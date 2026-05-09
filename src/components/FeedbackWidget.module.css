@@ -1,0 +1,110 @@
+.widget {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 200;
+}
+
+.trigger {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-navy);
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 150ms ease, background 150ms ease;
+}
+
+.trigger:hover {
+  background: var(--color-navy-light);
+  transform: scale(1.08);
+}
+
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  width: 280px;
+  box-shadow: var(--shadow-lg);
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 0.875rem;
+  margin-bottom: 0.875rem;
+  color: var(--color-navy);
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: 0.2rem;
+}
+
+.textarea {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  resize: vertical;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 150ms ease;
+  background: var(--color-bg);
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.textarea:focus {
+  border-color: var(--color-primary);
+  background: #fff;
+}
+
+.sendBtn {
+  width: 100%;
+  padding: 0.65rem;
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background 150ms ease;
+  font-family: inherit;
+}
+
+.sendBtn:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.sendBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sentMsg {
+  font-size: 0.875rem;
+  color: var(--color-success);
+  text-align: center;
+  padding: 0.5rem 0;
+}
+
+.errorMsg {
+  font-size: 0.775rem;
+  color: var(--color-error);
+  margin-bottom: 0.5rem;
+}
