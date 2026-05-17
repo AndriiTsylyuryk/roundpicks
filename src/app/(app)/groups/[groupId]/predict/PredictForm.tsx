@@ -19,22 +19,49 @@ interface Pick {
   rank3_id: string | null;
 }
 
+interface GroupResult {
+  wc_group: string;
+  rank1_id: string | null;
+  rank2_id: string | null;
+  rank3_id: string | null;
+}
+
 interface Props {
   groupId: string;
   userId: string;
   teams: Team[];
   existingPicks: Pick[];
   isLocked: boolean;
+  groupResults: GroupResult[];
+  existingBestThirdIds: string[];
+  officialBestThirdIds: string[];
 }
 
 const WC_GROUPS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
 const RANK_LABELS = ["①", "②", "③"];
 const RANK_COLORS = ["#f59e0b", "#94a3b8", "#b45309"];
 
-// Per group: ordered array [rank1_id, rank2_id, rank3_id] — null means not picked
 type GroupRanks = [string | null, string | null, string | null];
 
-export default function PredictForm({ groupId, userId, teams, existingPicks, isLocked }: Props) {
+function calcRankPoints(
+  predicted: GroupRanks,
+  result: GroupResult | undefined
+): (number | null)[] {
+  if (!result?.rank1_id) return [null, null, null];
+  const official = [result.rank1_id, result.rank2_id, result.rank3_id];
+  return predicted.map((teamId) => {
+    if (!teamId) return null;
+    if (official[0] === teamId || official[1] === teamId || official[2] === teamId) {
+      return official.indexOf(teamId) === predicted.indexOf(teamId) ? 2 : 1;
+    }
+    return 0;
+  });
+}
+
+export default function PredictForm({
+  groupId, userId, teams, existingPicks, isLocked,
+  groupResults, existingBestThirdIds, officialBestThirdIds,
+}: Props) {
   const initRanks = (): Record<string, GroupRanks> => {
     const m: Record<string, GroupRanks> = {};
     for (const g of WC_GROUPS) m[g] = [null, null, null];
@@ -49,7 +76,10 @@ export default function PredictForm({ groupId, userId, teams, existingPicks, isL
   const [savedGroups, setSavedGroups] = useState<Set<string>>(
     new Set(existingPicks.map((p) => p.wc_group))
   );
-  const [allSaved, setAllSaved] = useState(false);
+  const [step, setStep] = useState<1 | 2>(existingBestThirdIds.length > 0 ? 2 : 1);
+  const [bestThirdEditMode, setBestThirdEditMode] = useState(false);
+
+  const resultByGroup = new Map(groupResults.map((r) => [r.wc_group, r]));
 
   const teamsByGroup: Record<string, Team[]> = {};
   for (const g of WC_GROUPS) teamsByGroup[g] = [];
@@ -64,18 +94,13 @@ export default function PredictForm({ groupId, userId, teams, existingPicks, isL
     setRanks((prev) => {
       const cur: GroupRanks = [...prev[groupLetter]];
       const existingIdx = cur.indexOf(teamId);
-
       if (existingIdx !== -1) {
-        // Already ranked — remove and shift remaining down
         cur[existingIdx] = null;
-        // Compact: shift non-null values to fill the gap
         const filled = cur.filter((v): v is string => v !== null);
         return { ...prev, [groupLetter]: [filled[0] ?? null, filled[1] ?? null, filled[2] ?? null] };
       }
-
-      // Not ranked yet — assign to first open slot
       const firstOpen = cur.indexOf(null);
-      if (firstOpen === -1) return prev; // all 3 filled, ignore tap
+      if (firstOpen === -1) return prev;
       const next: GroupRanks = [...cur];
       next[firstOpen] = teamId;
       return { ...prev, [groupLetter]: next };
@@ -99,7 +124,6 @@ export default function PredictForm({ groupId, userId, teams, existingPicks, isL
   async function save() {
     setSaving(true);
     const supabase = createClient();
-
     const upserts = completedGroups.map((g) => ({
       group_id: groupId,
       user_id: userId,
@@ -109,15 +133,12 @@ export default function PredictForm({ groupId, userId, teams, existingPicks, isL
       rank3_id: ranks[g][2]!,
       updated_at: new Date().toISOString(),
     }));
-
     if (upserts.length > 0) {
       await supabase.from("group_picks").upsert(upserts, { onConflict: "group_id,user_id,wc_group" });
     }
-
     setSavedGroups(new Set(completedGroups));
     setSaving(false);
-
-    if (allComplete) setAllSaved(true);
+    if (allComplete) { setBestThirdEditMode(existingBestThirdIds.length > 0); setStep(2); }
   }
 
   if (!allGroupsHaveTeams) {
@@ -128,8 +149,7 @@ export default function PredictForm({ groupId, userId, teams, existingPicks, isL
     );
   }
 
-  // After all 12 groups saved → show Best 3rd step
-  if (allSaved || (allComplete && savedGroups.size === 12)) {
+  if (step === 2) {
     const thirdPlaceTeams = WC_GROUPS.map((g) => {
       const id = ranks[g][2];
       return teams.find((t) => t.id === id) ?? null;
@@ -141,7 +161,10 @@ export default function PredictForm({ groupId, userId, teams, existingPicks, isL
         userId={userId}
         thirdPlaceTeams={thirdPlaceTeams}
         isLocked={isLocked}
-        onBack={() => setAllSaved(false)}
+        onBack={() => { setStep(1); setBestThirdEditMode(false); }}
+        editMode={bestThirdEditMode}
+        existingSelectedIds={existingBestThirdIds}
+        officialBestThirdIds={officialBestThirdIds}
       />
     );
   }
@@ -174,18 +197,30 @@ export default function PredictForm({ groupId, userId, teams, existingPicks, isL
           const groupRanks = ranks[g];
           const isSaved = savedGroups.has(g);
           const isComplete = groupRanks.every((r) => r !== null);
+          const result = resultByGroup.get(g);
+          const rankPoints = calcRankPoints(groupRanks, result);
+          const groupPts = result?.rank1_id
+            ? rankPoints.reduce<number>((sum, p) => sum + (p ?? 0), 0)
+            : null;
 
           return (
             <div key={g} className={`${styles.groupCard} ${isComplete ? styles.groupCardComplete : ""}`}>
               <div className={styles.groupCardHeader}>
                 <span className={styles.groupLetter}>GROUP {g}</span>
-                {isSaved && isComplete && <span className={styles.savedBadge}>✓ Saved</span>}
+                <div className={styles.groupCardHeaderRight}>
+                  {groupPts !== null && (
+                    <span className={`${styles.groupScoreBadge} ${groupPts > 0 ? styles.groupScoreBadgePos : styles.groupScoreBadgeZero}`}>
+                      {groupPts > 0 ? `+${groupPts}` : "0"} pts
+                    </span>
+                  )}
+                  {isSaved && isComplete && <span className={styles.savedBadge}>✓ Saved</span>}
+                </div>
               </div>
 
-              {/* Rank summary row */}
               <div className={styles.rankSummary}>
                 {groupRanks.map((teamId, i) => {
                   const team = teams.find((t) => t.id === teamId);
+                  const pts = rankPoints[i];
                   return (
                     <div key={i} className={styles.rankSlot} style={{ borderColor: teamId ? RANK_COLORS[i] : undefined }}>
                       <span className={styles.rankNum} style={{ color: RANK_COLORS[i] }}>{RANK_LABELS[i]}</span>
@@ -194,19 +229,22 @@ export default function PredictForm({ groupId, userId, teams, existingPicks, isL
                       ) : (
                         <span className={styles.rankEmpty}>—</span>
                       )}
+                      {pts !== null && (
+                        <span className={`${styles.rankPts} ${pts > 0 ? styles.rankPtsGood : styles.rankPtsBad}`}>
+                          {pts > 0 ? `+${pts}` : "✗"}
+                        </span>
+                      )}
                     </div>
                   );
                 })}
               </div>
 
-              {/* Team tap list */}
               <div className={styles.teams}>
                 {groupTeams.map((team) => {
                   const rankIdx = groupRanks.indexOf(team.id);
                   const isRanked = rankIdx !== -1;
                   const allFilled = groupRanks.every((r) => r !== null);
                   const isDisabled = isLocked || (!isRanked && allFilled);
-
                   return (
                     <button
                       key={team.id}
@@ -229,9 +267,7 @@ export default function PredictForm({ groupId, userId, teams, existingPicks, isL
               </div>
 
               {!isLocked && !isComplete && (
-                <p className={styles.hint}>
-                  Tap teams to rank them 1st → 2nd → 3rd
-                </p>
+                <p className={styles.hint}>Tap teams to rank them 1st → 2nd → 3rd</p>
               )}
             </div>
           );
@@ -252,10 +288,7 @@ export default function PredictForm({ groupId, userId, teams, existingPicks, isL
               {saving ? "Saving…" : "Save predictions"}
             </button>
             {allComplete && !hasUnsaved && (
-              <button
-                className={`${styles.saveBtn} ${styles.nextBtn}`}
-                onClick={() => setAllSaved(true)}
-              >
+              <button className={`${styles.saveBtn} ${styles.nextBtn}`} onClick={() => { setBestThirdEditMode(existingBestThirdIds.length > 0); setStep(2); }}>
                 Next: Best 3rd →
               </button>
             )}

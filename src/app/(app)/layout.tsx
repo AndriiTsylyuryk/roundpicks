@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server-admin";
 import SignOutButton from "@/components/SignOutButton";
 import FeedbackWidget from "@/components/FeedbackWidget";
 import styles from "./layout.module.css";
@@ -23,6 +24,13 @@ export default async function AppLayout({
     .eq("id", user.id)
     .single();
 
+  const displayName = profile?.display_name ?? (() => {
+    const fallback = user.email?.split("@")[0] ?? "User";
+    const admin = createAdminClient();
+    admin.from("profiles").upsert({ id: user.id, display_name: fallback }, { onConflict: "id" });
+    return fallback;
+  })();
+
   return (
     <div className={styles.shell}>
       <nav className={styles.nav}>
@@ -32,7 +40,7 @@ export default async function AppLayout({
         </Link>
         <div className={styles.navActions}>
           <span className={styles.navName}>
-            {profile?.display_name ?? user.email}
+            {displayName}
           </span>
           <SignOutButton />
         </div>

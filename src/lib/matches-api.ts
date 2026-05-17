@@ -1,6 +1,7 @@
 const BASE_URL = "https://api.football-data.org/v4";
 
 const ROUND_MAP: Record<string, string> = {
+  GROUP_STAGE: "GROUP",
   ROUND_OF_32: "R32",
   ROUND_OF_16: "R16",
   QUARTER_FINALS: "QF",
@@ -27,6 +28,25 @@ interface FDTeam {
   shortName: string;
 }
 
+interface FDStandingEntry {
+  position: number;
+  team: { id: number };
+}
+
+interface FDStandingGroup {
+  stage: string;
+  type: string;
+  group: string;
+  table: FDStandingEntry[];
+}
+
+export interface StandingRow {
+  wc_group: string;
+  rank1_ext_id: number;
+  rank2_ext_id: number;
+  rank3_ext_id: number;
+}
+
 export async function syncWC2026All(): Promise<{
   teamsData?: Array<{ name: string; group_letter: string; external_id: number }>;
   matchesData?: Array<{
@@ -39,12 +59,13 @@ export async function syncWC2026All(): Promise<{
     status: string;
     kickoff_at: string;
   }>;
+  standingsData?: StandingRow[];
   error?: string;
 }> {
   const key = process.env.FOOTBALL_DATA_API_KEY;
   if (!key) return { error: "FOOTBALL_DATA_API_KEY not set" };
 
-  // 1st API call — teams (names, flags)
+  // 1st call — teams
   const teamsRes = await fetch(`${BASE_URL}/competitions/WC/teams?season=2026`, {
     headers: { "X-Auth-Token": key },
     cache: "no-store",
@@ -62,7 +83,7 @@ export async function syncWC2026All(): Promise<{
     return { error: "No teams returned from football-data.org" };
   }
 
-  // 2nd API call — matches (group assignments + knockout fixtures)
+  // 2nd call — matches (group assignments + all fixtures with scores)
   const matchesRes = await fetch(`${BASE_URL}/competitions/WC/matches?season=2026`, {
     headers: { "X-Auth-Token": key },
     cache: "no-store",
@@ -76,7 +97,6 @@ export async function syncWC2026All(): Promise<{
   const matchesJson = await matchesRes.json().catch(() => ({ matches: [] }));
   const allMatches: FDMatch[] = matchesJson?.matches ?? [];
 
-  // Extract group assignments from group-stage matches
   const groupMap: Record<number, string> = {};
   for (const m of allMatches) {
     if (!m.group) continue;
@@ -94,7 +114,6 @@ export async function syncWC2026All(): Promise<{
     external_id: t.id,
   }));
 
-  // Extract knockout fixtures
   const matchesData = allMatches
     .filter((m) => ROUND_MAP[m.stage])
     .map((m) => ({
@@ -111,5 +130,32 @@ export async function syncWC2026All(): Promise<{
       kickoff_at: m.utcDate,
     }));
 
-  return { teamsData, matchesData };
+  // 3rd call — standings (group stage final table, available once groups finish)
+  const standingsData: StandingRow[] = [];
+  const standingsRes = await fetch(`${BASE_URL}/competitions/WC/standings?season=2026`, {
+    headers: { "X-Auth-Token": key },
+    cache: "no-store",
+  });
+
+  if (standingsRes.ok) {
+    const standingsJson = await standingsRes.json().catch(() => ({ standings: [] }));
+    const groups: FDStandingGroup[] = standingsJson?.standings ?? [];
+
+    for (const group of groups) {
+      if (group.type !== "TOTAL") continue;
+      const letter = String(group.group ?? "").replace(/^GROUP_/i, "").trim();
+      if (!/^[A-L]$/.test(letter)) continue;
+      const sorted = [...group.table].sort((a, b) => a.position - b.position);
+      if (sorted.length < 3) continue;
+      standingsData.push({
+        wc_group: letter,
+        rank1_ext_id: sorted[0].team.id,
+        rank2_ext_id: sorted[1].team.id,
+        rank3_ext_id: sorted[2].team.id,
+      });
+    }
+  }
+  // standings returning non-ok is not a fatal error (group stage may not have started yet)
+
+  return { teamsData, matchesData, standingsData };
 }

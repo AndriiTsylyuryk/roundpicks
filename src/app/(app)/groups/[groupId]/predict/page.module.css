@@ -21,6 +21,171 @@
   color: var(--color-text-muted);
 }
 
+/* ── Score summary card ───────────────────────────────────────────────────── */
+.scoreSummary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  color: #fff;
+  border-radius: var(--radius-lg, 12px);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.75rem;
+  text-align: center;
+}
+
+.scoreTotalLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.scoreTotalValue {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.scoreBreakdown {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.25rem;
+}
+
+.scoreBreakdownItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.scoreBreakdownKey {
+  font-size: 0.65rem;
+  opacity: 0.75;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.scoreBreakdownVal {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* ── Group card score badge ───────────────────────────────────────────────── */
+.groupCardHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.groupScoreBadge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 99px;
+}
+
+.groupScoreBadgePos {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.groupScoreBadgeZero {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* ── Rank slot points ─────────────────────────────────────────────────────── */
+.rankPts {
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: auto;
+  padding: 0.1rem 0.35rem;
+  border-radius: 99px;
+  flex-shrink: 0;
+}
+
+.rankPtsGood {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.rankPtsBad {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* ── Step header score ────────────────────────────────────────────────────── */
+.stepScore {
+  margin-left: auto;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+  padding: 0.2rem 0.5rem;
+  background: #f1f5f9;
+  border-radius: 99px;
+}
+
+.stepScorePos {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+/* ── Best third scoring ───────────────────────────────────────────────────── */
+.thirdScoreTag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #15803d;
+}
+
+.thirdBtnCorrect {
+  border-color: #16a34a !important;
+  background: #f0fdf4 !important;
+}
+
+.thirdBtnWrong {
+  border-color: #dc2626 !important;
+  background: #fef2f2 !important;
+}
+
+.thirdResultCorrect {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #15803d;
+  background: #dcfce7;
+  padding: 0.1rem 0.35rem;
+  border-radius: 99px;
+}
+
+.thirdResultWrong {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #dc2626;
+  background: #fee2e2;
+  padding: 0.1rem 0.35rem;
+  border-radius: 99px;
+}
+
+.thirdResultMissed {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* ── Knockout match points ────────────────────────────────────────────────── */
+.koPointsWon {
+  font-weight: 700;
+  color: #15803d;
+}
+
+.koPointsMissed {
+  font-weight: 700;
+  color: #dc2626;
+}
+
 .progress {
   display: flex;
   align-items: center;
@@ -352,6 +517,19 @@
 
 .backBtn:hover { border-color: var(--color-text); color: var(--color-text); }
 
+.editPicksBtn {
+  background: none;
+  border: 1.5px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 150ms ease;
+}
+.editPicksBtn:hover { border-color: var(--color-text); color: var(--color-text); }
+
 /* ── Best 3rd ── */
 .thirdCounter {
   display: flex;
@@ -507,6 +685,31 @@
 .koScore {
   font-weight: 700;
   color: var(--color-text);
+}
+
+.koLockBadge {
+  font-weight: 600;
+  color: #9ca3af;
+}
+
+.koOpen {
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.koSaving {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.koSaved {
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.koError {
+  color: #dc2626;
+  font-weight: 600;
 }
 
 .koTeams {

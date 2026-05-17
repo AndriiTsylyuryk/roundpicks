@@ -452,3 +452,105 @@ grant select, insert, update, delete  on all tables    in schema public to authe
 grant select                          on all tables    in schema public to anon;
 grant usage, select                   on all sequences in schema public to authenticated;
 grant execute                         on all functions in schema public to authenticated, anon, service_role;
+
+-- ─── Time-based locking ──────────────────────────────────────────────────────
+
+-- Add updated_at to wc_matches (used by sync cooldown check)
+alter table public.wc_matches
+  add column if not exists updated_at timestamptz not null default now();
+
+create or replace function public.set_wc_matches_updated_at()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+create trigger wc_matches_updated_at
+  before update on public.wc_matches
+  for each row execute function public.set_wc_matches_updated_at();
+
+-- Drop finals_picks — knockout_picks covers all rounds including FINAL
+drop table if exists public.finals_picks;
+
+-- Phase 1 is open when: not manually locked AND first GROUP match hasn't kicked off yet.
+-- Falls back to manual-lock-only if no GROUP matches exist in DB yet (pre-sync).
+create or replace function public.phase1_open_for_group(p_group_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select not (
+    (select phase1_locked from groups where id = p_group_id)
+    or (
+      exists (select 1 from wc_matches where round = 'GROUP')
+      and now() >= (select min(kickoff_at) from wc_matches where round = 'GROUP')
+    )
+  )
+$$;
+
+-- group_picks: replace per-phase manual lock with time-based function
+drop policy if exists "Users can insert own picks" on public.group_picks;
+create policy "Users can insert own picks"
+  on public.group_picks for insert
+  with check (
+    auth.uid() = user_id
+    and group_id in (select public.get_my_group_ids())
+    and public.phase1_open_for_group(group_id)
+  );
+
+drop policy if exists "Users can update own picks" on public.group_picks;
+create policy "Users can update own picks"
+  on public.group_picks for update
+  using (
+    auth.uid() = user_id
+    and public.phase1_open_for_group(group_id)
+  )
+  with check (
+    auth.uid() = user_id
+    and public.phase1_open_for_group(group_id)
+  );
+
+-- best_third_picks: same Phase 1 lock as group_picks
+drop policy if exists "Users can insert own best_third_picks" on public.best_third_picks;
+create policy "Users can insert own best_third_picks"
+  on public.best_third_picks for insert
+  with check (
+    auth.uid() = user_id
+    and group_id in (select public.get_my_group_ids())
+    and public.phase1_open_for_group(group_id)
+  );
+
+drop policy if exists "Users can update own best_third_picks" on public.best_third_picks;
+create policy "Users can update own best_third_picks"
+  on public.best_third_picks for update
+  using (
+    auth.uid() = user_id
+    and public.phase1_open_for_group(group_id)
+  )
+  with check (
+    auth.uid() = user_id
+    and public.phase1_open_for_group(group_id)
+  );
+
+-- knockout_picks: per-match lock — can only pick/change before the match kicks off
+drop policy if exists "Users can insert own knockout_picks" on public.knockout_picks;
+create policy "Users can insert own knockout_picks"
+  on public.knockout_picks for insert
+  with check (
+    auth.uid() = user_id
+    and group_id in (select public.get_my_group_ids())
+    and now() < (select kickoff_at from wc_matches where id = match_id)
+  );
+
+drop policy if exists "Users can update own knockout_picks" on public.knockout_picks;
+create policy "Users can update own knockout_picks"
+  on public.knockout_picks for update
+  using (auth.uid() = user_id)
+  with check (
+    auth.uid() = user_id
+    and now() < (select kickoff_at from wc_matches where id = match_id)
+  );

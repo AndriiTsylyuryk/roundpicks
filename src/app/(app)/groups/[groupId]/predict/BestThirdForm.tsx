@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getFlag } from "@/lib/team-flags";
 import styles from "./page.module.css";
@@ -14,21 +15,31 @@ interface Team {
 interface Props {
   groupId: string;
   userId: string;
-  thirdPlaceTeams: Team[]; // the 12 teams user ranked 3rd (one per WC group)
+  thirdPlaceTeams: Team[];
   isLocked: boolean;
   onBack: () => void;
+  editMode: boolean;
+  existingSelectedIds: string[];
+  officialBestThirdIds: string[];
 }
 
 const REQUIRED = 8;
 
-export default function BestThirdForm({ groupId, userId, thirdPlaceTeams, isLocked, onBack }: Props) {
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+export default function BestThirdForm({
+  groupId, userId, thirdPlaceTeams, isLocked, onBack, editMode,
+  existingSelectedIds, officialBestThirdIds,
+}: Props) {
+  const router = useRouter();
+  const [selected, setSelected] = useState<Set<string>>(new Set(existingSelectedIds));
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
 
+  const isSaved = existingSelectedIds.length === REQUIRED && !editMode;
+
+  const hasOfficialResults = officialBestThirdIds.length === 8;
+
   function toggle(teamId: string) {
-    if (isLocked) return;
+    if (isLocked || isSaved) return;
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(teamId)) {
@@ -38,36 +49,40 @@ export default function BestThirdForm({ groupId, userId, thirdPlaceTeams, isLock
       }
       return next;
     });
-    setSaved(false);
   }
 
   async function save() {
     if (selected.size !== REQUIRED) return;
     setSaving(true);
     setError("");
-
     const supabase = createClient();
     const { error: dbError } = await supabase.from("best_third_picks").upsert(
       { group_id: groupId, user_id: userId, team_ids: [...selected], updated_at: new Date().toISOString() },
       { onConflict: "group_id,user_id" }
     );
-
     setSaving(false);
-    if (dbError) {
-      setError(dbError.message);
-    } else {
-      setSaved(true);
-    }
+    if (dbError) setError(dbError.message);
+    else router.push(`/groups/${groupId}`);
   }
 
   const count = selected.size;
   const isComplete = count === REQUIRED;
+
+  const correctCount = hasOfficialResults
+    ? [...selected].filter((id) => officialBestThirdIds.includes(id)).length
+    : null;
+  const bestThirdScore = correctCount !== null ? correctCount * 2 : null;
 
   return (
     <>
       <div className={styles.stepHeader}>
         <span className={styles.stepBadge}>Step 2 of 2</span>
         <span className={styles.stepTitle}>Best 3rd-Place Teams</span>
+        {bestThirdScore !== null && (
+          <span className={`${styles.stepScore} ${bestThirdScore > 0 ? styles.stepScorePos : ""}`}>
+            +{bestThirdScore} pts
+          </span>
+        )}
       </div>
 
       <p className={styles.stepDesc}>
@@ -81,28 +96,46 @@ export default function BestThirdForm({ groupId, userId, thirdPlaceTeams, isLock
         <div className={styles.thirdBar}>
           <div className={styles.thirdBarFill} style={{ width: `${(count / REQUIRED) * 100}%` }} />
         </div>
+        {hasOfficialResults && isComplete && (
+          <span className={styles.thirdScoreTag}>{correctCount}/8 correct · +{bestThirdScore} pts</span>
+        )}
       </div>
 
-      {isLocked && (
-        <div className={styles.lockedBanner}>🔒 Predictions are closed.</div>
-      )}
+      {isLocked && <div className={styles.lockedBanner}>🔒 Predictions are closed.</div>}
 
       <div className={styles.thirdGrid}>
         {thirdPlaceTeams.map((team) => {
           const isSelected = selected.has(team.id);
-          const isDisabled = isLocked || (!isSelected && count >= REQUIRED);
+          const isDisabled = isLocked || isSaved || (!isSelected && count >= REQUIRED);
+          const isCorrect = hasOfficialResults && officialBestThirdIds.includes(team.id);
+          const isWrong = hasOfficialResults && isSelected && !isCorrect;
+
           return (
             <button
               key={team.id}
               type="button"
-              className={`${styles.thirdBtn} ${isSelected ? styles.thirdBtnSelected : ""} ${isDisabled ? styles.thirdBtnDisabled : ""}`}
+              className={[
+                styles.thirdBtn,
+                isSelected ? styles.thirdBtnSelected : "",
+                isDisabled ? styles.thirdBtnDisabled : "",
+                isCorrect && isSelected ? styles.thirdBtnCorrect : "",
+                isWrong ? styles.thirdBtnWrong : "",
+              ].join(" ")}
               onClick={() => toggle(team.id)}
               disabled={isDisabled}
             >
               <span className={styles.thirdGroupTag}>Group {team.group_letter}</span>
               <span className={styles.thirdFlag}>{getFlag(team.name)}</span>
               <span className={styles.thirdName}>{team.name}</span>
-              {isSelected && <span className={styles.thirdCheck}>✓</span>}
+              {isSelected && hasOfficialResults && (
+                <span className={isCorrect ? styles.thirdResultCorrect : styles.thirdResultWrong}>
+                  {isCorrect ? "+2" : "✗"}
+                </span>
+              )}
+              {!isSelected && hasOfficialResults && isCorrect && (
+                <span className={styles.thirdResultMissed}>missed</span>
+              )}
+              {isSelected && !hasOfficialResults && <span className={styles.thirdCheck}>✓</span>}
             </button>
           );
         })}
@@ -112,19 +145,25 @@ export default function BestThirdForm({ groupId, userId, thirdPlaceTeams, isLock
 
       {!isLocked && (
         <div className={styles.saveBar}>
-          <button className={styles.backBtn} onClick={onBack} disabled={saving}>
-            ← Back
-          </button>
-          <div className={styles.saveBtns}>
-            {saved && <span className={styles.saveStatus}>Saved ✓</span>}
-            <button
-              className={styles.saveBtn}
-              onClick={save}
-              disabled={saving || !isComplete || saved}
-            >
-              {saving ? "Saving…" : saved ? "Saved ✓" : "Save picks"}
-            </button>
-          </div>
+          {isSaved ? (
+            <>
+              <button className={styles.saveBtn} disabled>Saved ✓</button>
+              <button className={styles.editPicksBtn} onClick={onBack}>
+                Edit picks
+              </button>
+            </>
+          ) : (
+            <>
+              <button className={styles.backBtn} onClick={onBack} disabled={saving}>← Back</button>
+              <button
+                className={styles.saveBtn}
+                onClick={save}
+                disabled={saving || !isComplete}
+              >
+                {saving ? "Saving…" : "Save picks"}
+              </button>
+            </>
+          )}
         </div>
       )}
     </>

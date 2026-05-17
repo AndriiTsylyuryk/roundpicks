@@ -18,7 +18,7 @@ export function calcBestThirdScore(userPicks: string[], officialIds: string[]): 
   return userPicks.filter((id) => officialSet.has(id)).length * 2;
 }
 
-const ROUND_POINTS: Record<string, number> = {
+export const ROUND_POINTS: Record<string, number> = {
   R32: 1, R16: 2, QF: 3, SF: 4, FINAL: 5, "3RD": 3,
 };
 

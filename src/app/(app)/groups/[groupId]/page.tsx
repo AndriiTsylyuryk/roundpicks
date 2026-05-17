@@ -13,8 +13,6 @@ interface GroupRow {
   invite_code: string;
   phase1_locked: boolean;
   phase1_deadline: string | null;
-  phase2_locked: boolean;
-  phase3_locked: boolean;
   group_members: { user_id: string }[];
   events: { name: string; slug: string } | null;
 }
@@ -51,9 +49,23 @@ export default async function GroupPage({ params }: Props) {
     .select("id, display_name")
     .in("id", safeIds);
 
+  const nullProfileIds = (profiles ?? [])
+    .filter((p) => !p.display_name)
+    .map((p) => p.id);
+
+  const emailById: Record<string, string> = {};
+  if (nullProfileIds.length > 0) {
+    const { data: authUsers } = await admin.auth.admin.listUsers({ perPage: 1000 });
+    for (const u of authUsers?.users ?? []) {
+      if (nullProfileIds.includes(u.id) && u.email) {
+        emailById[u.id] = u.email.split("@")[0];
+      }
+    }
+  }
+
   const nameById: Record<string, string> = {};
   for (const p of profiles ?? []) {
-    nameById[p.id] = p.display_name ?? "Unknown";
+    nameById[p.id] = p.display_name ?? emailById[p.id] ?? "User";
   }
 
   const { data: picks } = await supabase
@@ -141,6 +153,19 @@ export default async function GroupPage({ params }: Props) {
         : b.groupsSubmitted - a.groupsSubmitted
     );
 
+  const { data: firstGroupMatch } = await supabase
+    .from("wc_matches")
+    .select("kickoff_at")
+    .eq("round", "GROUP")
+    .order("kickoff_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  const now = new Date();
+  const phase1Deadline = firstGroupMatch?.kickoff_at ? new Date(firstGroupMatch.kickoff_at) : null;
+  const phase1IsOpen = !group.phase1_locked && (!phase1Deadline || now < phase1Deadline);
+  const knockoutsStarted = group.phase1_locked || (!!phase1Deadline && now >= phase1Deadline);
+
   const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/groups/join/${group.invite_code}`;
   const rankEmoji = ["🥇", "🥈", "🥉"];
 
@@ -161,8 +186,8 @@ export default async function GroupPage({ params }: Props) {
         )}
         <div className={styles.groupMeta}>
           <span>👥 {members.length} participants</span>
-          {group.phase1_deadline && (
-            <span>⏰ Deadline: {new Date(group.phase1_deadline).toLocaleString()}</span>
+          {phase1Deadline && phase1IsOpen && (
+            <span>⏰ Group picks close: {phase1Deadline.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
           )}
         </div>
       </div>
@@ -176,30 +201,16 @@ export default async function GroupPage({ params }: Props) {
       </div>
 
       <div className={styles.phaseBar}>
-        {(() => {
-          const allLocked = group.phase1_locked && group.phase2_locked && group.phase3_locked;
-          const label = !group.phase1_locked
+        <span className={`${styles.phaseBadge} ${phase1IsOpen || knockoutsStarted ? styles.open : styles.locked}`}>
+          {phase1IsOpen
             ? "✅ Group stage predictions open"
-            : !group.phase2_locked
-            ? "✅ Knockout predictions open"
-            : !group.phase3_locked
-            ? "✅ Finals predictions open"
-            : "🔒 All predictions closed";
-          const isOpen = !allLocked;
-          return (
-            <>
-              <span className={`${styles.phaseBadge} ${isOpen ? styles.open : styles.locked}`}>
-                {label}
-              </span>
-              <Link
-                href={`/groups/${groupId}/predict`}
-                className={`${styles.predictBtn} ${isOpen ? "" : styles.disabled}`}
-              >
-                {isOpen ? "Make predictions →" : "Predictions closed"}
-              </Link>
-            </>
-          );
-        })()}
+            : knockoutsStarted
+            ? "⚽ Knockout picks — vote per match"
+            : "🔒 Predictions not started"}
+        </span>
+        <Link href={`/groups/${groupId}/predict`} className={styles.predictBtn}>
+          {phase1IsOpen ? "Make group picks →" : "View & pick matches →"}
+        </Link>
       </div>
 
       <h2 className={styles.sectionTitle}>Leaderboard</h2>
