@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: POST /api/matches/sync
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -L \
             -X POST "${{ secrets.APP_URL }}/api/matches/sync" \
             -H "x-cron-secret: ${{ secrets.CRON_SECRET }}")
           echo "Response status: $STATUS"
