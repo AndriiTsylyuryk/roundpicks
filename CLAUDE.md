@@ -27,8 +27,6 @@ Concrete differences in use here:
 
 Never `import` `server-admin.ts` from client code. Authorize the user via the SSR client first (`auth.getUser()` + ownership check), then escalate with the admin client. Pattern: [src/app/api/admin/results/groups/route.ts](src/app/api/admin/results/groups/route.ts).
 
-Profiles RLS has no INSERT policy — inserts go through `handle_new_user` trigger (security definer). If a profile row is missing for an existing user (e.g. after schema drop/recreate), use the admin client to upsert. See `src/app/(app)/layout.tsx`.
-
 ## RLS — recursion trap
 
 `group_members` policies that reference `group_members` recurse. The schema works around this with `security definer` SQL functions:
@@ -38,24 +36,23 @@ Profiles RLS has no INSERT policy — inserts go through `handle_new_user` trigg
 
 When adding a new table scoped to a group, use `group_id in (select public.get_my_group_ids())` in the policy. Don't query `group_members` directly. See [supabase/migrations/001_initial_schema.sql](supabase/migrations/001_initial_schema.sql).
 
-Profiles RLS only allows `auth.uid() = id` for select/update — to fetch other members' display names use the admin client.
+Profiles RLS only allows `auth.uid() = id` for select — to fetch other members' display names use the admin client.
 
 ## Phase-based prediction model
 
-Two active phases. `finals_picks` table is **dropped** — it no longer exists.
+Each group (the betting league, not WC group) has three lock flags on the `groups` row:
 
-| Phase | What's locked | How it locks |
-| ----- | ------------- | ------------ |
-| 1 | `group_picks` + `best_third_picks` (rank 1/2/3 per WC group A–L, + 8 best 3rd picks) | Auto: `now() >= MIN(kickoff_at) WHERE round='GROUP'`. Manual override: `phase1_locked` flag on `groups` row. |
-| 2 | `knockout_picks` (R32 → FINAL) | Per-match: `now() < wc_matches.kickoff_at` checked at INSERT/UPDATE in RLS. |
+| Phase | Flag            | What's locked when true                      |
+| ----- | --------------- | -------------------------------------------- |
+| 1     | `phase1_locked` | `group_picks` (1st/2nd/3rd per WC group A–L) |
+| 2     | `phase2_locked` | `best_third_picks` + `knockout_picks`        |
+| 3     | `phase3_locked` | `finals_picks`                               |
 
-The `phase1_open_for_group(p_group_id)` SQL function (security definer) combines both checks. `phase2_locked` and `phase3_locked` columns still exist on the `groups` table but are unused — do not reintroduce logic for them.
-
-Admin panel only exposes Phase 1 emergency lock/unlock. Everything else is automatic.
+The lock is enforced **in RLS policies** (insert/update `with check` clauses query `groups.phaseN_locked`), not just in UI. The group page banner reflects the next open phase, not just phase 1 — see [src/app/(app)/groups/[groupId]/page.tsx](<src/app/(app)/groups/[groupId]/page.tsx>).
 
 ## Scoring
 
-Implemented in [src/lib/scoring.ts](src/lib/scoring.ts). Pure functions, no DB calls — caller fetches picks + official results and passes them in. `ROUND_POINTS` is exported.
+Implemented in [src/lib/scoring.ts](src/lib/scoring.ts). Pure functions, no DB calls — caller fetches picks + official results and passes them in.
 
 | Phase                             | Rule                        | Points                |
 | --------------------------------- | --------------------------- | --------------------- |
@@ -68,33 +65,11 @@ Knockout scoring only counts `status = 'finished'` matches with both scores set.
 
 ## football-data.org sync
 
-[src/lib/matches-api.ts](src/lib/matches-api.ts) exposes `syncWC2026All()` — **3 API calls**: `/teams`, `/matches`, `/standings`. Group letters for teams are derived from `match.group` field. `ROUND_MAP` includes `GROUP_STAGE → "GROUP"` (stored in `wc_matches` for auto-deadline).
+[src/lib/matches-api.ts](src/lib/matches-api.ts) exposes a single `syncWC2026All()` — **2 API calls** (`/teams` + `/matches`). Group letters for teams are derived from the `match.group` field, not a separate endpoint. Never reintroduce a 3rd call.
 
-[src/app/api/matches/sync/route.ts](src/app/api/matches/sync/route.ts):
-- Enforces **5-minute cooldown** via `MAX(updated_at)` from `wc_matches`. Returns 429 if too soon.
-- Secured by `x-cron-secret` header (requests without the header = manual admin call, allowed).
-- **Auto-populates** `wc_group_results` from standings data.
-- **Auto-detects** `is_best_third` on 8 teams from intersection of 3rd-place group teams + R32 fixture teams.
+[src/app/api/matches/sync/route.ts](src/app/api/matches/sync/route.ts) enforces a **5-minute cooldown** by reading `MAX(updated_at)` from `wc_matches` before calling the API. Returns 429 if too soon. Skipped on first sync (empty table).
 
-**Automated sync:** GitHub Actions cron (`*/10 * * * *`) in `.github/workflows/sync-matches.yml` — Vercel Hobby plan doesn't support sub-daily crons. Secrets required: `APP_URL`, `CRON_SECRET`.
-
-`ROUND_MAP` values: `GROUP`, `R32`, `R16`, `QF`, `SF`, `3RD`, `FINAL`.
-
-## Score visualization on predict page
-
-`src/app/(app)/groups/[groupId]/predict/page.tsx` computes scores server-side and passes them down:
-- Total score card shown when any points exist.
-- `PredictForm`: per-group score badge (+X pts) and per-rank badge (+2/+1/✗).
-- `BestThirdForm`: ✓/✗/missed per team, score tag.
-- `KnockoutForm`: per-match points badge (+N pts or ✗), auto-save on pick with optimistic UI.
-
-## Predict page step flow
-
-`PredictForm` controls a `step` state (1 | 2):
-- Step 1: Group Rankings (Groups A–L, pick 1st/2nd/3rd)
-- Step 2: BestThirdForm (pick 8 best 3rd-place qualifiers)
-
-`step` initialises to `2` if user already has saved best_third picks. "Edit picks" in BestThirdForm calls `onBack()` → `setStep(1)`. When navigating forward to Step 2 with existing picks, `bestThirdEditMode=true` is passed to BestThirdForm so it opens in editable state (not locked "Saved ✓" view).
+`ROUND_MAP` translates football-data stages → our `wc_matches.round` values (`R32`, `R16`, `QF`, `SF`, `3RD`, `FINAL`).
 
 ## Team flags — frontend only
 
@@ -114,19 +89,20 @@ src/
     (app)/                     # auth-required: /dashboard /groups/...
       groups/[groupId]/
         page.tsx               # group home + leaderboard
-        predict/               # PredictForm (Step1: groups, Step2: BestThird) → KnockoutForm
-        admin/                 # creator-only: phase1 emergency lock, phase2 info
+        predict/               # PredictForm (groups) → BestThirdForm → KnockoutForm → FinalsForm
+        admin/                 # creator-only: sync, lock phases, enter results
     api/
-      matches/sync/            # POST: pull from football-data.org (5-min cooldown, auto-results)
+      matches/sync/            # POST: pull from football-data.org (5-min cooldown)
       teams/groups/            # PATCH: manual group letter overrides
+      admin/results/groups/    # POST: official group standings (creator-only)
+      admin/results/best-third # POST: official 8 third-placers
       feedback/                # POST: collect user feedback
     auth/callback/             # OAuth/magic-link return
   lib/
-    matches-api.ts             # syncWC2026All (3 API calls)
-    scoring.ts                 # pure scoring fns, exports ROUND_POINTS
+    matches-api.ts             # syncWC2026All
+    scoring.ts                 # pure scoring fns
     team-flags.ts              # getFlag(name)
     supabase/{client,server,server-admin,types}.ts
-.github/workflows/sync-matches.yml  # GitHub Actions cron every 10 min
 supabase/migrations/001_initial_schema.sql
 ```
 
@@ -137,5 +113,3 @@ supabase/migrations/001_initial_schema.sql
 - **Type cast Supabase joins:** nested selects (e.g. `groups(*, events(name))`) often need an `as` cast — Supabase's generated types treat joined relations as arrays.
 - **Don't store derivable data:** flags, scores from picks — keep the DB minimal.
 - **No comments unless the WHY is non-obvious.** The codebase is intentionally lean.
-- **Admin results are auto-synced** — do not reintroduce manual group results or best-third entry forms. The sync endpoint handles it.
-- **Profile upsert:** profiles table has no INSERT RLS policy. Always use the admin client to create/fix missing profiles.

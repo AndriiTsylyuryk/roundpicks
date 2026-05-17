@@ -12,12 +12,28 @@ jobs:
     steps:
       - name: POST /api/matches/sync
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -L \
-            -X POST "${{ secrets.APP_URL }}/api/matches/sync" \
-            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}")
-          echo "Response status: $STATUS"
-          # 200 = synced, 429 = cooldown (still ok), anything else = failure
-          if [ "$STATUS" != "200" ] && [ "$STATUS" != "429" ]; then
-            echo "Unexpected status $STATUS"
+          APP_URL="${{ secrets.APP_URL }}"
+          CRON_SECRET="${{ secrets.CRON_SECRET }}"
+          
+          # Validate required secrets
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "ERROR: APP_URL or CRON_SECRET secrets are not configured"
             exit 1
           fi
+          
+          echo "Calling API endpoint: $APP_URL/api/matches/sync"
+          
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -L \
+            -X POST "$APP_URL/api/matches/sync" \
+            -H "x-cron-secret: $CRON_SECRET")
+          
+          echo "Response status: $STATUS"
+          
+          # 200 = synced, 429 = cooldown (still ok), anything else = failure
+          if [ "$STATUS" != "200" ] && [ "$STATUS" != "429" ]; then
+            echo "ERROR: Unexpected status $STATUS"
+            echo "Expected 200 (success) or 429 (rate limited)"
+            exit 1
+          fi
+          
+          echo "Sync completed successfully (Status: $STATUS)"
