@@ -21,18 +21,18 @@ const NAME_TO_FLAG: Record<string, string> = {
   Spain: "🇪🇸",
   Germany: "🇩🇪",
   England: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+  Scotland: "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
   Portugal: "🇵🇹",
   Netherlands: "🇳🇱",
-  Italy: "🇮🇹",
   Belgium: "🇧🇪",
   Croatia: "🇭🇷",
   Switzerland: "🇨🇭",
-  Denmark: "🇩🇰",
   Austria: "🇦🇹",
-  Poland: "🇵🇱",
   Turkey: "🇹🇷", Türkiye: "🇹🇷",
   Norway: "🇳🇴",
-  Ukraine: "🇺🇦",
+  Sweden: "🇸🇪",
+  Czechia: "🇨🇿", "Czech Republic": "🇨🇿",
+  "Bosnia-H.": "🇧🇦", "Bosnia-Herzegovina": "🇧🇦",
 
   // AFC (8)
   Japan: "🇯🇵",
@@ -43,23 +43,24 @@ const NAME_TO_FLAG: Record<string, string> = {
   Uzbekistan: "🇺🇿",
   Jordan: "🇯🇴",
   Iraq: "🇮🇶",
+  Qatar: "🇶🇦",
 
-  // CAF (10)
+  // CAF (9)
   Morocco: "🇲🇦",
   Tunisia: "🇹🇳",
   Egypt: "🇪🇬",
   Algeria: "🇩🇿",
   Senegal: "🇸🇳",
-  Nigeria: "🇳🇬",
   "Ivory Coast": "🇨🇮", "Côte d'Ivoire": "🇨🇮",
-  Cameroon: "🇨🇲",
   Ghana: "🇬🇭",
-  Mali: "🇲🇱",
+  "South Africa": "🇿🇦",
+  "Cape Verde": "🇨🇻", "Cape Verde Islands": "🇨🇻",
+  "Congo DR": "🇨🇩", "DR Congo": "🇨🇩",
 
-  // CONCACAF (3, hosts already listed)
+  // CONCACAF (6, hosts already listed)
   Panama: "🇵🇦",
-  Jamaica: "🇯🇲",
-  "Costa Rica": "🇨🇷",
+  Haiti: "🇭🇹",
+  Curaçao: "🇨🇼",
 
   // OFC (1)
   "New Zealand": "🇳🇿",

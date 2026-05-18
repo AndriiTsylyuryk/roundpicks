@@ -38,23 +38,22 @@ interface Props {
 }
 
 const WC_GROUPS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
-const RANK_LABELS = ["①", "②", "③"];
-const RANK_COLORS = ["#f59e0b", "#94a3b8", "#b45309"];
+const RANK_LABELS = ["①", "②"];
+const RANK_COLORS = ["#f59e0b", "#94a3b8"];
 
-type GroupRanks = [string | null, string | null, string | null];
+type GroupRanks = [string | null, string | null];
 
 function calcRankPoints(
   predicted: GroupRanks,
   result: GroupResult | undefined
 ): (number | null)[] {
-  if (!result?.rank1_id) return [null, null, null];
-  const official = [result.rank1_id, result.rank2_id, result.rank3_id];
-  return predicted.map((teamId) => {
+  if (!result?.rank1_id) return [null, null];
+  const officialTop2 = [result.rank1_id, result.rank2_id];
+  return predicted.map((teamId, idx) => {
     if (!teamId) return null;
-    if (official[0] === teamId || official[1] === teamId || official[2] === teamId) {
-      return official.indexOf(teamId) === predicted.indexOf(teamId) ? 2 : 1;
-    }
-    return 0;
+    const officialIdx = officialTop2.indexOf(teamId);
+    if (officialIdx === -1) return 0;
+    return officialIdx === idx ? 2 : 1;
   });
 }
 
@@ -64,9 +63,9 @@ export default function PredictForm({
 }: Props) {
   const initRanks = (): Record<string, GroupRanks> => {
     const m: Record<string, GroupRanks> = {};
-    for (const g of WC_GROUPS) m[g] = [null, null, null];
+    for (const g of WC_GROUPS) m[g] = [null, null];
     for (const p of existingPicks) {
-      m[p.wc_group] = [p.rank1_id, p.rank2_id, p.rank3_id ?? null];
+      m[p.wc_group] = [p.rank1_id, p.rank2_id];
     }
     return m;
   };
@@ -97,7 +96,7 @@ export default function PredictForm({
       if (existingIdx !== -1) {
         cur[existingIdx] = null;
         const filled = cur.filter((v): v is string => v !== null);
-        return { ...prev, [groupLetter]: [filled[0] ?? null, filled[1] ?? null, filled[2] ?? null] };
+        return { ...prev, [groupLetter]: [filled[0] ?? null, filled[1] ?? null] };
       }
       const firstOpen = cur.indexOf(null);
       if (firstOpen === -1) return prev;
@@ -108,7 +107,7 @@ export default function PredictForm({
   }
 
   const completedGroups = WC_GROUPS.filter(
-    (g) => ranks[g][0] !== null && ranks[g][1] !== null && ranks[g][2] !== null
+    (g) => ranks[g][0] !== null && ranks[g][1] !== null
   );
   const progress = completedGroups.length;
   const allComplete = progress === 12;
@@ -118,7 +117,7 @@ export default function PredictForm({
       const saved = existingPicks.find((p) => p.wc_group === g);
       if (!saved) return false;
       const r = ranks[g];
-      return saved.rank1_id !== r[0] || saved.rank2_id !== r[1] || (saved.rank3_id ?? null) !== r[2];
+      return saved.rank1_id !== r[0] || saved.rank2_id !== r[1];
     });
 
   async function save() {
@@ -130,7 +129,7 @@ export default function PredictForm({
       wc_group: g,
       rank1_id: ranks[g][0]!,
       rank2_id: ranks[g][1]!,
-      rank3_id: ranks[g][2]!,
+      rank3_id: null,
       updated_at: new Date().toISOString(),
     }));
     if (upserts.length > 0) {
@@ -150,10 +149,10 @@ export default function PredictForm({
   }
 
   if (step === 2) {
-    const thirdPlaceTeams = WC_GROUPS.map((g) => {
-      const id = ranks[g][2];
-      return teams.find((t) => t.id === id) ?? null;
-    }).filter((t): t is Team => t !== null);
+    const thirdPlaceTeams = WC_GROUPS.flatMap((g) => {
+      const picked = new Set([ranks[g][0], ranks[g][1]].filter(Boolean));
+      return teamsByGroup[g].filter((t) => !picked.has(t.id));
+    });
 
     return (
       <BestThirdForm
@@ -267,7 +266,7 @@ export default function PredictForm({
               </div>
 
               {!isLocked && !isComplete && (
-                <p className={styles.hint}>Tap teams to rank them 1st → 2nd → 3rd</p>
+                <p className={styles.hint}>Tap teams to rank them 1st → 2nd</p>
               )}
             </div>
           );

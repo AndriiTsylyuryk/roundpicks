@@ -40,6 +40,76 @@
 .groupName {
   font-size: 1.75rem;
   margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.editPencil {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  line-height: 1;
+}
+
+.groupName:hover .editPencil {
+  opacity: 1;
+}
+
+.nameEditRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.nameInput {
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-family: inherit;
+  border: none;
+  border-bottom: 2px solid var(--color-primary);
+  background: transparent;
+  outline: none;
+  color: var(--color-text);
+  min-width: 0;
+  flex: 1;
+}
+
+.nameSaveBtn {
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: inherit;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 0.3rem 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nameSaveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nameCancelBtn {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0.2rem;
+  line-height: 1;
+}
+
+.nameCancelBtn:hover {
+  color: var(--color-text);
 }
 
 .eventTag {
@@ -73,6 +143,26 @@
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
+}
+
+.inviteBoxFull {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.inviteFullHint {
+  font-weight: 400;
+  font-size: 0.8rem;
 }
 
 .inviteLabel {
@@ -239,6 +329,52 @@
   font-weight: 500;
   color: var(--color-text-muted);
   margin-left: 0.35rem;
+}
+
+/* ── Participants popover ── */
+.participantsWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.participantsBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+.participantsBtn:hover {
+  color: var(--color-text);
+}
+
+.participantsPopover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  z-index: 20;
+  min-width: 140px;
+  white-space: nowrap;
+}
+
+.participantItem {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text);
 }
 
 .noPicksMsg {

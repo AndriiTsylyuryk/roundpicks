@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/server-admin";
 import { calcGroupScore, calcBestThirdScore, calcKnockoutScore } from "@/lib/scoring";
 import CopyInviteButton from "./CopyInviteButton";
+import ParticipantsList from "./ParticipantsList";
+import GroupNameEditor from "./GroupNameEditor";
 import styles from "./page.module.css";
 
 interface GroupRow {
@@ -13,6 +15,7 @@ interface GroupRow {
   invite_code: string;
   phase1_locked: boolean;
   phase1_deadline: string | null;
+  max_participants: number;
   group_members: { user_id: string }[];
   events: { name: string; slug: string } | null;
 }
@@ -49,15 +52,16 @@ export default async function GroupPage({ params }: Props) {
     .select("id, display_name")
     .in("id", safeIds);
 
-  const nullProfileIds = (profiles ?? [])
-    .filter((p) => !p.display_name)
-    .map((p) => p.id);
+  const profileIds = new Set((profiles ?? []).map((p) => p.id));
+  const noDisplayName = (profiles ?? []).filter((p) => !p.display_name).map((p) => p.id);
+  const noProfile = memberIds.filter((id) => !profileIds.has(id));
+  const needEmail = [...noDisplayName, ...noProfile];
 
   const emailById: Record<string, string> = {};
-  if (nullProfileIds.length > 0) {
+  if (needEmail.length > 0) {
     const { data: authUsers } = await admin.auth.admin.listUsers({ perPage: 1000 });
     for (const u of authUsers?.users ?? []) {
-      if (nullProfileIds.includes(u.id) && u.email) {
+      if (needEmail.includes(u.id) && u.email) {
         emailById[u.id] = u.email.split("@")[0];
       }
     }
@@ -66,6 +70,9 @@ export default async function GroupPage({ params }: Props) {
   const nameById: Record<string, string> = {};
   for (const p of profiles ?? []) {
     nameById[p.id] = p.display_name ?? emailById[p.id] ?? "User";
+  }
+  for (const uid of noProfile) {
+    nameById[uid] = emailById[uid] ?? "User";
   }
 
   const { data: picks } = await supabase
@@ -180,25 +187,35 @@ export default async function GroupPage({ params }: Props) {
             </Link>
           )}
         </div>
-        <h1 className={styles.groupName}>{group.name}</h1>
+        {isCreator
+          ? <GroupNameEditor groupId={groupId} initialName={group.name} />
+          : <h1 className={styles.groupName}>{group.name}</h1>
+        }
         {group.events && (
           <div className={styles.eventTag}>⚽ {group.events.name}</div>
         )}
         <div className={styles.groupMeta}>
-          <span>👥 {members.length} participants</span>
+          <ParticipantsList names={members.map((m) => m.name)} />
           {phase1Deadline && phase1IsOpen && (
             <span>⏰ Group picks close: {phase1Deadline.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
           )}
         </div>
       </div>
 
-      <div className={styles.inviteBox}>
-        <div>
-          <div className={styles.inviteLabel}>Invite link — share with friends</div>
-          <div className={styles.inviteUrl}>{inviteUrl}</div>
+      {members.length >= group.max_participants ? (
+        <div className={styles.inviteBoxFull}>
+          <span>🔒 Group is full ({members.length}/{group.max_participants})</span>
+          {isCreator && <span className={styles.inviteFullHint}>Increase the limit in ⚙️ Admin to allow more members.</span>}
         </div>
-        <CopyInviteButton url={inviteUrl} />
-      </div>
+      ) : (
+        <div className={styles.inviteBox}>
+          <div>
+            <div className={styles.inviteLabel}>Invite link — share with friends ({members.length}/{group.max_participants})</div>
+            <div className={styles.inviteUrl}>{inviteUrl}</div>
+          </div>
+          <CopyInviteButton url={inviteUrl} />
+        </div>
+      )}
 
       <div className={styles.phaseBar}>
         <span className={`${styles.phaseBadge} ${phase1IsOpen || knockoutsStarted ? styles.open : styles.locked}`}>

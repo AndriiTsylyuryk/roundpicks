@@ -86,7 +86,7 @@ export default function BestThirdForm({
       </div>
 
       <p className={styles.stepDesc}>
-        Select <strong>8 teams</strong> from the 12 group third-place finishers that you think will qualify for the Round of 32.
+        Select <strong>8 teams</strong> you think will finish 3rd in their group and qualify for the Round of 32.
       </p>
 
       <div className={styles.thirdCounter}>
