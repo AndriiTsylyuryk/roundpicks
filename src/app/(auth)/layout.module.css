@@ -1,6 +1,6 @@
 .shell {
   min-height: 100vh;
-  background: linear-gradient(160deg, var(--color-navy) 0%, var(--color-navy-light) 100%);
+  background: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -10,33 +10,33 @@
 }
 
 .brand {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #fff;
-}
-
-.brandIcon {
+  font-family: var(--font-display-family);
   font-size: 1.75rem;
+  font-weight: 400;
+  background: linear-gradient(90deg, var(--color-brand-from), var(--color-brand-to));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-decoration: none;
+  line-height: 1;
 }
 
-.brandName {
-  font-size: 1.25rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+.brand:hover {
+  text-decoration: none;
 }
 
 .card {
   background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: 2.5rem 2rem;
   width: 100%;
   max-width: 400px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
 }
 
 .footer {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-light);
   text-align: center;
 }

@@ -35,8 +35,7 @@ export default async function AppLayout({
     <div className={styles.shell}>
       <nav className={styles.nav}>
         <Link href="/dashboard" className={styles.brand}>
-          <span className={styles.brandIcon}>⚽</span>
-          Roundpics
+          Roundpicks
         </Link>
         <div className={styles.navActions}>
           <span className={styles.navName}>

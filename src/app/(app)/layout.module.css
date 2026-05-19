@@ -1,15 +1,16 @@
 .shell {
   min-height: 100vh;
+  background: #fff;
   display: flex;
   flex-direction: column;
 }
 
 /* ── Nav ── */
 .nav {
-  background: var(--color-navy);
-  color: #fff;
-  padding: 0 1.5rem;
-  height: 56px;
+  background: #fff;
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 2rem;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -17,27 +18,22 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
 }
 
 .brand {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-weight: 800;
-  font-size: 1.1rem;
-  color: #fff;
+  font-family: var(--font-display-family);
+  font-size: 1.75rem;
+  font-weight: 400;
+  background: linear-gradient(90deg, var(--color-brand-from), var(--color-brand-to));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   text-decoration: none;
-  letter-spacing: -0.01em;
+  line-height: 1;
 }
 
 .brand:hover {
   text-decoration: none;
-  opacity: 0.9;
-}
-
-.brandIcon {
-  font-size: 1.25rem;
 }
 
 .navActions {
@@ -47,24 +43,10 @@
 }
 
 .navName {
-  font-size: 0.85rem;
-  color: rgba(255,255,255,0.65);
-}
-
-.signOutBtn {
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.2);
-  color: #fff;
-  font-size: 0.8rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
   font-weight: 500;
-  padding: 0.35rem 0.85rem;
-  border-radius: var(--radius-full);
-  cursor: pointer;
-  transition: background 150ms ease;
-}
-
-.signOutBtn:hover {
-  background: rgba(255,255,255,0.22);
+  color: var(--color-text-muted);
 }
 
 /* ── Main content ── */
