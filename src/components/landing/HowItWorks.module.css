@@ -1,0 +1,131 @@
+.section {
+  background: var(--color-paper-deep);
+  padding: var(--py) var(--px);
+  color: #fff;
+}
+
+.inner {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.h2 {
+  margin-top: 12px;
+  max-width: 720px;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: clamp(32px, 5vw, 64px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: #fff;
+}
+
+.grid {
+  margin-top: 56px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+  padding: 36px 28px 28px;
+  border-right: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.stepLast {
+  border-right: none;
+}
+
+.stepNum {
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 72px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.stepTitle {
+  margin-top: 28px;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.stepBody {
+  margin-top: 10px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* ── Tablet: 2-col ── */
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    margin-top: 40px;
+  }
+
+  .step {
+    min-height: 220px;
+    padding: 28px 24px 24px;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  }
+
+  /* remove bottom border from last two items */
+  .step:nth-child(3),
+  .stepLast {
+    border-bottom: none;
+  }
+
+  /* right border between the two columns */
+  .step:nth-child(odd) {
+    border-right: 1px solid rgba(255, 255, 255, 0.10);
+  }
+}
+
+/* ── Mobile: 1-col ── */
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+    margin-top: 32px;
+  }
+
+  .step {
+    min-height: unset;
+    padding: 24px 0;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  }
+
+  .step:nth-child(odd) {
+    border-right: none;
+  }
+
+  .step:nth-child(3) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  }
+
+  .stepLast {
+    border-bottom: none;
+  }
+
+  .stepNum {
+    font-size: 56px;
+  }
+
+  .stepTitle {
+    margin-top: 16px;
+    font-size: 20px;
+  }
+}

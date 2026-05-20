@@ -1,0 +1,241 @@
+.section {
+  background: var(--color-paper);
+  padding: 0 var(--px);
+}
+
+.inner {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  align-items: center;
+  gap: 64px;
+  min-height: 640px;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 100px 0;
+}
+
+/* ── Left copy ── */
+.eyebrow {
+  color: var(--color-teal);
+  margin-bottom: 24px;
+}
+
+.h1 {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: clamp(48px, 8vw, 96px);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  color: var(--color-ink);
+}
+
+.italic {
+  font-style: italic;
+  font-weight: 600;
+}
+
+.body {
+  margin-top: 32px;
+  max-width: 460px;
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--color-ink-soft);
+}
+
+.ctas {
+  margin-top: 36px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.primaryBtn {
+  border-radius: var(--radius-md);
+  background: var(--gradient-brand);
+  padding: 16px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 121, 145, 0.30);
+  text-decoration: none;
+  display: inline-block;
+  line-height: 1;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.primaryBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(0, 121, 145, 0.38);
+  text-decoration: none;
+  color: var(--color-ink);
+}
+
+.secondaryBtn {
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(6, 39, 49, 0.18);
+  padding: 16px 22px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-ink);
+  background: transparent;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  line-height: 1;
+  transition: background 150ms ease;
+}
+
+.secondaryBtn:hover {
+  background: rgba(6, 39, 49, 0.04);
+  text-decoration: none;
+  color: var(--color-ink);
+}
+
+/* ── Leaderboard panel ── */
+.panel {
+  position: relative;
+  min-height: 520px;
+  overflow: hidden;
+  border-radius: 24px;
+  background: var(--gradient-brand);
+  padding: 32px;
+  color: var(--color-ink);
+  box-shadow: 0 30px 80px rgba(0, 121, 145, 0.25);
+}
+
+.stencil {
+  pointer-events: none;
+  user-select: none;
+  position: absolute;
+  right: -40px;
+  bottom: -90px;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 480px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: rgba(6, 39, 49, 0.12);
+}
+
+.panelEyebrow {
+  color: rgba(6, 39, 49, 0.70);
+}
+
+.rows {
+  position: relative;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(6, 39, 49, 0.08);
+  background: rgba(255, 255, 255, 0.55);
+  padding: 14px 18px;
+  color: var(--color-ink);
+  backdrop-filter: blur(8px);
+}
+
+.rowYou {
+  border-color: rgba(120, 255, 214, 0.40);
+  background: rgba(6, 39, 49, 0.92);
+  color: var(--color-mint);
+}
+
+.rowRank {
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.rowName {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.hotBadge {
+  margin-left: 8px;
+  border-radius: 4px;
+  background: var(--color-ink);
+  padding: 2px 6px;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--color-mint);
+}
+
+.rowPoints {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.panelFooter {
+  position: absolute;
+  right: 32px;
+  bottom: 24px;
+  left: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(6, 39, 49, 0.70);
+}
+
+/* ── Tablet: stack, panel below ── */
+@media (max-width: 1024px) {
+  .inner {
+    grid-template-columns: 1fr;
+    min-height: unset;
+    padding: 72px 0;
+    gap: 48px;
+  }
+
+  .body {
+    max-width: 100%;
+  }
+}
+
+/* ── Mobile: hide panel, tighten up ── */
+@media (max-width: 640px) {
+  .inner {
+    padding: 52px 0;
+    gap: 36px;
+  }
+
+  .panel {
+    display: none;
+  }
+
+  .body {
+    font-size: 16px;
+    margin-top: 20px;
+  }
+
+  .ctas {
+    flex-direction: column;
+    margin-top: 28px;
+  }
+
+  .primaryBtn,
+  .secondaryBtn {
+    text-align: center;
+    width: 100%;
+  }
+}
