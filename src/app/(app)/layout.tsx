@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/server-admin";
 import SignOutButton from "@/components/SignOutButton";
 import FeedbackWidget from "@/components/FeedbackWidget";
+import { Logo } from "@/components/landing/Logo";
 import styles from "./layout.module.css";
 
 export default async function AppLayout({
@@ -35,7 +36,7 @@ export default async function AppLayout({
     <div className={styles.shell}>
       <nav className={styles.nav}>
         <Link href="/dashboard" className={styles.brand}>
-          Roundpicks
+          <Logo />
         </Link>
         <div className={styles.navActions}>
           <span className={styles.navName}>

@@ -174,7 +174,6 @@ export default async function GroupPage({ params }: Props) {
   const knockoutsStarted = group.phase1_locked || (!!phase1Deadline && now >= phase1Deadline);
 
   const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/groups/join/${group.invite_code}`;
-  const rankEmoji = ["🥇", "🥈", "🥉"];
 
   return (
     <>
@@ -230,39 +229,38 @@ export default async function GroupPage({ params }: Props) {
         </Link>
       </div>
 
-      <h2 className={styles.sectionTitle}>Leaderboard</h2>
       <div className={styles.leaderboard}>
+        <div className={`eyebrow ${styles.lbEyebrow}`}>Leaderboard · {group.name}</div>
         {members.length === 0 && (
           <p className={styles.noPicksMsg}>No participants yet. Share the invite link!</p>
         )}
-        {members.map((m, i) => (
-          <div key={m.userId} className={`${styles.lbRow} ${m.userId === user!.id ? styles.me : ""}`}>
-            <span className={`${styles.lbRank} ${hasGroupResults && i === 0 ? styles.gold : hasGroupResults && i === 1 ? styles.silver : hasGroupResults && i === 2 ? styles.bronze : ""}`}>
-              {hasGroupResults && i < 3 ? rankEmoji[i] : i + 1}
-            </span>
-            <span className={styles.lbName}>
-              {m.name} {m.userId === user!.id ? "(you)" : ""}
-            </span>
-            <span className={styles.lbScore}>
-              {hasGroupResults && m.score !== null ? (
-                <span className={styles.lbPoints}>
-                  {m.score} pts
-                  {m.score > 0 && (
-                    <span className={styles.lbBreakdown}>
-                      {m.groupScore}
-                      {m.bestThirdScore !== null ? `+${m.bestThirdScore}` : ""}
-                      {m.knockoutScore !== null ? `+${m.knockoutScore}` : ""}
-                    </span>
-                  )}
-                </span>
-              ) : m.groupsSubmitted < 12 ? (
-                <span className={styles.lbPending}>{m.groupsSubmitted}/12 picked</span>
-              ) : (
-                <span className={styles.lbDone}>Picks in ✓</span>
-              )}
-            </span>
-          </div>
-        ))}
+        <ul className={styles.lbList}>
+          {members.map((m, i) => (
+            <li key={m.userId} className={`${styles.lbRow} ${m.userId === user!.id ? styles.me : ""}`}>
+              <span className={styles.lbRank}>{String(i + 1).padStart(2, "0")}</span>
+              <span className={styles.lbName}>
+                {m.name}{m.userId === user!.id ? " (you)" : ""}
+                {hasGroupResults && i === 0 && <span className={styles.hotBadge}>HOT</span>}
+              </span>
+              <span className={styles.lbScore}>
+                {hasGroupResults && m.score !== null ? (
+                  <span className={styles.lbPoints}>
+                    {m.score}
+                    {m.score > 0 && (
+                      <span className={styles.lbBreakdown}>
+                        {m.groupScore}{m.bestThirdScore !== null ? `+${m.bestThirdScore}` : ""}{m.knockoutScore !== null ? `+${m.knockoutScore}` : ""}
+                      </span>
+                    )}
+                  </span>
+                ) : m.groupsSubmitted < 12 ? (
+                  <span className={styles.lbPending}>{m.groupsSubmitted}/12</span>
+                ) : (
+                  <span className={styles.lbDone}>✓</span>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
     </>
   );

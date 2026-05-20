@@ -1,35 +1,34 @@
 import type { Metadata } from "next";
-import { Anton, Montserrat, Poppins } from "next/font/google";
+import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const anton = Anton({
-  weight: "400",
+const display = Bricolage_Grotesque({
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
 });
 
-const montserrat = Montserrat({
+const sans = Geist({
   subsets: ["latin"],
-  variable: "--font-ui",
+  variable: "--font-sans",
   display: "swap",
 });
 
-const poppins = Poppins({
-  weight: ["300", "400", "500", "600"],
+const mono = Geist_Mono({
   subsets: ["latin"],
-  variable: "--font-body",
+  variable: "--font-mono",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Roundpicks — World Cup 2026 Predictions",
-  description: "Predict the World Cup 2026 with your friends and family. Free, fun, no gambling.",
+  title: "RoundPicks — Predict the game. Beat your mates.",
+  description:
+    "Start a group, predict every round of the World Cup, and watch the leaderboard sort the pundits from the wishful thinkers. Free, no money on the line.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${anton.variable} ${montserrat.variable} ${poppins.variable}`}>
+    <html lang="en" className={`${display.variable} ${sans.variable} ${mono.variable}`}>
       <body>{children}</body>
     </html>
   );

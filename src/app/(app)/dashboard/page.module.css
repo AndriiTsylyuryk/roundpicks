@@ -1,3 +1,4 @@
+/* ── Header ── */
 .header {
   display: flex;
   align-items: center;
@@ -8,27 +9,31 @@
 }
 
 .title {
-  font-size: 1.5rem;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
 }
 
 .createBtn {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: var(--color-primary);
-  color: #fff;
-  font-weight: 700;
+  background: var(--color-ink);
+  color: var(--color-mint);
+  font-weight: 600;
   font-size: 0.9rem;
   padding: 0.65rem 1.25rem;
   border-radius: var(--radius-full);
   text-decoration: none;
-  transition: background 150ms ease;
-  box-shadow: 0 2px 8px rgba(212, 22, 60, 0.3);
+  transition: opacity 150ms ease;
 }
 
 .createBtn:hover {
-  background: var(--color-primary-dark);
+  opacity: 0.85;
   text-decoration: none;
+  color: var(--color-mint);
 }
 
 /* ── Group cards ── */
@@ -39,23 +44,25 @@
 }
 
 .card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: var(--gradient-brand);
+  padding: 28px;
   text-decoration: none;
-  color: inherit;
+  color: var(--color-ink);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  box-shadow: 0 8px 32px rgba(0, 121, 145, 0.18);
   transition: box-shadow 150ms ease, transform 150ms ease;
 }
 
 .card:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 16px 48px rgba(0, 121, 145, 0.28);
   transform: translateY(-2px);
   text-decoration: none;
+  color: var(--color-ink);
 }
 
 .cardTop {
@@ -66,36 +73,39 @@
 }
 
 .cardName {
-  font-size: 1.0625rem;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 1.375rem;
   font-weight: 700;
-  color: var(--color-navy);
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+  line-height: 1.15;
 }
 
 .creatorBadge {
-  font-size: 0.7rem;
-  font-weight: 700;
-  background: var(--color-gold-light);
-  color: #7a5000;
-  padding: 0.2rem 0.55rem;
-  border-radius: var(--radius-full);
-  white-space: nowrap;
+  flex-shrink: 0;
+  background: var(--color-ink);
+  color: var(--color-mint);
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
 }
 
 .eventTag {
-  display: inline-block;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--color-navy);
-  background: #f0f4ff;
-  border: 1px solid #c7d7fd;
-  border-radius: var(--radius-full);
-  padding: 0.15rem 0.55rem;
-  margin-bottom: 0.35rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: rgba(6, 39, 49, 0.65);
 }
 
 .cardMeta {
   font-size: 0.8rem;
-  color: var(--color-text-muted);
+  color: rgba(6, 39, 49, 0.65);
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
@@ -103,25 +113,27 @@
 
 .phaseBadge {
   display: inline-block;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.85rem;
   border-radius: var(--radius-full);
-  background: var(--color-surface-2);
-  color: var(--color-text-muted);
-  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(6, 39, 49, 0.08);
+  backdrop-filter: blur(8px);
+  color: var(--color-ink);
+  align-self: flex-start;
 }
 
 .phaseBadge.locked {
-  background: #fff5f5;
-  color: var(--color-error);
-  border-color: #fed7d7;
+  background: rgba(6, 39, 49, 0.75);
+  border-color: transparent;
+  color: rgba(255, 255, 255, 0.70);
 }
 
 .phaseBadge.open {
-  background: #f0fff4;
-  color: var(--color-success);
-  border-color: #c6f6d5;
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(6, 39, 49, 0.12);
+  color: var(--color-ink);
 }
 
 /* ── Empty state ── */
@@ -129,7 +141,7 @@
   grid-column: 1 / -1;
   text-align: center;
   padding: 4rem 1rem;
-  color: var(--color-text-muted);
+  color: var(--color-ink-soft);
 }
 
 .emptyIcon {
@@ -138,30 +150,49 @@
 }
 
 .empty h2 {
-  font-size: 1.125rem;
-  color: var(--color-navy);
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
   margin-bottom: 0.5rem;
 }
 
 .empty p {
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   margin-bottom: 1.5rem;
+  color: var(--color-ink-soft);
 }
 
 .emptyBtn {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: var(--color-primary);
-  color: #fff;
+  background: var(--gradient-brand);
+  color: var(--color-ink);
   font-weight: 700;
   font-size: 0.9rem;
   padding: 0.65rem 1.5rem;
   border-radius: var(--radius-full);
   text-decoration: none;
+  box-shadow: 0 4px 16px rgba(0, 121, 145, 0.25);
+  transition: opacity 150ms ease;
 }
 
 .emptyBtn:hover {
-  background: var(--color-primary-dark);
+  opacity: 0.9;
   text-decoration: none;
+  color: var(--color-ink);
+}
+
+/* ── Mobile ── */
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    border-radius: 16px;
+    padding: 22px;
+  }
 }

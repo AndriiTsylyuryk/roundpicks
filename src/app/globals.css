@@ -5,44 +5,54 @@
 }
 
 :root {
-  --color-brand-from: #007991;
-  --color-brand-to: #78ffd6;
+  /* ── Brand palette ── */
+  --color-ink:        #062731;
+  --color-ink-soft:   #0d3540;
+  --color-paper:      #f2efe7;
+  --color-paper-deep: #06222b;
+  --color-paper-card: #ffffff;
+  --color-teal:       #007991;
+  --color-teal-deep:  #003a47;
+  --color-mint:       #78ffd6;
+  --gradient-brand:   linear-gradient(135deg, #007991 0%, #78ffd6 100%);
 
-  --color-primary: #007991;
-  --color-primary-dark: #005f73;
+  /* ── Legacy aliases (auth / app components) ── */
+  --color-primary:       var(--color-teal);
+  --color-primary-dark:  var(--color-teal-deep);
   --color-primary-light: #4db6c7;
+  --color-navy:          var(--color-ink);
+  --color-navy-light:    var(--color-ink-soft);
+  --color-bg:            var(--color-paper);
+  --color-surface:       var(--color-paper-card);
+  --color-surface-2:     #ede8df;
+  --color-border:        rgba(6, 39, 49, 0.12);
+  --color-text:          var(--color-ink);
+  --color-text-muted:    var(--color-ink-soft);
+  --color-text-light:    #7a8fa0;
+  --color-error:         #e53e3e;
+  --color-success:       #1a7f4b;
+  --color-gold:          #f0b429;
 
-  --color-navy: #0d1f3c;
-  --color-navy-light: #1a3260;
-  --color-gold: #f0b429;
-  --color-gold-light: #ffd97d;
-  --color-green: #1a7f4b;
+  /* ── Legacy brand gradient refs ── */
+  --color-brand-from: var(--color-teal);
+  --color-brand-to:   var(--color-mint);
 
-  --color-bg: #ffffff;
-  --color-surface: #ffffff;
-  --color-surface-2: #f0f2f5;
-  --color-border: #e2e6ea;
+  /* ── Responsive spacing tokens ── */
+  --px: 56px;
+  --py: 110px;
+  --nav-h: 76px;
 
-  --color-text: #1a1a2e;
-  --color-text-muted: #6b7a99;
-  --color-text-light: #9aa3b8;
-
-  --color-error: #e53e3e;
-  --color-success: #1a7f4b;
-
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  /* ── Radii ── */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
   --radius-full: 9999px;
 
-  --shadow-sm: 0 1px 3px rgba(13, 31, 60, 0.08);
-  --shadow-md: 0 4px 16px rgba(13, 31, 60, 0.10);
-  --shadow-lg: 0 8px 32px rgba(13, 31, 60, 0.14);
-
-  --font-sans: var(--font-body), "Poppins", system-ui, sans-serif;
-  --font-sans-ui: var(--font-ui), "Montserrat", system-ui, sans-serif;
-  --font-display-family: var(--font-display), "Anton", sans-serif;
+  /* ── Shadows ── */
+  --shadow-sm: 0 1px 3px rgba(6, 39, 49, 0.08);
+  --shadow-md: 0 4px 16px rgba(6, 39, 49, 0.10);
+  --shadow-lg: 0 8px 32px rgba(6, 39, 49, 0.14);
 }
 
 html {
@@ -53,15 +63,15 @@ html {
 }
 
 body {
-  font-family: var(--font-sans);
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
   line-height: 1.6;
   min-height: 100vh;
 }
 
 a {
-  color: var(--color-primary);
+  color: var(--color-teal);
   text-decoration: none;
 }
 
@@ -77,7 +87,37 @@ button, input, select, textarea {
 h1, h2, h3, h4, h5, h6 {
   line-height: 1.3;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--color-ink);
+}
+
+/* ── Eyebrow / micro-label — used across all sections ── */
+.eyebrow {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
+/* ── Selection ── */
+::selection {
+  background-color: #78ffd6;
+  color: #062731;
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --px: 32px;
+    --py: 80px;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --px: 20px;
+    --py: 56px;
+    --nav-h: 64px;
+  }
 }
 
 .sr-only {

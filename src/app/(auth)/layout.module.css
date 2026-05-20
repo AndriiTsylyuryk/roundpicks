@@ -1,6 +1,6 @@
 .shell {
   min-height: 100vh;
-  background: #fff;
+  background: var(--color-paper);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -9,24 +9,8 @@
   gap: 1.5rem;
 }
 
-.brand {
-  font-family: var(--font-display-family);
-  font-size: 1.75rem;
-  font-weight: 400;
-  background: linear-gradient(90deg, var(--color-brand-from), var(--color-brand-to));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-decoration: none;
-  line-height: 1;
-}
-
-.brand:hover {
-  text-decoration: none;
-}
-
 .card {
-  background: var(--color-surface);
+  background: var(--color-paper-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: 2.5rem 2rem;
@@ -36,7 +20,9 @@
 }
 
 .footer {
-  font-size: 0.75rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.7rem;
   color: var(--color-text-light);
   text-align: center;
+  letter-spacing: 0.04em;
 }
