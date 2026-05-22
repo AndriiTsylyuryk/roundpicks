@@ -31,13 +31,24 @@ export default async function AdminPage({ params }: Props) {
     .maybeSingle();
 
   return (
-    <div className={styles.page}>
-      <Link href={`/groups/${groupId}`} className={styles.back}>← Back to group</Link>
-      <h1 className={styles.title}>⚙️ Admin: {group.name}</h1>
-      <AdminControls
-        group={group}
-        firstGroupKickoff={firstGroupMatch?.kickoff_at ?? null}
-      />
-    </div>
+    <>
+      <div className={styles.heroBanner} style={{ maxWidth: 680, margin: "0 auto 1.75rem" }}>
+        <div className={styles.heroOrb} />
+        <div className={styles.heroInner}>
+          <Link href={`/groups/${groupId}`} className={styles.heroBack}>← {group.name}</Link>
+          <div className={styles.heroLabels}>
+            <div className={`eyebrow ${styles.heroEyebrow}`}>Admin Panel</div>
+            <h1 className={styles.heroTitle}>⚙️ {group.name}</h1>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.page}>
+        <AdminControls
+          group={group}
+          firstGroupKickoff={firstGroupMatch?.kickoff_at ?? null}
+        />
+      </div>
+    </>
   );
 }

@@ -9,7 +9,7 @@
 .nav {
   background: var(--color-paper);
   border-bottom: 1px solid rgba(6, 39, 49, 0.06);
-  padding: 0 var(--px);
+  padding: 0 24px;
   height: var(--nav-h);
   display: flex;
   align-items: center;
@@ -36,23 +36,28 @@
   gap: 0.75rem;
 }
 
-.navName {
+.navLink {
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--color-ink-soft);
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.navLink:hover {
+  color: var(--color-ink);
+  text-decoration: none;
 }
 
 /* ── Main content ── */
 .main {
   flex: 1;
-  padding: 2rem var(--px);
-  max-width: 960px;
-  margin: 0 auto;
+  padding: 2rem 24px;
   width: 100%;
 }
 
 @media (max-width: 640px) {
-  .navName {
+  .navLink {
     display: none;
   }
 }

@@ -2,8 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/server-admin";
-import SignOutButton from "@/components/SignOutButton";
-import FeedbackWidget from "@/components/FeedbackWidget";
+import NavUserMenu from "@/components/NavUserMenu";
 import { Logo } from "@/components/landing/Logo";
 import styles from "./layout.module.css";
 
@@ -39,14 +38,12 @@ export default async function AppLayout({
           <Logo />
         </Link>
         <div className={styles.navActions}>
-          <span className={styles.navName}>
-            {displayName}
-          </span>
-          <SignOutButton />
+          <Link href="/dashboard" className={styles.navLink}>Dashboard</Link>
+          <Link href="/help" className={styles.navLink}>Help</Link>
+          <NavUserMenu displayName={displayName} />
         </div>
       </nav>
       <main className={styles.main}>{children}</main>
-      <FeedbackWidget />
     </div>
   );
 }

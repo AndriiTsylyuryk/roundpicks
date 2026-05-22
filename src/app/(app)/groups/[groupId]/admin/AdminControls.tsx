@@ -57,51 +57,54 @@ export default function AdminControls({
     <>
       {/* Phase 1 */}
       <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>📋 Phase 1 — Group Stage Predictions</h2>
-
-        <div className={styles.row}>
-          <div>
-            <div className={styles.label}>Status</div>
-            <span className={`${styles.statusBadge} ${(group.phase1_locked || phase1AutoClosed) ? styles.locked : styles.open}`}>
-              {group.phase1_locked
-                ? "🔒 Manually locked"
-                : phase1AutoClosed
-                ? "🔒 Auto-closed (first match started)"
-                : "✅ Open"}
-            </span>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Phase 1 — Group Stage Predictions</h2>
+        </div>
+        <div className={styles.sectionBody}>
+          <div className={styles.row}>
+            <div>
+              <div className={styles.label}>Status</div>
+              <span className={`${styles.statusBadge} ${(group.phase1_locked || phase1AutoClosed) ? styles.locked : styles.open}`}>
+                {group.phase1_locked
+                  ? "🔒 Manually locked"
+                  : phase1AutoClosed
+                  ? "🔒 Auto-closed (first match started)"
+                  : "✅ Open"}
+              </span>
+            </div>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              {group.phase1_locked ? (
+                <button className={`${styles.actionBtn} ${styles.unlockBtn}`} onClick={() => setPhase1Locked(false)} disabled={saving}>
+                  Reopen (override)
+                </button>
+              ) : (
+                <button className={`${styles.actionBtn} ${styles.lockBtn}`} onClick={() => setPhase1Locked(true)} disabled={saving}>
+                  Lock now (override)
+                </button>
+              )}
+            </div>
           </div>
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            {group.phase1_locked ? (
-              <button className={`${styles.actionBtn} ${styles.unlockBtn}`} onClick={() => setPhase1Locked(false)} disabled={saving}>
-                Reopen (override)
-              </button>
+
+          <div className={styles.sectionNote}>
+            {phase1AutoDeadline ? (
+              <>Auto-closes at first group match kickoff: <strong>{phase1AutoDeadline}</strong></>
             ) : (
-              <button className={`${styles.actionBtn} ${styles.lockBtn}`} onClick={() => setPhase1Locked(true)} disabled={saving}>
-                Lock now (override)
-              </button>
+              "Auto-deadline not set yet — fixtures not synced yet."
             )}
           </div>
-        </div>
-
-        <div style={{ marginTop: "0.75rem" }}>
-          {phase1AutoDeadline ? (
-            <p className={styles.resultsNote}>
-              Auto-closes at first group match kickoff: <strong>{phase1AutoDeadline}</strong>
-            </p>
-          ) : (
-            <p className={styles.resultsNote}>
-              Auto-deadline not set yet — fixtures not synced yet.
-            </p>
-          )}
         </div>
       </div>
 
       {/* Phase 2: Knockout Picks */}
       <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>🏆 Phase 2 — Knockout Picks</h2>
-        <p className={styles.resultsNote}>
-          Voting for each match automatically closes at kickoff. Fixtures, scores, and group results sync automatically every 10 minutes.
-        </p>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Phase 2 — Knockout Picks</h2>
+        </div>
+        <div className={styles.sectionBody}>
+          <p className={styles.resultsNote}>
+            Voting for each match automatically closes at kickoff. Fixtures, scores, and group results sync automatically every 10 minutes.
+          </p>
+        </div>
       </div>
 
       {msg && (

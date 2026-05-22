@@ -554,3 +554,19 @@ create policy "Users can update own knockout_picks"
     auth.uid() = user_id
     and now() < (select kickoff_at from wc_matches where id = match_id)
   );
+
+-- group_picks: add delete policy so users can clear their own picks while phase 1 is open
+create policy "Users can delete own picks"
+  on public.group_picks for delete
+  using (
+    auth.uid() = user_id
+    and public.phase1_open_for_group(group_id)
+  );
+
+-- knockout_picks: add delete policy so users can un-pick before match kickoff
+create policy "Users can delete own knockout_picks"
+  on public.knockout_picks for delete
+  using (
+    auth.uid() = user_id
+    and now() < (select kickoff_at from wc_matches where id = match_id)
+  );

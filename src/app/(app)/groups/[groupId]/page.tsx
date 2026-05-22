@@ -6,6 +6,7 @@ import { calcGroupScore, calcBestThirdScore, calcKnockoutScore } from "@/lib/sco
 import CopyInviteButton from "./CopyInviteButton";
 import ParticipantsList from "./ParticipantsList";
 import GroupNameEditor from "./GroupNameEditor";
+import LeaveGroupButton from "./LeaveGroupButton";
 import styles from "./page.module.css";
 
 interface GroupRow {
@@ -29,7 +30,6 @@ export default async function GroupPage({ params }: Props) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Nested join result — cast to GroupRow since Supabase types don't model FK relations
   const { data: group } = await supabase
     .from("groups")
     .select("*, group_members(user_id), events(name, slug)")
@@ -44,7 +44,6 @@ export default async function GroupPage({ params }: Props) {
 
   const memberIds = (group.group_members ?? []).map((m) => m.user_id);
 
-  // Fetch display names via admin client — profiles RLS only exposes own row
   const admin = createAdminClient();
   const safeIds = memberIds.length > 0 ? memberIds : ["00000000-0000-0000-0000-000000000000"];
   const { data: profiles } = await admin
@@ -160,6 +159,9 @@ export default async function GroupPage({ params }: Props) {
         : b.groupsSubmitted - a.groupsSubmitted
     );
 
+  const currentUserMember = members.find(m => m.userId === user!.id);
+  const userHasAllGroupPicks = (currentUserMember?.groupsSubmitted ?? 0) >= 12;
+
   const { data: firstGroupMatch } = await supabase
     .from("wc_matches")
     .select("kickoff_at")
@@ -177,6 +179,7 @@ export default async function GroupPage({ params }: Props) {
 
   return (
     <>
+      {/* ── Header ── */}
       <div className={styles.header}>
         <div className={styles.topRow}>
           <Link href="/dashboard" className={styles.back}>← My groups</Link>
@@ -190,46 +193,76 @@ export default async function GroupPage({ params }: Props) {
           ? <GroupNameEditor groupId={groupId} initialName={group.name} />
           : <h1 className={styles.groupName}>{group.name}</h1>
         }
-        {group.events && (
-          <div className={styles.eventTag}>⚽ {group.events.name}</div>
-        )}
-        <div className={styles.groupMeta}>
-          <ParticipantsList names={members.map((m) => m.name)} />
-          {phase1Deadline && phase1IsOpen && (
-            <span>⏰ Group picks close: {phase1Deadline.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-          )}
-        </div>
       </div>
 
-      {members.length >= group.max_participants ? (
-        <div className={styles.inviteBoxFull}>
-          <span>🔒 Group is full ({members.length}/{group.max_participants})</span>
-          {isCreator && <span className={styles.inviteFullHint}>Increase the limit in ⚙️ Admin to allow more members.</span>}
-        </div>
-      ) : (
-        <div className={styles.inviteBox}>
-          <div>
-            <div className={styles.inviteLabel}>Invite link — share with friends ({members.length}/{group.max_participants})</div>
-            <div className={styles.inviteUrl}>{inviteUrl}</div>
-          </div>
-          <CopyInviteButton url={inviteUrl} />
-        </div>
-      )}
-
-      <div className={styles.phaseBar}>
-        <span className={`${styles.phaseBadge} ${phase1IsOpen || knockoutsStarted ? styles.open : styles.locked}`}>
-          {phase1IsOpen
-            ? "✅ Group stage predictions open"
-            : knockoutsStarted
-            ? "⚽ Knockout picks — vote per match"
-            : "🔒 Predictions not started"}
+      {/* ── How it works ── */}
+      <div className={styles.howItWorks}>
+        <span className={styles.howItWorksStripe} aria-hidden />
+        <span className={styles.howItWorksBadge}>How it works</span>
+        <span>
+          Rank each WC group 1–3:{' '}
+          <strong>+2 pts</strong> for the correct slot,{' '}
+          <strong>+1</strong> for the right team in the wrong rank.{' '}
+          Best third: <strong>+2</strong> per team.{' '}
+          Knockout winners: <strong>1–5 pts</strong> per correct call.
         </span>
-        <Link href={`/groups/${groupId}/predict`} className={styles.predictBtn}>
-          {phase1IsOpen ? "Make group picks →" : "View & pick matches →"}
-        </Link>
       </div>
 
-      <div className={styles.leaderboard}>
+      {/* ── CTA card ── */}
+      <div className={styles.ctaCard}>
+        <div className={styles.ctaOrb} />
+        <div className={styles.ctaTop}>
+          <div>
+            <div className={`eyebrow ${styles.ctaEyebrow}`}>Predictions open</div>
+            <div className={styles.ctaHeadline}>
+              {phase1IsOpen ? "Group stage to call." : "Knockout picks to call."}
+            </div>
+            <div className={styles.ctaMeta}>
+              <ParticipantsList names={members.map((m) => m.name)} />
+              {phase1Deadline && phase1IsOpen && (
+                <span>Closes {phase1Deadline.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+              )}
+            </div>
+          </div>
+          <Link
+            href={`/groups/${groupId}/predict`}
+            className={`${styles.ctaPredictBtn} ${userHasAllGroupPicks && phase1IsOpen ? styles.ctaPredictBtnDone : ""}`}
+          >
+            {userHasAllGroupPicks && phase1IsOpen ? "Picks submitted · Edit picks" : "Make Roundpick"}
+          </Link>
+        </div>
+        <div className={styles.ctaDivider} />
+        {members.length >= group.max_participants ? (
+          <div className={styles.ctaInviteFull}>
+            <span>🔒 Group full ({members.length}/{group.max_participants})</span>
+            {isCreator && <span className={styles.ctaFullHint}>Increase limit in ⚙️ Admin.</span>}
+          </div>
+        ) : (
+          <div className={styles.ctaInviteRow}>
+            <div>
+              <div className={styles.ctaInviteLabel}>Invite link · {members.length}/{group.max_participants}</div>
+              <div className={styles.ctaInviteUrl}>{inviteUrl}</div>
+            </div>
+            <CopyInviteButton url={inviteUrl} />
+          </div>
+        )}
+      </div>
+
+      {/* ── Phase strip ── */}
+      <div className={styles.phaseStrip}>
+        <div className={`${styles.phaseItem} ${!knockoutsStarted ? styles.phaseItemActive : styles.phaseItemDone}`}>
+          <span className={styles.phaseDot} />
+          <span className={styles.phaseLabel}>Group stage</span>
+        </div>
+        <div className={styles.phaseLine} />
+        <div className={`${styles.phaseItem} ${knockoutsStarted ? styles.phaseItemActive : styles.phaseItemPending}`}>
+          <span className={styles.phaseDot} />
+          <span className={styles.phaseLabel}>Knockouts</span>
+        </div>
+      </div>
+
+      {/* ── Leaderboard ── */}
+      <div className={styles.leaderboard} style={{ marginBottom: "1.5rem" }}>
         <div className={`eyebrow ${styles.lbEyebrow}`}>Leaderboard · {group.name}</div>
         {members.length === 0 && (
           <p className={styles.noPicksMsg}>No participants yet. Share the invite link!</p>
@@ -262,6 +295,12 @@ export default async function GroupPage({ params }: Props) {
           ))}
         </ul>
       </div>
+
+      {!isCreator && (
+        <div className={styles.leaveRow}>
+          <LeaveGroupButton groupId={groupId} />
+        </div>
+      )}
     </>
   );
 }

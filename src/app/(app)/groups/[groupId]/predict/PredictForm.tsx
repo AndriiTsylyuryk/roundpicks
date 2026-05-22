@@ -72,6 +72,7 @@ export default function PredictForm({
 
   const [ranks, setRanks] = useState<Record<string, GroupRanks>>(initRanks);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [savedGroups, setSavedGroups] = useState<Set<string>>(
     new Set(existingPicks.map((p) => p.wc_group))
   );
@@ -112,16 +113,22 @@ export default function PredictForm({
   const progress = completedGroups.length;
   const allComplete = progress === 12;
 
+  const groupsToDelete = WC_GROUPS.filter(
+    (g) => savedGroups.has(g) && !completedGroups.includes(g)
+  );
+
   const hasUnsaved = completedGroups.some((g) => !savedGroups.has(g)) ||
     WC_GROUPS.some((g) => {
       const saved = existingPicks.find((p) => p.wc_group === g);
       if (!saved) return false;
       const r = ranks[g];
       return saved.rank1_id !== r[0] || saved.rank2_id !== r[1];
-    });
+    }) ||
+    groupsToDelete.length > 0;
 
   async function save() {
     setSaving(true);
+    setSaveError(null);
     const supabase = createClient();
     const upserts = completedGroups.map((g) => ({
       group_id: groupId,
@@ -132,9 +139,28 @@ export default function PredictForm({
       rank3_id: null,
       updated_at: new Date().toISOString(),
     }));
+
+    const errors: string[] = [];
+
     if (upserts.length > 0) {
-      await supabase.from("group_picks").upsert(upserts, { onConflict: "group_id,user_id,wc_group" });
+      const { error } = await supabase.from("group_picks").upsert(upserts, { onConflict: "group_id,user_id,wc_group" });
+      if (error) errors.push(error.message);
     }
+    await Promise.all(groupsToDelete.map(async (g) => {
+      const { error } = await supabase.from("group_picks")
+        .delete()
+        .eq("group_id", groupId)
+        .eq("user_id", userId)
+        .eq("wc_group", g);
+      if (error) errors.push(error.message);
+    }));
+
+    if (errors.length > 0) {
+      setSaveError("Save failed. Please try again.");
+      setSaving(false);
+      return;
+    }
+
     setSavedGroups(new Set(completedGroups));
     setSaving(false);
     if (allComplete) { setBestThirdEditMode(existingBestThirdIds.length > 0); setStep(2); }
@@ -220,14 +246,24 @@ export default function PredictForm({
                 {groupRanks.map((teamId, i) => {
                   const team = teams.find((t) => t.id === teamId);
                   const pts = rankPoints[i];
+                  const canRemove = !isLocked && !!team;
                   return (
-                    <div key={i} className={styles.rankSlot} style={{ borderColor: teamId ? RANK_COLORS[i] : undefined }}>
+                    <div
+                      key={i}
+                      role={canRemove ? "button" : undefined}
+                      tabIndex={canRemove ? 0 : undefined}
+                      className={`${styles.rankSlot} ${canRemove ? styles.rankSlotRemovable : ""}`}
+                      style={{ borderColor: teamId ? RANK_COLORS[i] : undefined }}
+                      onClick={canRemove ? () => tap(g, team.id) : undefined}
+                      onKeyDown={canRemove ? (e) => { if (e.key === "Enter" || e.key === " ") tap(g, team.id); } : undefined}
+                    >
                       <span className={styles.rankNum} style={{ color: RANK_COLORS[i] }}>{RANK_LABELS[i]}</span>
                       {team ? (
                         <span className={styles.rankTeam}>{getFlag(team.name)} {team.name}</span>
                       ) : (
                         <span className={styles.rankEmpty}>—</span>
                       )}
+                      {canRemove && <span className={styles.rankRemoveHint}>×</span>}
                       {pts !== null && (
                         <span className={`${styles.rankPts} ${pts > 0 ? styles.rankPtsGood : styles.rankPtsBad}`}>
                           {pts > 0 ? `+${pts}` : "✗"}
@@ -239,27 +275,19 @@ export default function PredictForm({
               </div>
 
               <div className={styles.teams}>
-                {groupTeams.map((team) => {
-                  const rankIdx = groupRanks.indexOf(team.id);
-                  const isRanked = rankIdx !== -1;
+                {groupTeams.filter((t) => !groupRanks.includes(t.id)).map((team) => {
                   const allFilled = groupRanks.every((r) => r !== null);
-                  const isDisabled = isLocked || (!isRanked && allFilled);
+                  const isDisabled = isLocked || allFilled;
                   return (
                     <button
                       key={team.id}
                       type="button"
-                      className={`${styles.teamBtn} ${isRanked ? styles.teamBtnRanked : ""} ${isDisabled ? styles.teamBtnDisabled : ""}`}
+                      className={`${styles.teamBtn} ${isDisabled ? styles.teamBtnDisabled : ""}`}
                       onClick={() => tap(g, team.id)}
                       disabled={isDisabled}
-                      style={isRanked ? { borderColor: RANK_COLORS[rankIdx], background: `${RANK_COLORS[rankIdx]}14` } : undefined}
                     >
                       <span className={styles.teamFlag}>{getFlag(team.name)}</span>
                       <span className={styles.teamName}>{team.name}</span>
-                      {isRanked && (
-                        <span className={styles.teamRankBadge} style={{ background: RANK_COLORS[rankIdx] }}>
-                          {RANK_LABELS[rankIdx]}
-                        </span>
-                      )}
                     </button>
                   );
                 })}
@@ -276,13 +304,13 @@ export default function PredictForm({
       {!isLocked && (
         <div className={styles.saveBar}>
           <span className={styles.saveStatus}>
-            {hasUnsaved ? "Unsaved changes" : "All changes saved"}
+            {saveError ? saveError : hasUnsaved ? "Unsaved changes" : "All changes saved"}
           </span>
           <div className={styles.saveBtns}>
             <button
               className={styles.saveBtn}
               onClick={save}
-              disabled={saving || completedGroups.length === 0 || !hasUnsaved}
+              disabled={saving || !hasUnsaved}
             >
               {saving ? "Saving…" : "Save predictions"}
             </button>

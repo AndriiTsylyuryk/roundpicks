@@ -61,7 +61,6 @@ export default async function PredictPage({ params }: Props) {
     wc_group: string; rank1_id: string; rank2_id: string; rank3_id: string | null;
   }[];
 
-  // Official group results (for scoring)
   const { data: groupResultsRaw } = await supabase
     .from("wc_group_results")
     .select("wc_group, rank1_id, rank2_id, rank3_id");
@@ -70,12 +69,10 @@ export default async function PredictPage({ params }: Props) {
   }[];
   const hasGroupResults = groupResults.some((r) => r.rank1_id);
 
-  // Official best 3rd (for scoring)
   const { data: officialBestThirdRaw } = await supabase
     .from("wc_teams").select("id").eq("is_best_third", true);
   const officialBestThirdIds = (officialBestThirdRaw ?? []).map((t) => t.id);
 
-  // User's saved best 3rd picks
   const { data: bestThirdPick } = await supabase
     .from("best_third_picks")
     .select("team_ids")
@@ -84,7 +81,6 @@ export default async function PredictPage({ params }: Props) {
     .maybeSingle();
   const existingBestThirdIds: string[] = bestThirdPick?.team_ids ?? [];
 
-  // Phase 1 deadline from first GROUP match kickoff
   const { data: firstGroupMatch } = await supabase
     .from("wc_matches")
     .select("kickoff_at")
@@ -117,7 +113,6 @@ export default async function PredictPage({ params }: Props) {
     knockoutPicks = (koPicksRaw ?? []) as { match_id: string; winner_id: string }[];
   }
 
-  // Compute score totals (only when official results exist)
   const groupScore = hasGroupResults ? calcGroupScore(existingPicks, groupResults) : null;
   const bestThirdScore = officialBestThirdIds.length === 8
     ? calcBestThirdScore(existingBestThirdIds, officialBestThirdIds)
@@ -134,19 +129,23 @@ export default async function PredictPage({ params }: Props) {
 
   return (
     <>
-      <div className={styles.header}>
-        <Link href={`/groups/${groupId}`} className={styles.back}>← Back to group</Link>
-        <h1 className={styles.title}>Predictions</h1>
-        <p className={styles.subtitle}>
-          {phase1IsOpen
-            ? <>Rank <strong>1st, 2nd &amp; 3rd</strong> in each of the 12 groups and pick 8 best third-place qualifiers.{deadlineStr && <> Closes <strong>{deadlineStr}</strong>.</>}</>
-            : showKnockouts
-            ? "Group stage closed. Pick match winners — each match locks at kickoff."
-            : "Predictions open soon."}
-        </p>
+      {/* ── Dark banner ── */}
+      <div className={styles.heroBanner}>
+        <div className={styles.heroOrb} />
+        <div className={styles.heroInner}>
+          <Link href={`/groups/${groupId}`} className={styles.heroBack}>← {group.name}</Link>
+          <div className={styles.heroLabels}>
+            <div className={`eyebrow ${styles.heroEyebrow}`}>
+              {phase1IsOpen ? "Phase 1 · Group Rankings" : "Phase 2 · Knockout Picks"}
+            </div>
+            {deadlineStr && phase1IsOpen && (
+              <span className={styles.heroDeadline}>Closes {deadlineStr}</span>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Score summary — shown once any results are in */}
+      {/* Score summary */}
       {totalScore !== null && (
         <div className={styles.scoreSummary}>
           <div className={styles.scoreTotalLabel}>Your score</div>
@@ -186,21 +185,15 @@ export default async function PredictPage({ params }: Props) {
         officialBestThirdIds={officialBestThirdIds}
       />
 
-      {/* Phase 2+: Knockout match winners */}
+      {/* Phase 2: Knockout match winners */}
       {showKnockouts && (
-        <div className={styles.phaseSection}>
-          <h2 className={styles.phaseSectionTitle}>Knockout Picks</h2>
-          <p className={styles.phaseSectionSub}>
-            Pick the winner of each match. Voting closes at kickoff for each individual match.
-          </p>
-          <KnockoutForm
-            groupId={groupId}
-            userId={user.id}
-            matches={matches}
-            teams={teams}
-            existingPicks={knockoutPicks}
-          />
-        </div>
+        <KnockoutForm
+          groupId={groupId}
+          userId={user.id}
+          matches={matches}
+          teams={teams}
+          existingPicks={knockoutPicks}
+        />
       )}
     </>
   );
