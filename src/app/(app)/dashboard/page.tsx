@@ -18,6 +18,10 @@ interface StandingRow {
   points: number | null;
 }
 
+function fmtDate(d: Date): string {
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
@@ -40,6 +44,19 @@ export default async function DashboardPage() {
     (m: { group_id: string }) => m.group_id,
   );
 
+  const { data: event } = await supabase
+    .from("events")
+    .select("name, starts_at, ends_at")
+    .eq("slug", "wc2026")
+    .single<{ name: string; starts_at: string; ends_at: string } | null>();
+
+  const tournamentName = event?.name ?? "FIFA World Cup 2026";
+  const tournamentStart = event?.starts_at ? new Date(event.starts_at + "T00:00:00Z") : null;
+  const tournamentEnd = event?.ends_at ? new Date(event.ends_at + "T00:00:00Z") : null;
+  const tournamentRange = tournamentStart && tournamentEnd
+    ? `${fmtDate(tournamentStart)} – ${fmtDate(tournamentEnd)} · USA, Canada & Mexico`
+    : "USA, Canada & Mexico";
+
   if (groupIds.length === 0) {
     return (
       <>
@@ -49,10 +66,8 @@ export default async function DashboardPage() {
             <div className={`eyebrow ${styles.bannerEyebrow}`}>
               Active tournament
             </div>
-            <div className={styles.bannerTitle}>FIFA World Cup 2026</div>
-            <div className={styles.bannerSub}>
-              Jun 11 – Jul 19 · USA, Canada &amp; Mexico
-            </div>
+            <div className={styles.bannerTitle}>{tournamentName}</div>
+            <div className={styles.bannerSub}>{tournamentRange}</div>
           </div>
         </div>
         <div className={styles.header}>
@@ -155,18 +170,23 @@ export default async function DashboardPage() {
     for (const id of noProfileIds) nameById[id] = emailById[id] ?? "User";
   }
 
-  // Phase 1 countdown
-  const deadline = firstMatchResult.data?.kickoff_at
-    ? new Date(firstMatchResult.data.kickoff_at)
-    : new Date("2026-06-11T17:00:00Z");
+  // Phase deadline
   const now = new Date();
-  const msLeft = deadline.getTime() - now.getTime();
-  const phase1IsOpen = msLeft > 0;
-  const daysLeft = Math.max(0, Math.floor(msLeft / (1000 * 60 * 60 * 24)));
-  const hoursLeft = Math.max(
-    0,
-    Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-  );
+  const phase1Deadline = firstMatchResult.data?.kickoff_at
+    ? new Date(firstMatchResult.data.kickoff_at)
+    : null;
+  const phase1IsOpen = phase1Deadline ? now < phase1Deadline : false;
+  const groupStageOver = phase1Deadline ? now >= phase1Deadline : false;
+
+  const countdown =
+    phase1Deadline && phase1IsOpen
+      ? (() => {
+          const ms = phase1Deadline.getTime() - now.getTime();
+          const d = Math.floor(ms / (1000 * 60 * 60 * 24));
+          const h = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          return `${d}d ${h}h`;
+        })()
+      : null;
 
   // Preserve membership join order
   const groupMap = new Map(groups.map((g) => [g.id, g]));
@@ -183,17 +203,17 @@ export default async function DashboardPage() {
           <div className={`eyebrow ${styles.bannerEyebrow}`}>
             {phase1IsOpen ? "Active tournament" : "Tournament"}
           </div>
-          <div className={styles.bannerTitle}>FIFA World Cup 2026</div>
+          <div className={styles.bannerTitle}>{tournamentName}</div>
           <div className={styles.bannerSub}>
-            {phase1IsOpen ? (
+            {countdown ? (
               <>
-                <strong>
-                  Group stage closes in {daysLeft}d {hoursLeft}h
-                </strong>{" "}
-                · Jun 11
+                <strong>Group stage closes in {countdown}</strong>{" · "}
+                {phase1Deadline ? fmtDate(phase1Deadline) : ""}
               </>
+            ) : groupStageOver ? (
+              "Knockout phase · Predictions open"
             ) : (
-              "Jun 11 – Jul 19 · USA, Canada & Mexico"
+              tournamentRange
             )}
           </div>
         </div>

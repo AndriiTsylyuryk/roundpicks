@@ -60,6 +60,8 @@ export default function UserMenuDrawer({ displayName }: Props) {
 
   return (
     <>
+      <div className={styles.drawerAccent} />
+
       {view === "menu" && (
         <>
           <div className={styles.drawerHeader}>
@@ -67,21 +69,26 @@ export default function UserMenuDrawer({ displayName }: Props) {
             <button className={styles.drawerClose} onClick={close}>✕</button>
           </div>
           <div className={styles.drawerDivider} />
+
+          <div className={styles.sectionLabel}>Feedback</div>
           <button className={styles.drawerItem} onClick={() => setView("feedback")}>
-            💬 Leave a feedback
+            <span className={styles.drawerItemLabel}>Leave a feedback</span>
           </button>
           <a className={styles.drawerItem} href="#" target="_blank" rel="noreferrer">
-            ☕ Support the project
+            <span className={styles.drawerItemLabel}>Support the project</span>
           </a>
+
           <div className={styles.drawerDivider} />
+
+          <div className={styles.sectionLabel}>Account</div>
           <button className={styles.drawerItem} onClick={signOut}>
-            Sign out
+            <span className={styles.drawerItemLabel}>Sign out</span>
           </button>
           <button
             className={`${styles.drawerItem} ${styles.drawerItemDanger}`}
             onClick={() => setView("delete-confirm")}
           >
-            Delete account
+            <span className={styles.drawerItemLabel}>Delete account</span>
           </button>
         </>
       )}
@@ -93,7 +100,7 @@ export default function UserMenuDrawer({ displayName }: Props) {
             <span className={styles.drawerTitle}>Leave a feedback</span>
           </div>
           {feedbackStatus === "sent" ? (
-            <p className={styles.sentMsg}>Thanks for the feedback! 🙏</p>
+            <p className={styles.sentMsg}>Thanks for the feedback!</p>
           ) : (
             <form onSubmit={submitFeedback} className={styles.feedbackForm}>
               <textarea
@@ -125,11 +132,12 @@ export default function UserMenuDrawer({ displayName }: Props) {
             <button className={styles.drawerBack} onClick={() => setView("menu")}>←</button>
             <span className={styles.drawerTitle}>Delete account</span>
           </div>
+          <div className={styles.deleteIcon}>!</div>
           <p className={styles.deleteMsg}>
-            This is permanent — all your picks and groups will be removed.
+            This action is permanent — all your picks, groups, and data will be removed. This cannot be undone.
           </p>
           {deleteStatus === "error" && (
-            <p className={styles.errorMsg} style={{ padding: "0 14px" }}>Something went wrong. Try again.</p>
+            <p className={styles.errorMsg} style={{ padding: "0 20px" }}>Something went wrong. Try again.</p>
           )}
           <div className={styles.deleteActions}>
             <button
