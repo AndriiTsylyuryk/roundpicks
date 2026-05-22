@@ -1,10 +1,8 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/server-admin";
-import NavUserMenu from "@/components/NavUserMenu";
-import { Logo } from "@/components/landing/Logo";
-import styles from "./layout.module.css";
+import { DrawerProvider } from "@/lib/drawer-context";
+import { AppShell } from "./AppShell";
 
 export default async function AppLayout({
   children,
@@ -32,18 +30,10 @@ export default async function AppLayout({
   })();
 
   return (
-    <div className={styles.shell}>
-      <nav className={styles.nav}>
-        <Link href="/dashboard" className={styles.brand}>
-          <Logo />
-        </Link>
-        <div className={styles.navActions}>
-          <Link href="/dashboard" className={styles.navLink}>Dashboard</Link>
-          <Link href="/help" className={styles.navLink}>Help</Link>
-          <NavUserMenu displayName={displayName} />
-        </div>
-      </nav>
-      <main className={styles.main}>{children}</main>
-    </div>
+    <DrawerProvider>
+      <AppShell displayName={displayName}>
+        {children}
+      </AppShell>
+    </DrawerProvider>
   );
 }
