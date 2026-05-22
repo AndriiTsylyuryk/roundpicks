@@ -50,10 +50,7 @@ export function Hero() {
               </li>
             ))}
           </ul>
-          <div className={styles.panelFooter}>
-            <span>Round of 16 — locked</span>
-            <span>Next pick: Jul 02</span>
-          </div>
+
         </div>
       </div>
     </section>

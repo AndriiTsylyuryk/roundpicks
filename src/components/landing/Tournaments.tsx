@@ -2,7 +2,6 @@ import styles from "./Tournaments.module.css";
 
 const CARDS = [
   { tag: "Live now",    title: "World Cup 2026", body: "48 teams · 12 groups · 104 matches",        when: "Jun 11 — Jul 19", primary: true },
-  { tag: "Coming next", title: "Eurovision",     body: "Pick the winner, jury chaos, douze points.", when: "May 2026" },
   { tag: "On the radar", title: "Euro 2028",     body: "Group rankings · knockouts · dark-horse pool.", when: "Summer 2028" },
 ];
 

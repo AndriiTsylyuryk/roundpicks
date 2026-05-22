@@ -9,7 +9,6 @@ export function Footer() {
         <span>© 2026 RoundPicks</span>
         <span>Not affiliated with FIFA</span>
         <span>No gambling · No money</span>
-        <span>hello@roundpicks.app</span>
       </div>
     </footer>
   );
