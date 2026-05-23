@@ -173,6 +173,7 @@
   display: flex;
   flex-direction: column;
   min-height: 190px;
+  margin-bottom: 1rem;
 }
 
 .ctaOrb {
@@ -322,17 +323,18 @@
 
 /* CopyInviteButton uses this class */
 .copyBtn {
+  flex-shrink: 0;
   background: rgba(120, 255, 214, 0.12);
   border: 1px solid rgba(120, 255, 214, 0.28);
   color: var(--color-mint);
-  font-size: 0.8rem;
   font-weight: 600;
-  padding: 0.45rem 1rem;
-  border-radius: var(--radius-full);
-  cursor: pointer;
+  font-size: 0.9375rem;
+  padding: 0.875rem 1.375rem;
+  border-radius: 10px;
   white-space: nowrap;
-  transition: background 150ms ease;
+  cursor: pointer;
   font-family: inherit;
+  transition: background 150ms ease;
 }
 
 .copyBtn:hover {
@@ -384,12 +386,108 @@
   color: rgba(6, 39, 49, 0.35);
 }
 
-.phaseCloses {
-  margin-left: auto;
+/* ── Expandable sections ── */
+.expandable {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  background: var(--color-paper-card);
+}
+
+.expandableSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.expandableSummary::-webkit-details-marker {
+  display: none;
+}
+
+.expandableSummary:hover {
+  background: rgba(6, 39, 49, 0.03);
+}
+
+.expandableChevron {
+  font-size: 0.7rem;
+  transition: transform 200ms ease;
+  color: var(--color-ink-soft);
+}
+
+.expandable[open] .expandableChevron {
+  transform: rotate(180deg);
+}
+
+.expandableBody {
+  padding: 0 20px 16px;
+  font-size: 0.875rem;
+  color: var(--color-ink-soft);
+  line-height: 1.6;
+}
+
+.expandableBody p {
+  margin: 0 0 6px;
+}
+
+.expandableBody p:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Leaderboard hero ── */
+.leaderboardHero {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-paper-deep);
+  border-radius: var(--radius-xl);
+  padding: 28px 28px 18px;
+  margin-bottom: 1rem;
+  min-height: 190px;
+}
+
+.lbHeroEyebrow {
   font-size: 0.8rem;
   font-weight: 500;
-  color: rgba(6, 39, 49, 0.45);
-  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 14px;
+}
+
+.leaderboardHero .lbRow {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.leaderboardHero .lbRow.me {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.leaderboardHero .lbRank {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.leaderboardHero .lbName {
+  color: #fff;
+}
+
+.leaderboardHero .lbScore {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.leaderboardHero .lbPending {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.leaderboardHero .noPicksMsg {
+  color: rgba(255, 255, 255, 0.5);
 }
 
 /* ── Leaderboard ── */

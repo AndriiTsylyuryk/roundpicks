@@ -261,84 +261,7 @@ export default async function GroupPage({ params }: Props) {
         </span>
       </div> */}
 
-      {/* ── Cards row ── */}
-      <div className={styles.cardsRow}>
-        <div className={styles.ctaCard}>
-          <div className={styles.ctaOrb} />
-          <div className={styles.ctaTop}>
-            <div>
-              <div className={`eyebrow ${styles.ctaEyebrow}`}>
-                Predictions open
-              </div>
-              <div className={styles.ctaHeadline}>
-                {phase1IsOpen
-                  ? "Group stage to call."
-                  : "Knockout picks to call."}
-              </div>
-              <div className={styles.ctaMeta}>
-                {phase1Deadline && phase1IsOpen && (
-                  <span>
-                    Closes{" "}
-                    {phase1Deadline.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </span>
-                )}
-              </div>
-            </div>
-            <Link
-              href={`/groups/${groupId}/predict`}
-              className={`${styles.ctaPredictBtn} ${userHasAllGroupPicks && phase1IsOpen ? styles.ctaPredictBtnDone : ""}`}
-            >
-              {userHasAllGroupPicks && phase1IsOpen
-                ? "Picks submitted · Edit picks"
-                : "Make your Picks"}
-            </Link>
-          </div>
-        </div>
-
-        {members.length >= group.max_participants ? (
-          <div className={styles.ctaCard}>
-            <div className={styles.ctaInviteFull}>
-              <span>
-                🔒 Group full ({members.length}/{group.max_participants})
-              </span>
-              {isCreator && (
-                <span className={styles.ctaFullHint}>
-                  Increase limit in ⚙️ Settings.
-                </span>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className={styles.ctaCard}>
-            <div className={styles.ctaInviteRow}>
-              <div>
-                <div className={styles.ctaInviteLabel}>
-                  Invite link · {members.length}/{group.max_participants}
-                </div>
-
-                <div className={styles.ctaHeadline}>
-                  Think your friends know football?
-                </div>
-                {phase1Deadline && phase1IsOpen && (
-                  <div className={styles.ctaInviteExpires}>
-                    Expires{" "}
-                    {phase1Deadline.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </div>
-                )}
-              </div>
-              <CopyInviteButton url={inviteUrl} />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ── Progress bar ── */}
+      {/* ── Timeline ── */}
       <div className={styles.progressCard}>
         <div className={styles.progressTrack}>
           <div
@@ -383,6 +306,81 @@ export default async function GroupPage({ params }: Props) {
         </div>
       </div>
 
+      {/* ── CTA card ── */}
+      <div className={styles.ctaCard}>
+        <div className={styles.ctaOrb} />
+        <div className={styles.ctaTop}>
+          <div>
+            <div className={`eyebrow ${styles.ctaEyebrow}`}>
+              Predictions open
+            </div>
+            <div className={styles.ctaHeadline}>
+              {phase1IsOpen
+                ? "Group stage to call."
+                : "Knockout picks to call."}
+            </div>
+            <div className={styles.ctaMeta}>
+              {phase1Deadline && phase1IsOpen && (
+                <span>
+                  Closes{" "}
+                  {phase1Deadline.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </span>
+              )}
+            </div>
+          </div>
+          <Link
+            href={`/groups/${groupId}/predict`}
+            className={`${styles.ctaPredictBtn} ${userHasAllGroupPicks && phase1IsOpen ? styles.ctaPredictBtnDone : ""}`}
+          >
+            {userHasAllGroupPicks && phase1IsOpen
+              ? "Picks submitted · Edit picks"
+              : "Make your Picks"}
+          </Link>
+        </div>
+      </div>
+
+      {/* ── Invite card ── */}
+      {members.length >= group.max_participants ? (
+        <div className={styles.ctaCard}>
+          <div className={styles.ctaInviteFull}>
+            <span>
+              🔒 Group full ({members.length}/{group.max_participants})
+            </span>
+            {isCreator && (
+              <span className={styles.ctaFullHint}>
+                Increase limit in ⚙️ Settings.
+              </span>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className={styles.ctaCard}>
+          <div className={styles.ctaInviteRow}>
+            <div>
+              <div className={styles.ctaInviteLabel}>
+                Invite link · {members.length}/{group.max_participants}
+              </div>
+              <div className={styles.ctaHeadline}>
+                Think your friends know football?
+              </div>
+              {phase1Deadline && phase1IsOpen && (
+                <div className={styles.ctaInviteExpires}>
+                  Expires{" "}
+                  {phase1Deadline.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </div>
+              )}
+            </div>
+            <CopyInviteButton url={inviteUrl} />
+          </div>
+        </div>
+      )}
+
       {/* ── Leaderboard ── */}
       {anyPicksSubmitted && (
         <div className={styles.leaderboard} style={{ marginBottom: "1.5rem" }}>
@@ -396,51 +394,78 @@ export default async function GroupPage({ params }: Props) {
             </p>
           ) : (
             <ul className={styles.lbList}>
-              {members.map((m, i) => (
-                <li
-                  key={m.userId}
-                  className={`${styles.lbRow} ${m.userId === user!.id ? styles.me : ""}`}
-                >
-                  <span className={styles.lbRank}>
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span className={styles.lbName}>
-                    {m.name}
-                    {m.userId === user!.id ? " (you)" : ""}
-                    {hasGroupResults && i === 0 && (
-                      <span className={styles.hotBadge}>HOT</span>
-                    )}
-                  </span>
-                  <span className={styles.lbScore}>
-                    {hasGroupResults && m.score !== null ? (
-                      <span className={styles.lbPoints}>
-                        {m.score}
-                        {m.score > 0 && (
-                          <span className={styles.lbBreakdown}>
-                            {m.groupScore}
-                            {m.bestThirdScore !== null
-                              ? `+${m.bestThirdScore}`
-                              : ""}
-                            {m.knockoutScore !== null
-                              ? `+${m.knockoutScore}`
-                              : ""}
-                          </span>
-                        )}
-                      </span>
-                    ) : m.groupsSubmitted < 12 ? (
-                      <span className={styles.lbPending}>
-                        {m.groupsSubmitted}/12
-                      </span>
-                    ) : (
-                      <span className={styles.lbDone}>✓</span>
-                    )}
-                  </span>
-                </li>
-              ))}
+              {members.map((m, i) => {
+                const content = (
+                  <li
+                    key={m.userId}
+                    className={`${styles.lbRow} ${m.userId === user!.id ? styles.me : ""}`}
+                  >
+                    <span className={styles.lbRank}>
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className={styles.lbName}>
+                      {m.name}
+                      {m.userId === user!.id ? " (you)" : ""}
+                      {hasGroupResults && i === 0 && (
+                        <span className={styles.hotBadge}>HOT</span>
+                      )}
+                    </span>
+                    <span className={styles.lbScore}>
+                      {hasGroupResults && m.score !== null ? (
+                        <span className={styles.lbPoints}>
+                          {m.score}
+                          {m.score > 0 && (
+                            <span className={styles.lbBreakdown}>
+                              {m.groupScore}
+                              {m.bestThirdScore !== null
+                                ? `+${m.bestThirdScore}`
+                                : ""}
+                              {m.knockoutScore !== null
+                                ? `+${m.knockoutScore}`
+                                : ""}
+                            </span>
+                          )}
+                        </span>
+                      ) : m.groupsSubmitted < 12 ? (
+                        <span className={styles.lbPending}>
+                          {m.groupsSubmitted}/12
+                        </span>
+                      ) : (
+                        <span className={styles.lbDone}>✓</span>
+                      )}
+                    </span>
+                  </li>
+                );
+                return m.userId === user!.id ? (
+                  <Link href={`/groups/${groupId}/predict`} key={m.userId} style={{ textDecoration: "none", color: "inherit" }}>
+                    {content}
+                  </Link>
+                ) : (
+                  content
+                );
+              })}
             </ul>
           )}
         </div>
       )}
+
+      {/* ── How scoring works ── */}
+      <details className={styles.expandable}>
+        <summary className={styles.expandableSummary}>
+          <span>How scoring works</span>
+          <span className={styles.expandableChevron}>▾</span>
+        </summary>
+        <div className={styles.expandableBody}>
+          <p>Predict each World Cup group by ranking teams 1st–3rd.</p>
+          <p><strong>Scoring:</strong></p>
+          <p>+2 points for a team in the exact correct position</p>
+          <p>+1 point for a correct team placed in the wrong spot</p>
+          <p><strong>Best third-placed teams:</strong></p>
+          <p>+2 points for each correctly predicted team</p>
+          <p><strong>Knockout stage predictions:</strong></p>
+          <p>1–5 points awarded for each correctly predicted winner, depending on the round.</p>
+        </div>
+      </details>
 
       {!isCreator && (
         <div className={styles.leaveRow}>
