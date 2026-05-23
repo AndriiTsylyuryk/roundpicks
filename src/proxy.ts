@@ -38,7 +38,15 @@ export async function proxy(request: NextRequest) {
 
   const {
     data: { user },
+    error: getUserError,
   } = await supabase.auth.getUser();
+
+  if (getUserError) {
+    const sbCookies = request.cookies.getAll().filter(c => c.name.startsWith("sb-"));
+    for (const c of sbCookies) {
+      supabaseResponse.cookies.set(c.name, "", { maxAge: 0, path: "/" });
+    }
+  }
 
   const { pathname } = request.nextUrl;
   const isPublic = PUBLIC_PATHS.some(
