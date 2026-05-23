@@ -34,10 +34,13 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Google OAuth / magic link via code
+  // Google OAuth / magic link / password reset via code
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(`${origin}${next}`);
+    if (!error) {
+      if (type === "recovery") return NextResponse.redirect(`${origin}/reset-password`);
+      return NextResponse.redirect(`${origin}${next}`);
+    }
   }
 
   return NextResponse.redirect(`${origin}/login?error=auth`);
