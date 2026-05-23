@@ -51,8 +51,8 @@ export default async function DashboardPage() {
     .single<{ name: string; starts_at: string; ends_at: string } | null>();
 
   const tournamentName = event?.name ?? "FIFA World Cup 2026";
-  const tournamentStart = event?.starts_at ? new Date(event.starts_at + "T00:00:00Z") : null;
-  const tournamentEnd = event?.ends_at ? new Date(event.ends_at + "T00:00:00Z") : null;
+  const tournamentStart = event?.starts_at ? new Date(event.starts_at) : null;
+  const tournamentEnd = event?.ends_at ? new Date(event.ends_at) : null;
   const tournamentRange = tournamentStart && tournamentEnd
     ? `${fmtDate(tournamentStart)} – ${fmtDate(tournamentEnd)} · USA, Canada & Mexico`
     : "USA, Canada & Mexico";
@@ -75,16 +75,12 @@ export default async function DashboardPage() {
             <div className={`eyebrow ${styles.headerEyebrow}`}>Your groups</div>
             <h1 className={styles.title}>Welcome back, {displayName}.</h1>
           </div>
-          <Link href="/groups/new" className={styles.createBtn}>
-            ＋ Create group
-          </Link>
         </div>
         <div className={styles.grid}>
           <div className={styles.empty}>
-            <div className={styles.emptyIcon}>⚽</div>
             <h2>No groups yet</h2>
             <p>Create a group and invite your friends to start predicting!</p>
-            <Link href="/groups/new" className={styles.emptyBtn}>
+            <Link href="/groups/new" className={styles.createBtn}>
               + Create your first group
             </Link>
           </div>

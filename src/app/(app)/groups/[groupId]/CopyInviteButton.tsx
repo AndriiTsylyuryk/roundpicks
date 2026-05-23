@@ -14,7 +14,7 @@ export default function CopyInviteButton({ url }: { url: string }) {
 
   return (
     <button onClick={copy} className={styles.copyBtn}>
-      {copied ? "✓ Copied!" : "Copy link"}
+      {copied ? "Share the link" : "Invite a friend"}
     </button>
   );
 }

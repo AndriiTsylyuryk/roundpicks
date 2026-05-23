@@ -158,12 +158,21 @@
 }
 
 /* ── CTA card ── */
+.cardsRow {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
 .ctaCard {
   position: relative;
   overflow: hidden;
   background: var(--color-paper-deep);
   border-radius: var(--radius-xl);
-  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 190px;
 }
 
 .ctaOrb {
@@ -185,6 +194,7 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 28px 28px 24px;
+  flex: 1;
 }
 
 .ctaEyebrow {
@@ -259,8 +269,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 18px 28px 22px;
+  padding: 28px 28px 24px;
   flex-wrap: wrap;
+  flex: 1;
 }
 
 .ctaInviteLabel {
@@ -281,13 +292,24 @@
   word-break: break-all;
 }
 
+.ctaInviteExpires {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 4px;
+}
+
 .ctaInviteFull {
   position: relative;
-  padding: 18px 28px 22px;
+  padding: 28px 28px 24px;
   display: flex;
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
+  flex: 1;
   font-size: 0.875rem;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.50);
@@ -317,65 +339,57 @@
   background: rgba(120, 255, 214, 0.22);
 }
 
-/* ── Phase strip ── */
-.phaseStrip {
+/* ── Progress bar ── */
+.progressCard {
   background: var(--color-paper-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 14px 24px;
-  display: flex;
-  align-items: center;
+  padding: 18px 24px 14px;
   margin-bottom: 1.25rem;
   box-shadow: var(--shadow-sm);
 }
 
-.phaseItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: rgba(6, 39, 49, 0.35);
+.progressTrack {
+  height: 6px;
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
 }
 
-.phaseItemActive {
+.progressFill {
+  height: 100%;
+  background: var(--gradient-brand);
+  border-radius: var(--radius-full);
+  transition: width 300ms ease;
+}
+
+.progressLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.progressLabelActive {
   color: var(--color-ink);
   font-weight: 600;
 }
 
-.phaseItemDone {
+.progressLabelDone {
   color: var(--color-ink-soft);
 }
 
-.phaseDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  border: 2px solid rgba(6, 39, 49, 0.15);
-  background: transparent;
+.progressLabelPending {
+  color: rgba(6, 39, 49, 0.35);
 }
 
-.phaseItemActive .phaseDot {
-  background: var(--color-teal);
-  border-color: var(--color-teal);
-}
-
-.phaseItemDone .phaseDot {
-  background: var(--color-teal);
-  border-color: var(--color-teal);
-  opacity: 0.50;
-}
-
-.phaseLine {
-  flex: 1;
-  height: 1px;
-  background: var(--color-border);
-  margin: 0 16px;
-}
-
-.phaseLabel {
-  line-height: 1;
+.phaseCloses {
+  margin-left: auto;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(6, 39, 49, 0.45);
+  white-space: nowrap;
 }
 
 /* ── Leaderboard ── */
