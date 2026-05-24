@@ -6,11 +6,21 @@ import { createClient } from "@/lib/supabase/client";
 import { useDrawer } from "@/lib/drawer-context";
 import styles from "./NavUserMenu.module.css";
 
+const PRESETS_EUR = [1, 3, 10];
+
+function displayAmount(supportAmount: number, customAmount: string): string {
+  if (customAmount) {
+    const v = parseFloat(customAmount);
+    return Number.isFinite(v) ? `€${v}` : "";
+  }
+  return `€${supportAmount}`;
+}
+
 interface Props {
   displayName: string;
 }
 
-type View = "menu" | "feedback" | "delete-confirm";
+type View = "menu" | "feedback" | "delete-confirm" | "support";
 
 export default function UserMenuDrawer({ displayName }: Props) {
   const { close } = useDrawer();
@@ -18,6 +28,10 @@ export default function UserMenuDrawer({ displayName }: Props) {
   const [feedback, setFeedback] = useState("");
   const [feedbackStatus, setFeedbackStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [deleteStatus, setDeleteStatus] = useState<"idle" | "deleting" | "error">("idle");
+  const [supportAmount, setSupportAmount] = useState<number>(3);
+  const [customAmount, setCustomAmount] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [supportError, setSupportError] = useState("");
   const router = useRouter();
   const pathname = usePathname();
 
@@ -74,9 +88,9 @@ export default function UserMenuDrawer({ displayName }: Props) {
           <button className={styles.drawerItem} onClick={() => setView("feedback")}>
             <span className={styles.drawerItemLabel}>Leave a feedback</span>
           </button>
-          <a className={styles.drawerItem} href="#" target="_blank" rel="noreferrer">
+          <button className={styles.drawerItem} onClick={() => setView("support")}>
             <span className={styles.drawerItemLabel}>Support the project</span>
-          </a>
+          </button>
 
           <div className={styles.drawerDivider} />
 
@@ -147,6 +161,77 @@ export default function UserMenuDrawer({ displayName }: Props) {
             >
               {deleteStatus === "deleting" ? "Deleting…" : "Yes, delete my account"}
             </button>
+          </div>
+        </>
+      )}
+
+      {view === "support" && (
+        <>
+          <div className={styles.drawerHeader}>
+            <button className={styles.drawerBack} onClick={() => setView("menu")}>←</button>
+            <span className={styles.drawerTitle}>Support the project</span>
+          </div>
+          <div className={styles.supportBody}>
+            <p className={styles.supportLabel}>Choose amount</p>
+            <div className={styles.supportPresets}>
+              {PRESETS_EUR.map((eur) => (
+                <button
+                  key={eur}
+                  className={`${styles.supportChip} ${supportAmount === eur && !customAmount ? styles.supportChipActive : ""}`}
+                  onClick={() => { setSupportAmount(eur); setCustomAmount(""); }}
+                >
+                  €{eur}
+                </button>
+              ))}
+            </div>
+            <div className={styles.supportCustom}>
+              <span className={styles.supportCurrency}>€</span>
+              <input
+                className={styles.supportInput}
+                type="number"
+                min="1"
+                max="1000"
+                step="any"
+                placeholder="Your amount"
+                value={customAmount}
+                onChange={(e) => { setCustomAmount(e.target.value); setSupportAmount(0); }}
+              />
+            </div>
+            <button
+              className={styles.supportBtn}
+              disabled={submitting}
+              onClick={async () => {
+                const amount = customAmount
+                  ? Math.round(parseFloat(customAmount) * 100)
+                  : supportAmount * 100;
+                if (!amount || amount < 100 || amount > 100000) return;
+                setSubmitting(true);
+                try {
+                  const res = await fetch("/api/stripe/session", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ amount }),
+                  });
+                  if (!res.ok) {
+                    const data = await res.json();
+                    throw new Error(data.error || "Something went wrong");
+                  }
+                  const { url } = await res.json();
+                  window.location.href = url;
+                } catch (e) {
+                  setSupportError(e instanceof Error ? e.message : "Something went wrong");
+                  setSubmitting(false);
+                }
+              }}
+            >
+              {submitting ? "Redirecting…" : `Support with ${displayAmount(supportAmount, customAmount)}`}
+            </button>
+            {supportError && <p className={styles.errorMsg}>{supportError}</p>}
+            <p className={styles.supportPaymentRow}>
+              We accept:&#8194;
+              <img className={styles.supportPaymentIcon} src="/icons/apple-pay.svg" alt="Apple Pay" />
+              <img className={styles.supportPaymentIcon} src="/icons/google-pay.svg" alt="Google Pay" />
+            </p>
           </div>
         </>
       )}

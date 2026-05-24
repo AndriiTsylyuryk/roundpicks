@@ -38,6 +38,7 @@ export function AppShell({ displayName, children }: Props) {
           <div className={styles.navActions}>
             <Link href="/dashboard" className={styles.navLink}>Dashboard</Link>
             <Link href="/help" className={styles.navLink}>Help</Link>
+            <Link href="/support" className={styles.navLink}>Support the project</Link>
             <NavUserMenu displayName={displayName} />
           </div>
         </nav>

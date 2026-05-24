@@ -36,6 +36,9 @@ export default function ForgotPasswordPage() {
         <p className={styles.subtitle}>
           We sent a password reset link to <strong>{email}</strong>.
         </p>
+        <p className={styles.spamNote}>
+          Didn&apos;t see it? Check your spam folder.
+        </p>
         <p className={styles.footer}>
           <Link href="/login">Back to sign in</Link>
         </p>

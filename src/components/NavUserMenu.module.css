@@ -277,4 +277,120 @@
   cursor: not-allowed;
 }
 
+/* ── Support view ── */
+.supportBody {
+  padding: 8px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.supportLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+  margin: 0;
+}
+
+.supportPresets {
+  display: flex;
+  gap: 8px;
+}
+
+.supportChip {
+  flex: 1;
+  padding: 0.6rem 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: transparent;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.supportChipActive {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  border-color: var(--color-ink);
+}
+
+.supportCustom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0 12px;
+}
+
+.supportCurrency {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+}
+
+.supportInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 0.6rem 0;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--color-ink);
+  background: transparent;
+  min-width: 0;
+}
+
+.supportInput::-webkit-inner-spin-button,
+.supportInput::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.supportInput[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.supportBtn {
+  width: 100%;
+  background: var(--gradient-brand);
+  color: var(--color-ink);
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.65rem 1rem;
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 150ms ease;
+  margin-top: 4px;
+}
+
+.supportBtn:hover {
+  opacity: 0.85;
+}
+
+.supportBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.supportPaymentRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: var(--color-ink-soft);
+  margin-top: 2px;
+}
+
+.supportPaymentIcon {
+  height: 40px;
+  width: auto;
+  opacity: 0.8;
+}
+
 
