@@ -59,6 +59,9 @@
 }
 
 .navLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--color-ink-soft);

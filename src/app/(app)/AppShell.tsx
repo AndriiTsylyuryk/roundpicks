@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Logo } from "@/components/landing/Logo";
 import NavUserMenu from "@/components/NavUserMenu";
 import UserMenuDrawer from "@/components/UserMenuDrawer";
+import { LayoutDashboard, Heart, LifeBuoy } from "lucide-react";
 import { useDrawer } from "@/lib/drawer-context";
 import styles from "./layout.module.css";
 
@@ -36,9 +37,9 @@ export function AppShell({ displayName, children }: Props) {
             <Logo />
           </Link>
           <div className={styles.navActions}>
-            <Link href="/dashboard" className={styles.navLink}>Dashboard</Link>
-            <Link href="/help" className={styles.navLink}>Help</Link>
-            <Link href="/support" className={styles.navLink}>Support the project</Link>
+            <Link href="/dashboard" className={styles.navLink}><LayoutDashboard size={16} /> Dashboard</Link>
+            <Link href="/help" className={styles.navLink}><LifeBuoy size={16} /> Help</Link>
+            <Link href="/support" className={styles.navLink}><Heart size={16} /> Support the project</Link>
             <NavUserMenu displayName={displayName} />
           </div>
         </nav>

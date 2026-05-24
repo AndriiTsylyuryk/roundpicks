@@ -130,15 +130,11 @@
 
 .drawerItemIcon {
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
-  background: rgba(6, 39, 49, 0.04);
-  font-size: 1rem;
-  line-height: 1;
 }
 
 .drawerItemLabel {

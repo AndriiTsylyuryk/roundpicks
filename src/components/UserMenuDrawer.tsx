@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { Heart, LogOut, MessageSquare, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useDrawer } from "@/lib/drawer-context";
 import styles from "./NavUserMenu.module.css";
@@ -86,9 +87,11 @@ export default function UserMenuDrawer({ displayName }: Props) {
 
           <div className={styles.sectionLabel}>Feedback</div>
           <button className={styles.drawerItem} onClick={() => setView("feedback")}>
+            <MessageSquare size={16} className={styles.drawerItemIcon} />
             <span className={styles.drawerItemLabel}>Leave a feedback</span>
           </button>
           <button className={styles.drawerItem} onClick={() => setView("support")}>
+            <Heart size={16} className={styles.drawerItemIcon} />
             <span className={styles.drawerItemLabel}>Support the project</span>
           </button>
 
@@ -96,12 +99,14 @@ export default function UserMenuDrawer({ displayName }: Props) {
 
           <div className={styles.sectionLabel}>Account</div>
           <button className={styles.drawerItem} onClick={signOut}>
+            <LogOut size={16} className={styles.drawerItemIcon} />
             <span className={styles.drawerItemLabel}>Sign out</span>
           </button>
           <button
             className={`${styles.drawerItem} ${styles.drawerItemDanger}`}
             onClick={() => setView("delete-confirm")}
           >
+            <Trash2 size={16} className={styles.drawerItemIcon} />
             <span className={styles.drawerItemLabel}>Delete account</span>
           </button>
         </>
