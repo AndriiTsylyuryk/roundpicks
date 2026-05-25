@@ -4,9 +4,7 @@ export default function HelpPage() {
   return (
     <div className={styles.page}>
       <article className={styles.article}>
-        <h1 className={styles.title}>Help</h1>
-
-        <h2 className={styles.sectionTitle}>FAQs</h2>
+        <h1 className={styles.title}>FAQs</h1>
         <div className={styles.accordion}>
           <details className={styles.item} open>
             <summary className={styles.summary}>
@@ -75,7 +73,6 @@ export default function HelpPage() {
           </details>
         </div>
 
-        <h2 className={styles.sectionTitle}>Help</h2>
         <p className={styles.contactText}>Have a question or need help? Write to us:</p>
         <p style={{ margin: "4px 0 0" }}>
           <a href="mailto:info@roundpicks.com" className={styles.contactLink}>

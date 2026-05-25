@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Heart, LogOut, MessageSquare, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { Heart, LayoutDashboard, LifeBuoy, Info, LogOut, MessageSquare, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useDrawer } from "@/lib/drawer-context";
 import styles from "./NavUserMenu.module.css";
@@ -83,6 +84,22 @@ export default function UserMenuDrawer({ displayName }: Props) {
             <span className={styles.drawerName}>{displayName}</span>
             <button className={styles.drawerClose} onClick={close}>✕</button>
           </div>
+          <div className={styles.drawerDivider} />
+
+          <div className={styles.sectionLabel}>Navigate</div>
+          <Link href="/dashboard" className={styles.drawerItem} onClick={close}>
+            <LayoutDashboard size={16} className={styles.drawerItemIcon} />
+            <span className={styles.drawerItemLabel}>Dashboard</span>
+          </Link>
+          <Link href="/help" className={styles.drawerItem} onClick={close}>
+            <LifeBuoy size={16} className={styles.drawerItemIcon} />
+            <span className={styles.drawerItemLabel}>Help</span>
+          </Link>
+          <Link href="/about" className={styles.drawerItem} onClick={close}>
+            <Info size={16} className={styles.drawerItemIcon} />
+            <span className={styles.drawerItemLabel}>About</span>
+          </Link>
+
           <div className={styles.drawerDivider} />
 
           <div className={styles.sectionLabel}>Feedback</div>

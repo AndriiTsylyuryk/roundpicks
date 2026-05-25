@@ -10,7 +10,7 @@
 }
 
 .title {
-  margin: 0;
+  margin: 0 0 40px;
   font-family: var(--font-display), system-ui, sans-serif;
   font-weight: 800;
   font-size: 48px;
@@ -125,7 +125,7 @@
 }
 
 .contactText {
-  margin: 0;
+  margin: 40px 0 0;
   font-size: 16px;
   line-height: 1.65;
   color: var(--color-ink-soft);
