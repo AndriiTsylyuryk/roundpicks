@@ -174,16 +174,18 @@ export default async function PredictPage({ params }: Props) {
       )}
 
       {/* Phase 1: Group stage + best third */}
-      <PredictForm
-        groupId={groupId}
-        userId={user.id}
-        teams={teams}
-        existingPicks={existingPicks}
-        isLocked={!phase1IsOpen}
-        groupResults={groupResults}
-        existingBestThirdIds={existingBestThirdIds}
-        officialBestThirdIds={officialBestThirdIds}
-      />
+      {phase1IsOpen && (
+        <PredictForm
+          groupId={groupId}
+          userId={user.id}
+          teams={teams}
+          existingPicks={existingPicks}
+          isLocked={false}
+          groupResults={groupResults}
+          existingBestThirdIds={existingBestThirdIds}
+          officialBestThirdIds={officialBestThirdIds}
+        />
+      )}
 
       {/* Phase 2: Knockout match winners */}
       {showKnockouts && (

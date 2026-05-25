@@ -498,6 +498,260 @@
   font-size: 0.9rem;
 }
 
+/* ── Phase 3: Bracket list view ── */
+.bracket {
+  max-width: 680px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.bracketRound {
+  background: var(--color-paper-card);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.bracketRoundHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.bracketRoundLabel {
+  color: var(--color-ink-soft);
+  opacity: 0.65;
+}
+
+.bracketRoundLabelAccent {
+  color: var(--color-teal);
+}
+
+.bracketRoundTitle {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+  margin-top: 2px;
+  color: var(--color-ink);
+}
+
+.bracketRoundPill {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--color-paper);
+  color: var(--color-ink-soft);
+  border: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.bracketRoundPillDone {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0, 121, 145, 0.10);
+  color: var(--color-teal);
+  border: 1px solid rgba(0, 121, 145, 0.22);
+  white-space: nowrap;
+}
+
+.bracketMatchList {
+  list-style: none;
+  margin: 0;
+  padding: 12px 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bracketMatchRow {
+  padding: 10px 12px;
+  background: var(--color-paper);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.bracketMatchMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 6px;
+}
+
+.bracketMatchId {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  opacity: 0.6;
+}
+
+.bracketSaving {
+  font-size: 10px;
+  color: var(--color-ink-soft);
+  animation: pulse 0.8s infinite;
+}
+
+.bracketError {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-error);
+}
+
+.bracketMatchStatus {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--color-ink-soft);
+  opacity: 0.5;
+  margin-left: auto;
+}
+
+.bracketStatusSaved {
+  color: var(--color-teal);
+  opacity: 1;
+}
+
+.bracketMatchTeams {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bracketTeamBtn {
+  flex: 1 1 180px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--color-paper-card);
+  border: 1.5px solid var(--color-border);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.bracketTeamBtn:hover:not(:disabled) {
+  border-color: var(--color-teal);
+  background: rgba(0, 121, 145, 0.06);
+}
+
+.bracketTeamBtnPicked {
+  background: rgba(0, 121, 145, 0.10) !important;
+  border-color: var(--color-teal) !important;
+}
+
+.bracketTeamBtnNotPicked {
+  opacity: 0.3;
+}
+
+.bracketTeamBtnWon {
+  background: rgba(22, 163, 74, 0.08) !important;
+  border-color: #16a34a !important;
+}
+
+.bracketTeamBtnLost {
+  opacity: 0.3;
+}
+
+.bracketTeamBtnDisabled {
+  cursor: not-allowed;
+}
+
+.bracketFlag {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.bracketName {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bracketNamePicked {
+  font-weight: 600;
+}
+
+.bracketNameNotPicked {
+  color: var(--color-ink-soft);
+}
+
+.bracketTbd {
+  font-size: 14px;
+  color: var(--color-ink-soft);
+  font-style: italic;
+  opacity: 0.5;
+}
+
+.bracketVs {
+  flex: 0 0 auto;
+  align-self: center;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--color-ink-soft);
+  opacity: 0.45;
+  text-transform: uppercase;
+  padding: 0 4px;
+}
+
+.bracketCheck {
+  color: var(--color-teal);
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.bracketResultWon {
+  text-align: center;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-teal);
+  padding: 4px;
+  margin-top: 6px;
+  border-top: 1px solid rgba(0, 121, 145, 0.15);
+  background: rgba(0, 121, 145, 0.05);
+  border-radius: 0 0 10px 10px;
+}
+
+.bracketResultLost {
+  text-align: center;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-error);
+  padding: 4px;
+  margin-top: 6px;
+  border-top: 1px solid rgba(229, 62, 62, 0.15);
+  background: rgba(229, 62, 62, 0.04);
+  border-radius: 0 0 10px 10px;
+}
+
 /* ── Best 3rd ── */
 .thirdCounter {
   display: flex;
