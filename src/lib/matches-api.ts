@@ -3,7 +3,7 @@ const BASE_URL = "https://api.football-data.org/v4";
 const ROUND_MAP: Record<string, string> = {
   GROUP_STAGE: "GROUP",
   LAST_32: "R32",
-  LAST_OF_16: "R16",
+  LAST_16: "R16",
   QUARTER_FINALS: "QF",
   SEMI_FINALS: "SF",
   THIRD_PLACE: "3RD",
