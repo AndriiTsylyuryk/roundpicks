@@ -2,8 +2,8 @@ const BASE_URL = "https://api.football-data.org/v4";
 
 const ROUND_MAP: Record<string, string> = {
   GROUP_STAGE: "GROUP",
-  ROUND_OF_32: "R32",
-  ROUND_OF_16: "R16",
+  LAST_32: "R32",
+  LAST_OF_16: "R16",
   QUARTER_FINALS: "QF",
   SEMI_FINALS: "SF",
   THIRD_PLACE: "3RD",
@@ -48,7 +48,11 @@ export interface StandingRow {
 }
 
 export async function syncWC2026All(): Promise<{
-  teamsData?: Array<{ name: string; group_letter: string; external_id: number }>;
+  teamsData?: Array<{
+    name: string;
+    group_letter: string;
+    external_id: number;
+  }>;
   matchesData?: Array<{
     external_id: number;
     round: string;
@@ -66,14 +70,19 @@ export async function syncWC2026All(): Promise<{
   if (!key) return { error: "FOOTBALL_DATA_API_KEY not set" };
 
   // 1st call — teams
-  const teamsRes = await fetch(`${BASE_URL}/competitions/WC/teams?season=2026`, {
-    headers: { "X-Auth-Token": key },
-    cache: "no-store",
-  });
+  const teamsRes = await fetch(
+    `${BASE_URL}/competitions/WC/teams?season=2026`,
+    {
+      headers: { "X-Auth-Token": key },
+      cache: "no-store",
+    },
+  );
 
   if (!teamsRes.ok) {
     const body = await teamsRes.json().catch(() => ({}));
-    return { error: `Teams API ${teamsRes.status}: ${body.message ?? "unknown error"}` };
+    return {
+      error: `Teams API ${teamsRes.status}: ${body.message ?? "unknown error"}`,
+    };
   }
 
   const teamsJson = await teamsRes.json();
@@ -84,14 +93,19 @@ export async function syncWC2026All(): Promise<{
   }
 
   // 2nd call — matches (group assignments + all fixtures with scores)
-  const matchesRes = await fetch(`${BASE_URL}/competitions/WC/matches?season=2026`, {
-    headers: { "X-Auth-Token": key },
-    cache: "no-store",
-  });
+  const matchesRes = await fetch(
+    `${BASE_URL}/competitions/WC/matches?season=2026`,
+    {
+      headers: { "X-Auth-Token": key },
+      cache: "no-store",
+    },
+  );
 
   if (!matchesRes.ok) {
     const body = await matchesRes.json().catch(() => ({}));
-    return { error: `Matches API ${matchesRes.status}: ${body.message ?? "unknown error"}` };
+    return {
+      error: `Matches API ${matchesRes.status}: ${body.message ?? "unknown error"}`,
+    };
   }
 
   const matchesJson = await matchesRes.json().catch(() => ({ matches: [] }));
@@ -100,7 +114,9 @@ export async function syncWC2026All(): Promise<{
   const groupMap: Record<number, string> = {};
   for (const m of allMatches) {
     if (!m.group) continue;
-    const letter = String(m.group).replace(/^GROUP_/i, "").trim();
+    const letter = String(m.group)
+      .replace(/^GROUP_/i, "")
+      .trim();
     if (letter.length === 1 && /^[A-L]$/i.test(letter)) {
       const g = letter.toUpperCase();
       if (m.homeTeam?.id) groupMap[m.homeTeam.id] = g;
@@ -124,26 +140,37 @@ export async function syncWC2026All(): Promise<{
       home_score: m.score?.fullTime?.home ?? null,
       away_score: m.score?.fullTime?.away ?? null,
       status:
-        m.status === "FINISHED" ? "finished" :
-        m.status === "IN_PLAY" || m.status === "PAUSED" || m.status === "LIVE" ? "live" :
-        "scheduled",
+        m.status === "FINISHED"
+          ? "finished"
+          : m.status === "IN_PLAY" ||
+              m.status === "PAUSED" ||
+              m.status === "LIVE"
+            ? "live"
+            : "scheduled",
       kickoff_at: m.utcDate,
     }));
 
   // 3rd call — standings (group stage final table, available once groups finish)
   const standingsData: StandingRow[] = [];
-  const standingsRes = await fetch(`${BASE_URL}/competitions/WC/standings?season=2026`, {
-    headers: { "X-Auth-Token": key },
-    cache: "no-store",
-  });
+  const standingsRes = await fetch(
+    `${BASE_URL}/competitions/WC/standings?season=2026`,
+    {
+      headers: { "X-Auth-Token": key },
+      cache: "no-store",
+    },
+  );
 
   if (standingsRes.ok) {
-    const standingsJson = await standingsRes.json().catch(() => ({ standings: [] }));
+    const standingsJson = await standingsRes
+      .json()
+      .catch(() => ({ standings: [] }));
     const groups: FDStandingGroup[] = standingsJson?.standings ?? [];
 
     for (const group of groups) {
       if (group.type !== "TOTAL") continue;
-      const letter = String(group.group ?? "").replace(/^GROUP_/i, "").trim();
+      const letter = String(group.group ?? "")
+        .replace(/^GROUP_/i, "")
+        .trim();
       if (!/^[A-L]$/.test(letter)) continue;
       const sorted = [...group.table].sort((a, b) => a.position - b.position);
       if (sorted.length < 3) continue;
