@@ -1,0 +1,213 @@
+/* ── Bell button ── */
+
+.bellBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+  flex-shrink: 0;
+}
+
+.bellBtn:hover {
+  background: rgba(6, 39, 49, 0.06);
+  color: var(--color-ink);
+}
+
+.bellBadge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #b3263b;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* ── Forced modal overlay ── */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 34, 43, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  padding: 1rem;
+}
+
+.modalCard {
+  background: #f2efe7;
+  border-radius: 20px;
+  max-width: 420px;
+  width: 100%;
+  padding: 1.75rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.modalTitle {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin: 0 0 0.5rem;
+}
+
+.modalBody {
+  font-size: 0.9rem;
+  color: var(--color-ink-soft);
+  line-height: 1.5;
+  margin: 0 0 1.25rem;
+}
+
+.ackBtn {
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.55rem 1.5rem;
+  border-radius: 10px;
+  border: none;
+  background: var(--color-ink);
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 150ms ease;
+}
+
+.ackBtn:hover {
+  opacity: 0.85;
+}
+
+/* ── History panel ── */
+
+.panelOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+}
+
+.panel {
+  position: absolute;
+  top: calc(var(--nav-h) - 6px);
+  right: 80px;
+  width: 340px;
+  max-height: 60vh;
+  background: var(--color-paper-card);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  z-index: 160;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform-origin: top right;
+}
+
+.panelHeader {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.panelEmpty {
+  font-size: 0.82rem;
+  color: var(--color-ink-soft);
+  opacity: 0.55;
+  text-align: center;
+  padding: 2rem 1rem;
+  margin: 0;
+}
+
+.panelList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+}
+
+.panelItem {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(6, 39, 49, 0.05);
+}
+
+.panelItemUnread {
+  background: rgba(0, 121, 145, 0.04);
+}
+
+.panelItem:last-child {
+  border-bottom: none;
+}
+
+.panelItemTitle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-bottom: 0.15rem;
+}
+
+.panelItemBody {
+  font-size: 0.78rem;
+  color: var(--color-ink-soft);
+  line-height: 1.4;
+  margin-bottom: 0.3rem;
+}
+
+.panelItemMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panelItemRead {
+  font-size: 0.68rem;
+  color: var(--color-ink-soft);
+  opacity: 0.45;
+}
+
+.panelItemAckBtn {
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-teal);
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.panelItemAckBtn:hover {
+  background: rgba(0, 121, 145, 0.06);
+}
+
+@media (max-width: 640px) {
+  .panel {
+    right: 12px;
+    width: calc(100% - 24px);
+    max-height: 50vh;
+  }
+
+  .modalCard {
+    padding: 1.25rem;
+    margin: 0 8px;
+  }
+}

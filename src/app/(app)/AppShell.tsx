@@ -8,6 +8,7 @@ import NavUserMenu from "@/components/NavUserMenu";
 import UserMenuDrawer from "@/components/UserMenuDrawer";
 import { LayoutDashboard, Heart, LifeBuoy, Info } from "lucide-react";
 import { useDrawer } from "@/lib/drawer-context";
+import NotificationBell from "@/components/NotificationBell";
 import styles from "./layout.module.css";
 
 interface Props {
@@ -41,6 +42,7 @@ export function AppShell({ displayName, children }: Props) {
             <Link href="/help" className={styles.navLink}><LifeBuoy size={16} /> Help</Link>
             <Link href="/about" className={styles.navLink}><Info size={16} /> About</Link>
             <Link href="/support" className={styles.navLink}><Heart size={16} /> Support the project</Link>
+            <NotificationBell />
             <NavUserMenu displayName={displayName} />
           </div>
         </nav>

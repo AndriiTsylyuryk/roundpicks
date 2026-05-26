@@ -14,7 +14,8 @@ create table public.profiles (
   display_name text,
   avatar_url   text,
   locale       text not null default 'en',
-  created_at   timestamptz not null default now()
+  created_at   timestamptz not null default now(),
+  dismissed_notifications jsonb not null default '[]'::jsonb
 );
 
 create or replace function public.handle_new_user()
@@ -555,3 +556,17 @@ create policy "Users can delete own knockout_picks"
     auth.uid() = user_id
     and now() < (select kickoff_at from wc_matches where id = match_id)
   );
+
+-- ─── Site notifications ─────────────────────────────────────────────────────
+create table if not exists public.site_notifications (
+  id         uuid primary key default gen_random_uuid(),
+  title      text not null,
+  body       text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.site_notifications enable row level security;
+
+create policy "Anyone can read notifications"
+  on public.site_notifications for select
+  using (true);
