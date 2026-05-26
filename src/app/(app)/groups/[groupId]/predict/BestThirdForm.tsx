@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { getFlag } from "@/lib/team-flags";
+import { getFlagCode } from "@/lib/team-flags";
 import styles from "./page.module.css";
 
 interface Team {
@@ -125,7 +125,13 @@ export default function BestThirdForm({
               disabled={isDisabled}
             >
               <span className={styles.thirdGroupTag}>Group {team.group_letter}</span>
-              <span className={styles.thirdFlag}>{getFlag(team.name)}</span>
+              <span className={styles.thirdFlag}>
+                {(() => {
+                  const c = getFlagCode(team.name);
+                  if (!c) return "⚽";
+                  return <img className={styles.flagImg} src={`https://flagcdn.com/28x21/${c.length > 2 ? c.slice(0, 2) : c}.png`} alt="" />;
+                })()}
+              </span>
               <span className={styles.thirdName}>{team.name}</span>
               {isSelected && hasOfficialResults && (
                 <span className={isCorrect ? styles.thirdResultCorrect : styles.thirdResultWrong}>

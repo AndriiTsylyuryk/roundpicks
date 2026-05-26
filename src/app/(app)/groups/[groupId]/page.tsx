@@ -12,6 +12,7 @@ import CopyInviteButton from "./CopyInviteButton";
 import ParticipantsList from "./ParticipantsList";
 import GroupNameEditor from "./GroupNameEditor";
 import LeaveGroupButton from "./LeaveGroupButton";
+import ViewPicksButton from "./ViewPicksButton";
 import styles from "./page.module.css";
 
 interface GroupRow {
@@ -411,7 +412,7 @@ export default async function GroupPage({ params }: Props) {
           ) : (
             <ul className={styles.lbList}>
               {members.map((m, i) => {
-                const content = (
+                return (
                   <li
                     key={m.userId}
                     className={`${styles.lbRow} ${m.userId === user!.id ? styles.me : ""}`}
@@ -430,17 +431,6 @@ export default async function GroupPage({ params }: Props) {
                       {hasGroupResults && m.score !== null ? (
                         <span className={styles.lbPoints}>
                           {m.score}
-                          {m.score > 0 && (
-                            <span className={styles.lbBreakdown}>
-                              {m.groupScore}
-                              {m.bestThirdScore !== null
-                                ? `+${m.bestThirdScore}`
-                                : ""}
-                              {m.knockoutScore !== null
-                                ? `+${m.knockoutScore}`
-                                : ""}
-                            </span>
-                          )}
                         </span>
                       ) : m.groupsSubmitted < 12 ? (
                         <span className={styles.lbPending}>
@@ -449,15 +439,9 @@ export default async function GroupPage({ params }: Props) {
                       ) : (
                         <span className={styles.lbDone}>✓</span>
                       )}
+                      <ViewPicksButton userId={m.userId} userName={m.name} groupId={groupId} />
                     </span>
                   </li>
-                );
-                return m.userId === user!.id ? (
-                  <Link href={`/groups/${groupId}/predict`} key={m.userId} style={{ textDecoration: "none", color: "inherit" }}>
-                    {content}
-                  </Link>
-                ) : (
-                  content
                 );
               })}
             </ul>

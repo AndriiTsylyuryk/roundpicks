@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { getFlag } from "@/lib/team-flags";
+import { getFlagCode } from "@/lib/team-flags";
 import BestThirdForm from "./BestThirdForm";
 import styles from "./page.module.css";
 
@@ -259,7 +259,13 @@ export default function PredictForm({
                     >
                       <span className={styles.rankNum} style={{ color: RANK_COLORS[i] }}>{RANK_LABELS[i]}</span>
                       {team ? (
-                        <span className={styles.rankTeam}>{getFlag(team.name)} {team.name}</span>
+                        <span className={styles.rankTeam}>
+                          {(() => {
+                            const c = getFlagCode(team.name);
+                            if (!c) return "⚽";
+                            return <img className={styles.rankFlag} src={`https://flagcdn.com/28x21/${c.length > 2 ? c.slice(0, 2) : c}.png`} alt="" />;
+                          })()} {team.name}
+                        </span>
                       ) : (
                         <span className={styles.rankEmpty}>—</span>
                       )}
@@ -286,7 +292,13 @@ export default function PredictForm({
                       onClick={() => tap(g, team.id)}
                       disabled={isDisabled}
                     >
-                      <span className={styles.teamFlag}>{getFlag(team.name)}</span>
+                      <span className={styles.teamFlag}>
+                        {(() => {
+                          const c = getFlagCode(team.name);
+                          if (!c) return "⚽";
+                          return <img className={styles.flagImg} src={`https://flagcdn.com/28x21/${c.length > 2 ? c.slice(0, 2) : c}.png`} alt="" />;
+                        })()}
+                      </span>
                       <span className={styles.teamName}>{team.name}</span>
                     </button>
                   );

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { getFlag } from "@/lib/team-flags";
+import { getFlagCode } from "@/lib/team-flags";
 import { ROUND_POINTS } from "@/lib/scoring";
 import styles from "./page.module.css";
 
@@ -124,7 +124,12 @@ function BracketMatchRow({
       >
         {team ? (
           <>
-            <span className={styles.bracketFlag}>{getFlag(team.name)}</span>
+            {(() => {
+              const code = getFlagCode(team.name);
+              if (!code) return <span className={styles.bracketFlagFallback}>?</span>;
+              const cc = code.length > 2 ? code.slice(0, 2) : code;
+              return <img className={styles.bracketFlag} src={`https://flagcdn.com/28x21/${cc}.png`} alt="" />;
+            })()}
             <span className={[
               styles.bracketName,
               isWin ? styles.bracketNamePicked : "",
