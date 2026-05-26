@@ -28,25 +28,6 @@ interface FDTeam {
   shortName: string;
 }
 
-interface FDStandingEntry {
-  position: number;
-  team: { id: number };
-}
-
-interface FDStandingGroup {
-  stage: string;
-  type: string;
-  group: string;
-  table: FDStandingEntry[];
-}
-
-export interface StandingRow {
-  wc_group: string;
-  rank1_ext_id: number;
-  rank2_ext_id: number;
-  rank3_ext_id: number;
-}
-
 export async function syncWC2026All(): Promise<{
   teamsData?: Array<{
     name: string;
@@ -63,7 +44,6 @@ export async function syncWC2026All(): Promise<{
     status: string;
     kickoff_at: string;
   }>;
-  standingsData?: StandingRow[];
   error?: string;
 }> {
   const key = process.env.FOOTBALL_DATA_API_KEY;
@@ -150,39 +130,5 @@ export async function syncWC2026All(): Promise<{
       kickoff_at: m.utcDate,
     }));
 
-  // 3rd call — standings (group stage final table, available once groups finish)
-  const standingsData: StandingRow[] = [];
-  const standingsRes = await fetch(
-    `${BASE_URL}/competitions/WC/standings?season=2026`,
-    {
-      headers: { "X-Auth-Token": key },
-      cache: "no-store",
-    },
-  );
-
-  if (standingsRes.ok) {
-    const standingsJson = await standingsRes
-      .json()
-      .catch(() => ({ standings: [] }));
-    const groups: FDStandingGroup[] = standingsJson?.standings ?? [];
-
-    for (const group of groups) {
-      if (group.type !== "TOTAL") continue;
-      const letter = String(group.group ?? "")
-        .replace(/^GROUP_/i, "")
-        .trim();
-      if (!/^[A-L]$/.test(letter)) continue;
-      const sorted = [...group.table].sort((a, b) => a.position - b.position);
-      if (sorted.length < 3) continue;
-      standingsData.push({
-        wc_group: letter,
-        rank1_ext_id: sorted[0].team.id,
-        rank2_ext_id: sorted[1].team.id,
-        rank3_ext_id: sorted[2].team.id,
-      });
-    }
-  }
-  // standings returning non-ok is not a fatal error (group stage may not have started yet)
-
-  return { teamsData, matchesData, standingsData };
+  return { teamsData, matchesData };
 }

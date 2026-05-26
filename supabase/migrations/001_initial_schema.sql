@@ -148,11 +148,10 @@ create policy "Users can leave groups"
 
 -- ─── WC Teams ────────────────────────────────────────────────────────────────
 create table public.wc_teams (
-  id             uuid    primary key default gen_random_uuid(),
-  name           text    not null unique,
-  group_letter   char(1) not null,
-  external_id    int,
-  is_best_third  boolean not null default false
+  id           uuid    primary key default gen_random_uuid(),
+  name         text    not null unique,
+  group_letter char(1) not null,
+  external_id  int
 );
 
 alter table public.wc_teams enable row level security;
@@ -273,20 +272,6 @@ create policy "Users can update own best_third_picks"
         and groups.phase2_locked = true
     )
   );
-
--- ─── Official Group Stage Results ────────────────────────────────────────────
-create table public.wc_group_results (
-  id         uuid        primary key default gen_random_uuid(),
-  wc_group   char(1)     not null unique,
-  rank1_id   uuid        references public.wc_teams(id),
-  rank2_id   uuid        references public.wc_teams(id),
-  rank3_id   uuid        references public.wc_teams(id),
-  updated_at timestamptz not null default now()
-);
-
-alter table public.wc_group_results enable row level security;
-create policy "Anyone can view wc_group_results"
-  on public.wc_group_results for select using (true);
 
 -- ─── Knockout Picks ──────────────────────────────────────────────────────────
 create table public.knockout_picks (

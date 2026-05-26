@@ -102,9 +102,10 @@ export default async function DashboardPage() {
         .select("group_id, user_id")
         .in("group_id", safeIds),
       supabase
-        .from("wc_group_results")
-        .select("*", { count: "exact", head: true })
-        .not("rank1_id", "is", null),
+        .from("wc_matches")
+        .select("id", { count: "exact", head: true })
+        .eq("round", "GROUP")
+        .eq("status", "finished"),
       supabase
         .from("wc_matches")
         .select("kickoff_at")

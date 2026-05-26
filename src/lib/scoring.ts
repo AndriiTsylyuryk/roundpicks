@@ -5,11 +5,71 @@ interface GroupPick {
   rank3_id: string | null;
 }
 
-interface GroupResult {
+export interface GroupResult {
   wc_group: string;
   rank1_id: string | null;
   rank2_id: string | null;
   rank3_id: string | null;
+}
+
+interface GroupMatch {
+  home_team_id: string | null;
+  away_team_id: string | null;
+  home_score: number | null;
+  away_score: number | null;
+  status: string;
+}
+
+export function deriveGroupStandings(
+  matches: GroupMatch[],
+  teams: { id: string; group_letter: string }[],
+): GroupResult[] {
+  type Stats = { pts: number; gd: number; gf: number };
+  const stats = new Map<string, Stats>(
+    teams.map((t) => [t.id, { pts: 0, gd: 0, gf: 0 }]),
+  );
+
+  for (const m of matches) {
+    if (m.status !== "finished") continue;
+    if (!m.home_team_id || !m.away_team_id) continue;
+    if (m.home_score === null || m.away_score === null) continue;
+    const h = stats.get(m.home_team_id);
+    const a = stats.get(m.away_team_id);
+    if (!h || !a) continue;
+    h.gf += m.home_score;
+    h.gd += m.home_score - m.away_score;
+    a.gf += m.away_score;
+    a.gd += m.away_score - m.home_score;
+    if (m.home_score > m.away_score) h.pts += 3;
+    else if (m.home_score < m.away_score) a.pts += 3;
+    else { h.pts += 1; a.pts += 1; }
+  }
+
+  const byGroup = new Map<string, string[]>();
+  for (const t of teams) {
+    if (!/^[A-L]$/.test(t.group_letter)) continue;
+    if (!byGroup.has(t.group_letter)) byGroup.set(t.group_letter, []);
+    byGroup.get(t.group_letter)!.push(t.id);
+  }
+
+  const results: GroupResult[] = [];
+  for (const [letter, ids] of byGroup) {
+    const sorted = [...ids].sort((a, b) => {
+      const sa = stats.get(a)!;
+      const sb = stats.get(b)!;
+      if (sb.pts !== sa.pts) return sb.pts - sa.pts;
+      if (sb.gd !== sa.gd) return sb.gd - sa.gd;
+      return sb.gf - sa.gf;
+    });
+    results.push({
+      wc_group: letter,
+      rank1_id: sorted[0] ?? null,
+      rank2_id: sorted[1] ?? null,
+      rank3_id: sorted[2] ?? null,
+    });
+  }
+
+  return results;
 }
 
 // +2 per correct team in official best 8 third-placers

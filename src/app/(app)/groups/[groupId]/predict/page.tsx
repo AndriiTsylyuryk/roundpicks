@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { calcGroupScore, calcBestThirdScore, calcKnockoutScore } from "@/lib/scoring";
+import { calcGroupScore, calcBestThirdScore, calcKnockoutScore, deriveGroupStandings } from "@/lib/scoring";
 import PredictForm from "./PredictForm";
 import KnockoutForm from "./KnockoutForm";
 import styles from "./page.module.css";
@@ -61,17 +61,15 @@ export default async function PredictPage({ params }: Props) {
     wc_group: string; rank1_id: string; rank2_id: string; rank3_id: string | null;
   }[];
 
-  const { data: groupResultsRaw } = await supabase
-    .from("wc_group_results")
-    .select("wc_group, rank1_id, rank2_id, rank3_id");
-  const groupResults = (groupResultsRaw ?? []) as {
-    wc_group: string; rank1_id: string | null; rank2_id: string | null; rank3_id: string | null;
-  }[];
+  const { data: finishedGroupMatchesRaw } = await supabase
+    .from("wc_matches")
+    .select("home_team_id, away_team_id, home_score, away_score, status")
+    .eq("round", "GROUP")
+    .eq("status", "finished");
+  const groupResults = deriveGroupStandings(finishedGroupMatchesRaw ?? [], teams);
   const hasGroupResults = groupResults.some((r) => r.rank1_id);
 
-  const { data: officialBestThirdRaw } = await supabase
-    .from("wc_teams").select("id").eq("is_best_third", true);
-  const officialBestThirdIds = (officialBestThirdRaw ?? []).map((t) => t.id);
+  let officialBestThirdIds: string[] = [];
 
   const { data: bestThirdPick } = await supabase
     .from("best_third_picks")
@@ -104,6 +102,19 @@ export default async function PredictPage({ params }: Props) {
       .in("round", ["R32", "R16", "QF", "SF", "FINAL", "3RD"])
       .order("kickoff_at");
     matches = (matchesRaw ?? []) as WcMatch[];
+
+    const thirdPlaceIds = new Set(
+      groupResults.map((r) => r.rank3_id).filter((id): id is string => id !== null),
+    );
+    const r32TeamIds = new Set(
+      matches
+        .filter((m) => m.round === "R32")
+        .flatMap((m) => [m.home_team_id, m.away_team_id])
+        .filter((id): id is string => id !== null),
+    );
+    if (r32TeamIds.size > 0) {
+      officialBestThirdIds = [...thirdPlaceIds].filter((id) => r32TeamIds.has(id));
+    }
 
     const { data: koPicksRaw } = await supabase
       .from("knockout_picks")

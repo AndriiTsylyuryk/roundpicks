@@ -124,20 +124,17 @@ export type Database = {
           name: string;
           group_letter: string;
           external_id: number | null;
-          is_best_third: boolean;
         };
         Insert: {
           id?: string;
           name: string;
           group_letter: string;
           external_id?: number | null;
-          is_best_third?: boolean;
         };
         Update: {
           name?: string;
           group_letter?: string;
           external_id?: number | null;
-          is_best_third?: boolean;
         };
         Relationships: [];
       };
@@ -219,31 +216,6 @@ export type Database = {
         };
         Update: {
           team_ids?: string[];
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      wc_group_results: {
-        Row: {
-          id: string;
-          wc_group: string;
-          rank1_id: string | null;
-          rank2_id: string | null;
-          rank3_id: string | null;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          wc_group: string;
-          rank1_id?: string | null;
-          rank2_id?: string | null;
-          rank3_id?: string | null;
-          updated_at?: string;
-        };
-        Update: {
-          rank1_id?: string | null;
-          rank2_id?: string | null;
-          rank3_id?: string | null;
           updated_at?: string;
         };
         Relationships: [];

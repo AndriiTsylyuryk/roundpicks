@@ -6,6 +6,7 @@ import {
   calcGroupScore,
   calcBestThirdScore,
   calcKnockoutScore,
+  deriveGroupStandings,
 } from "@/lib/scoring";
 import CopyInviteButton from "./CopyInviteButton";
 import ParticipantsList from "./ParticipantsList";
@@ -94,18 +95,18 @@ export default async function GroupPage({ params }: Props) {
     .select("user_id, wc_group, rank1_id, rank2_id, rank3_id")
     .eq("group_id", groupId);
 
-  const { data: groupResultsRaw } = await supabase
-    .from("wc_group_results")
-    .select("wc_group, rank1_id, rank2_id, rank3_id");
-  const groupResults = groupResultsRaw ?? [];
-  const hasGroupResults = groupResults.some((r) => r.rank1_id);
-
-  const { data: officialBestThirdRaw } = await supabase
+  const { data: wcTeamsRaw } = await supabase
     .from("wc_teams")
-    .select("id")
-    .eq("is_best_third", true);
-  const officialBestThirdIds = (officialBestThirdRaw ?? []).map((t) => t.id);
-  const hasBestThird = officialBestThirdIds.length === 8;
+    .select("id, group_letter");
+  const wcTeams = (wcTeamsRaw ?? []) as { id: string; group_letter: string }[];
+
+  const { data: finishedGroupMatchesRaw } = await supabase
+    .from("wc_matches")
+    .select("home_team_id, away_team_id, home_score, away_score, status")
+    .eq("round", "GROUP")
+    .eq("status", "finished");
+  const groupResults = deriveGroupStandings(finishedGroupMatchesRaw ?? [], wcTeams);
+  const hasGroupResults = groupResults.some((r) => r.rank1_id);
 
   const { data: bestThirdPicksRaw } = await supabase
     .from("best_third_picks")
@@ -134,6 +135,21 @@ export default async function GroupPage({ params }: Props) {
   const hasKnockoutResults = knockoutMatches.some(
     (m) => m.status === "finished",
   );
+
+  const thirdPlaceIds = new Set(
+    groupResults.map((r) => r.rank3_id).filter((id): id is string => id !== null),
+  );
+  const r32TeamIds = new Set(
+    knockoutMatches
+      .filter((m) => m.round === "R32")
+      .flatMap((m) => [m.home_team_id, m.away_team_id])
+      .filter((id): id is string => id !== null),
+  );
+  const officialBestThirdIds =
+    r32TeamIds.size > 0
+      ? [...thirdPlaceIds].filter((id) => r32TeamIds.has(id))
+      : [];
+  const hasBestThird = officialBestThirdIds.length === 8;
 
   const { data: knockoutPicksRaw } = await supabase
     .from("knockout_picks")
