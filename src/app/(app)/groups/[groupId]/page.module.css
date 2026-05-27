@@ -258,6 +258,14 @@
   color: rgba(255, 255, 255, 0.90);
 }
 
+.ctaPredictBtnDisabled {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.35);
+  box-shadow: none;
+  cursor: default;
+  pointer-events: none;
+}
+
 .ctaDivider {
   height: 1px;
   background: rgba(255, 255, 255, 0.10);

@@ -522,14 +522,31 @@ create policy "Users can update own best_third_picks"
     and public.phase1_open_for_group(group_id)
   );
 
--- knockout_picks: per-match lock — can only pick/change before the match kicks off
+-- ─── Phase 2 lock helper ─────────────────────────────────────────────────────
+create or replace function public.phase2_open_for_group(p_group_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select not (
+    (select phase2_locked from groups where id = p_group_id)
+    or (
+      exists (select 1 from wc_matches where round = 'R32')
+      and now() >= (select min(kickoff_at) from wc_matches where round = 'R32')
+    )
+  )
+$$;
+
+-- knockout_picks: can only pick/change while phase 2 is open
 drop policy if exists "Users can insert own knockout_picks" on public.knockout_picks;
 create policy "Users can insert own knockout_picks"
   on public.knockout_picks for insert
   with check (
     auth.uid() = user_id
     and group_id in (select public.get_my_group_ids())
-    and now() < (select kickoff_at from wc_matches where id = match_id)
+    and public.phase2_open_for_group(group_id)
   );
 
 drop policy if exists "Users can update own knockout_picks" on public.knockout_picks;
@@ -538,7 +555,7 @@ create policy "Users can update own knockout_picks"
   using (auth.uid() = user_id)
   with check (
     auth.uid() = user_id
-    and now() < (select kickoff_at from wc_matches where id = match_id)
+    and public.phase2_open_for_group(group_id)
   );
 
 -- group_picks: add delete policy so users can clear their own picks while phase 1 is open
@@ -549,12 +566,13 @@ create policy "Users can delete own picks"
     and public.phase1_open_for_group(group_id)
   );
 
--- knockout_picks: add delete policy so users can un-pick before match kickoff
+-- knockout_picks: add delete policy so users can un-pick while phase 2 is open
+drop policy if exists "Users can delete own knockout_picks" on public.knockout_picks;
 create policy "Users can delete own knockout_picks"
   on public.knockout_picks for delete
   using (
     auth.uid() = user_id
-    and now() < (select kickoff_at from wc_matches where id = match_id)
+    and public.phase2_open_for_group(group_id)
   );
 
 -- ─── Site notifications ─────────────────────────────────────────────────────

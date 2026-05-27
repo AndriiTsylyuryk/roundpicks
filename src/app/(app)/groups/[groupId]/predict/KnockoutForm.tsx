@@ -73,6 +73,7 @@ function BracketMatchRow({
   onPick,
   upstreamSlots,
   displayIds,
+  overrideTeams,
 }: {
   match: WcMatch;
   teamById: Map<string, Team>;
@@ -81,11 +82,22 @@ function BracketMatchRow({
   onPick: (match: WcMatch, teamId: string) => void;
   upstreamSlots: Map<string, { home: UpstreamSlot; away: UpstreamSlot }>;
   displayIds: Map<string, string>;
+  overrideTeams?: { homeId: string | null; awayId: string | null } | null;
 }) {
   const slots = upstreamSlots.get(match.id);
 
-  const derivedHomeId = slots?.home.matchId ? (picks[slots.home.matchId] ?? null) : null;
-  const derivedAwayId = slots?.away.matchId ? (picks[slots.away.matchId] ?? null) : null;
+  const derivedHomeId =
+    overrideTeams != null
+      ? overrideTeams.homeId
+      : slots?.home.matchId
+        ? (picks[slots.home.matchId] ?? null)
+        : null;
+  const derivedAwayId =
+    overrideTeams != null
+      ? (overrideTeams.awayId ?? null)
+      : slots?.away.matchId
+        ? (picks[slots.away.matchId] ?? null)
+        : null;
 
   const effectiveHomeId = match.home_team_id ?? derivedHomeId;
   const effectiveAwayId = match.away_team_id ?? derivedAwayId;
@@ -101,12 +113,16 @@ function BracketMatchRow({
       ? match.home_score > match.away_score
         ? match.home_team_id
         : match.away_score > match.home_score
-        ? match.away_team_id
-        : null
+          ? match.away_team_id
+          : null
       : null;
 
-  const renderTeam = (teamId: string | null, isDerived: boolean, fallbackLabel: string | null) => {
-    const team = teamId ? teamById.get(teamId) ?? null : null;
+  const renderTeam = (
+    teamId: string | null,
+    isDerived: boolean,
+    fallbackLabel: string | null,
+  ) => {
+    const team = teamId ? (teamById.get(teamId) ?? null) : null;
     const isWin = pickedId === teamId;
     const isLose = !!(pickedId && !isWin);
     const isUpstream = !teamId && fallbackLabel !== null;
@@ -121,25 +137,40 @@ function BracketMatchRow({
           isWin ? styles.bracketTeamBtnPicked : "",
           isLose ? styles.bracketTeamBtnNotPicked : "",
           actualWinner === teamId ? styles.bracketTeamBtnWon : "",
-          actualWinner && actualWinner !== teamId && teamId ? styles.bracketTeamBtnLost : "",
+          actualWinner && actualWinner !== teamId && teamId
+            ? styles.bracketTeamBtnLost
+            : "",
           btnDisabled ? styles.bracketTeamBtnDisabled : "",
-        ].filter(Boolean).join(" ")}
+        ]
+          .filter(Boolean)
+          .join(" ")}
         onClick={() => teamId && onPick(match, teamId)}
       >
         {team ? (
           <>
             {(() => {
               const code = getFlagCode(team.name);
-              if (!code) return <span className={styles.bracketFlagFallback}>?</span>;
+              if (!code)
+                return <span className={styles.bracketFlagFallback}>?</span>;
               const cc = code.length > 2 ? code.slice(0, 2) : code;
-              return <img className={styles.bracketFlag} src={`https://flagcdn.com/28x21/${cc}.png`} alt="" />;
+              return (
+                <img
+                  className={styles.bracketFlag}
+                  src={`https://flagcdn.com/28x21/${cc}.png`}
+                  alt=""
+                />
+              );
             })()}
-            <span className={[
-              styles.bracketName,
-              isWin ? styles.bracketNamePicked : "",
-              isLose ? styles.bracketNameNotPicked : "",
-              isDerived && !isWin && !isLose ? styles.bracketNameDerived : "",
-            ].filter(Boolean).join(" ")}>
+            <span
+              className={[
+                styles.bracketName,
+                isWin ? styles.bracketNamePicked : "",
+                isLose ? styles.bracketNameNotPicked : "",
+                isDerived && !isWin && !isLose ? styles.bracketNameDerived : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
               {team.name}
             </span>
           </>
@@ -154,19 +185,21 @@ function BracketMatchRow({
   return (
     <div className={styles.bracketMatchRow}>
       <div className={styles.bracketMatchMeta}>
-        <span className={styles.bracketMatchId}>Match {displayIds.get(match.id) ?? match.id}</span>
+        <span className={styles.bracketMatchId}>
+          Match {displayIds.get(match.id) ?? match.id}
+        </span>
         <span className={styles.bracketMatchStatus}>
-          {isFinished ? (
-            match.home_score !== null ? `${match.home_score}–${match.away_score}` : "Finished"
-          ) : pickedId ? (
-            <span className={styles.bracketStatusSaved}>Pick saved</span>
-          ) : isLocked ? (
-            "Locked"
-          ) : empty ? (
-            ""
-          ) : (
-            "Tap a team"
-          )}
+          {isFinished
+            ? match.home_score !== null
+              ? `${match.home_score}–${match.away_score}`
+              : "Finished"
+            : isLocked
+              ? "Locked"
+              : empty
+                ? ""
+                : !pickedId
+                  ? "Tap a team"
+                  : null}
         </span>
       </div>
       <div className={styles.bracketMatchTeams}>
@@ -175,19 +208,37 @@ function BracketMatchRow({
         {renderTeam(effectiveAwayId, awayIsDerived, slots?.away.label ?? null)}
       </div>
       {isFinished && pickedId && actualWinner && (
-        <div className={pickedId === actualWinner ? styles.bracketResultWon : styles.bracketResultLost}>
-          {pickedId === actualWinner ? `+${ROUND_POINTS[match.round] ?? 0}` : "✗"}
+        <div
+          className={
+            pickedId === actualWinner
+              ? styles.bracketResultWon
+              : styles.bracketResultLost
+          }
+        >
+          {pickedId === actualWinner
+            ? `+${ROUND_POINTS[match.round] ?? 0}`
+            : "✗"}
         </div>
       )}
     </div>
   );
 }
 
-export default function KnockoutForm({ groupId, userId, matches, teams, existingPicks, isKnockoutLocked }: Props) {
-  const initialPicks = Object.fromEntries(existingPicks.map((p) => [p.match_id, p.winner_id]));
+export default function KnockoutForm({
+  groupId,
+  userId,
+  matches,
+  teams,
+  existingPicks,
+  isKnockoutLocked,
+}: Props) {
+  const initialPicks = Object.fromEntries(
+    existingPicks.map((p) => [p.match_id, p.winner_id]),
+  );
 
   const [picks, setPicks] = useState<Record<string, string>>(initialPicks);
-  const [savedPicks, setSavedPicks] = useState<Record<string, string>>(initialPicks);
+  const [savedPicks, setSavedPicks] =
+    useState<Record<string, string>>(initialPicks);
   const [isEditMode, setIsEditMode] = useState(existingPicks.length === 0);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -230,7 +281,10 @@ export default function KnockoutForm({ groupId, userId, matches, teams, existing
 
   // For each later-round match, track which upstream match feeds each slot.
   // 3RD is fed by SF losers — can't derive from winner picks, skip it.
-  const upstreamSlots = new Map<string, { home: UpstreamSlot; away: UpstreamSlot }>();
+  const upstreamSlots = new Map<
+    string,
+    { home: UpstreamSlot; away: UpstreamSlot }
+  >();
   for (let r = 1; r < rounds.length; r++) {
     const { round, matches: curMatches } = rounds[r];
     if (round === "3RD") continue;
@@ -251,54 +305,55 @@ export default function KnockoutForm({ groupId, userId, matches, teams, existing
     });
   }
 
-  // Reverse lookup: matchId → downstream matchId (for cascade)
-  const reverseUpstream = new Map<string, string>();
-  for (const [downstreamId, { home, away }] of upstreamSlots) {
-    if (home.matchId) reverseUpstream.set(home.matchId, downstreamId);
-    if (away.matchId) reverseUpstream.set(away.matchId, downstreamId);
+  // Derive 3RD place teams: SF losers (the team in each SF that the user did NOT pick)
+  function getEffectiveTeams(match: WcMatch): {
+    homeId: string | null;
+    awayId: string | null;
+  } {
+    const slots = upstreamSlots.get(match.id);
+    return {
+      homeId:
+        match.home_team_id ??
+        (slots?.home.matchId ? (picks[slots.home.matchId] ?? null) : null),
+      awayId:
+        match.away_team_id ??
+        (slots?.away.matchId ? (picks[slots.away.matchId] ?? null) : null),
+    };
   }
+
+  const sfMatches = rounds.find((r) => r.round === "SF")?.matches ?? [];
+  const derived3rdTeams = (() => {
+    const sf1 = sfMatches[0] ?? null;
+    const sf2 = sfMatches[1] ?? null;
+    const result = {
+      homeId: null as string | null,
+      awayId: null as string | null,
+    };
+    if (sf1) {
+      const { homeId, awayId } = getEffectiveTeams(sf1);
+      const winner = picks[sf1.id] ?? null;
+      if (winner && homeId && awayId)
+        result.homeId = winner === homeId ? awayId : homeId;
+    }
+    if (sf2) {
+      const { homeId, awayId } = getEffectiveTeams(sf2);
+      const winner = picks[sf2.id] ?? null;
+      if (winner && homeId && awayId)
+        result.awayId = winner === homeId ? awayId : homeId;
+    }
+    return result;
+  })();
 
   function handlePick(match: WcMatch, teamId: string) {
     if (isKnockoutLocked || match.status === "finished") return;
 
     setPicks((prev) => {
       if (prev[match.id] === teamId) {
-        // Toggle off: remove pick and cascade-remove downstream picks for this team
-        let newPicks = { ...prev };
-        delete newPicks[match.id];
-        let cur = match.id;
-        while (true) {
-          const downstream = reverseUpstream.get(cur);
-          if (!downstream) break;
-          if (newPicks[downstream] === teamId) {
-            const next = { ...newPicks };
-            delete next[downstream];
-            newPicks = next;
-            cur = downstream;
-          } else {
-            break;
-          }
-        }
-        return newPicks;
+        const next = { ...prev };
+        delete next[match.id];
+        return next;
       }
-
-      // Pick: set and cascade forward, replacing old team at each step
-      const prevTeam = prev[match.id] ?? null;
-      let newPicks = { ...prev, [match.id]: teamId };
-      let cur = match.id;
-      while (true) {
-        const downstream = reverseUpstream.get(cur);
-        if (!downstream) break;
-        const downstreamPick = newPicks[downstream];
-        // Cascade if slot is empty OR held the team being replaced
-        if (!downstreamPick || downstreamPick === prevTeam) {
-          newPicks = { ...newPicks, [downstream]: teamId };
-          cur = downstream;
-        } else {
-          break;
-        }
-      }
-      return newPicks;
+      return { ...prev, [match.id]: teamId };
     });
   }
 
@@ -344,7 +399,8 @@ export default function KnockoutForm({ groupId, userId, matches, teams, existing
 
   const hasRealMatches = matches.length > 0;
   const totalPicked = Object.keys(picks).length;
-  const hasUnsavedChanges = JSON.stringify(picks) !== JSON.stringify(savedPicks);
+  const hasUnsavedChanges =
+    JSON.stringify(picks) !== JSON.stringify(savedPicks);
 
   return (
     <>
@@ -364,14 +420,22 @@ export default function KnockoutForm({ groupId, userId, matches, teams, existing
             <div key={round} className={styles.bracketRound}>
               <header className={styles.bracketRoundHeader}>
                 <div>
-                  <div className={`eyebrow ${accent ? styles.bracketRoundLabelAccent : styles.bracketRoundLabel}`}>
+                  <div
+                    className={`eyebrow ${accent ? styles.bracketRoundLabelAccent : styles.bracketRoundLabel}`}
+                  >
                     {label}
                   </div>
                   <div className={styles.bracketRoundTitle}>
                     {total} {total === 1 ? "match" : "matches"}
                   </div>
                 </div>
-                <span className={picked === total ? styles.bracketRoundPillDone : styles.bracketRoundPill}>
+                <span
+                  className={
+                    picked === total
+                      ? styles.bracketRoundPillDone
+                      : styles.bracketRoundPill
+                  }
+                >
                   {picked} / {total} picked
                 </span>
               </header>
@@ -386,6 +450,9 @@ export default function KnockoutForm({ groupId, userId, matches, teams, existing
                       onPick={handlePick}
                       upstreamSlots={upstreamSlots}
                       displayIds={displayIds}
+                      overrideTeams={
+                        match.round === "3RD" ? derived3rdTeams : null
+                      }
                     />
                   </li>
                 ))}
@@ -400,8 +467,8 @@ export default function KnockoutForm({ groupId, userId, matches, teams, existing
           <span className={styles.saveStatus}>
             {saveError
               ? saveError
-              : isEditMode && hasUnsavedChanges
-                ? `${totalPicked} picks — unsaved`
+              : hasUnsavedChanges
+                ? "Unsaved changes"
                 : totalPicked > 0
                   ? `${totalPicked} picks saved`
                   : "No picks yet"}

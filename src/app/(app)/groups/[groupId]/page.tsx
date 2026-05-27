@@ -329,12 +329,14 @@ export default async function GroupPage({ params }: Props) {
         <div className={styles.ctaTop}>
           <div>
             <div className={`eyebrow ${styles.ctaEyebrow}`}>
-              Predictions open
+              {phase1IsOpen || phase2IsOpen ? "Predictions open" : "Predictions closed"}
             </div>
             <div className={styles.ctaHeadline}>
               {phase1IsOpen
                 ? "Group stage to call."
-                : "Knockout picks to call."}
+                : phase2IsOpen
+                  ? "Knockout picks to call."
+                  : "nothing to call"}
             </div>
             <div className={styles.ctaMeta}>
               {phase1Deadline && phase1IsOpen && (
@@ -348,14 +350,20 @@ export default async function GroupPage({ params }: Props) {
               )}
             </div>
           </div>
-          <Link
-            href={`/groups/${groupId}/predict`}
-            className={`${styles.ctaPredictBtn} ${userHasAllGroupPicks && phase1IsOpen ? styles.ctaPredictBtnDone : ""}`}
-          >
-            {userHasAllGroupPicks && phase1IsOpen
-              ? "Picks submitted · Edit picks"
-              : "Make your Picks"}
-          </Link>
+          {phase1IsOpen || phase2IsOpen ? (
+            <Link
+              href={`/groups/${groupId}/predict`}
+              className={`${styles.ctaPredictBtn} ${userHasAllGroupPicks && phase1IsOpen ? styles.ctaPredictBtnDone : ""}`}
+            >
+              {userHasAllGroupPicks && phase1IsOpen
+                ? "Picks submitted · Edit picks"
+                : "Make your Picks"}
+            </Link>
+          ) : (
+            <span className={`${styles.ctaPredictBtn} ${styles.ctaPredictBtnDisabled}`}>
+              Predictions closed
+            </span>
+          )}
         </div>
       </div>
 
