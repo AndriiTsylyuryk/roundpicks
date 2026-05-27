@@ -10,6 +10,7 @@ interface GroupBasic {
   id: string;
   name: string;
   phase1_locked: boolean;
+  phase2_locked: boolean;
   group_members: { user_id: string }[];
 }
 
