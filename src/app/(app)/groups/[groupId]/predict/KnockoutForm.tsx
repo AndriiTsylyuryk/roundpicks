@@ -28,6 +28,7 @@ interface Props {
   matches: WcMatch[];
   teams: Team[];
   existingPicks: { match_id: string; winner_id: string }[];
+  isKnockoutLocked: boolean;
 }
 
 const ROUND_ORDER = ["R32", "R16", "QF", "SF", "FINAL", "3RD"];
@@ -59,39 +60,41 @@ const ROUND_MATCH_COUNT: Record<string, number> = {
   "3RD": 1,
 };
 
-type MatchSaveState = "idle" | "saving" | "saved" | "error";
+interface UpstreamSlot {
+  matchId: string | null;
+  label: string | null;
+}
 
 function BracketMatchRow({
   match,
   teamById,
   picks,
-  saveState,
+  isLocked,
   onPick,
-  isMatchLocked,
-  upstreamLabels,
+  upstreamSlots,
   displayIds,
 }: {
   match: WcMatch;
   teamById: Map<string, Team>;
   picks: Record<string, string>;
-  saveState: Record<string, MatchSaveState>;
+  isLocked: boolean;
   onPick: (match: WcMatch, teamId: string) => void;
-  isMatchLocked: (match: WcMatch) => boolean;
-  upstreamLabels: Map<string, { home: string | null; away: string | null }>;
+  upstreamSlots: Map<string, { home: UpstreamSlot; away: UpstreamSlot }>;
   displayIds: Map<string, string>;
 }) {
-  const upstream = upstreamLabels.get(match.id);
-  const homeUpstream = upstream?.home ?? null;
-  const awayUpstream = upstream?.away ?? null;
-  const home = match.home_team_id ? teamById.get(match.home_team_id) ?? null : null;
-  const away = match.away_team_id ? teamById.get(match.away_team_id) ?? null : null;
+  const slots = upstreamSlots.get(match.id);
+
+  const derivedHomeId = slots?.home.matchId ? (picks[slots.home.matchId] ?? null) : null;
+  const derivedAwayId = slots?.away.matchId ? (picks[slots.away.matchId] ?? null) : null;
+
+  const effectiveHomeId = match.home_team_id ?? derivedHomeId;
+  const effectiveAwayId = match.away_team_id ?? derivedAwayId;
+  const homeIsDerived = !match.home_team_id && !!derivedHomeId;
+  const awayIsDerived = !match.away_team_id && !!derivedAwayId;
+
   const pickedId = picks[match.id];
   const isFinished = match.status === "finished";
-  const locked = isMatchLocked(match);
-  const ms = saveState[match.id] ?? "idle";
-  const hasRealHome = !!(match.home_team_id && home);
-  const hasRealAway = !!(match.away_team_id && away);
-  const empty = !hasRealHome || !hasRealAway;
+  const empty = !effectiveHomeId || !effectiveAwayId;
 
   const actualWinner =
     isFinished && match.home_score !== null && match.away_score !== null
@@ -102,11 +105,12 @@ function BracketMatchRow({
         : null
       : null;
 
-  const renderTeam = (team: Team | null, teamId: string | null, upstreamLabel: string | null) => {
+  const renderTeam = (teamId: string | null, isDerived: boolean, fallbackLabel: string | null) => {
+    const team = teamId ? teamById.get(teamId) ?? null : null;
     const isWin = pickedId === teamId;
-    const isLose = pickedId && !isWin;
-    const isUpstream = !teamId && upstreamLabel !== null;
-    const btnDisabled = locked || isUpstream || isFinished || !teamId;
+    const isLose = !!(pickedId && !isWin);
+    const isUpstream = !teamId && fallbackLabel !== null;
+    const btnDisabled = isLocked || isFinished || isUpstream || !teamId;
 
     return (
       <button
@@ -134,16 +138,15 @@ function BracketMatchRow({
               styles.bracketName,
               isWin ? styles.bracketNamePicked : "",
               isLose ? styles.bracketNameNotPicked : "",
+              isDerived && !isWin && !isLose ? styles.bracketNameDerived : "",
             ].filter(Boolean).join(" ")}>
               {team.name}
             </span>
           </>
         ) : (
-          <span className={styles.bracketTbd}>{upstreamLabel ?? "TBD"}</span>
+          <span className={styles.bracketTbd}>{fallbackLabel ?? "TBD"}</span>
         )}
-        {isWin && (
-          <span className={styles.bracketCheck}>✓</span>
-        )}
+        {isWin && <span className={styles.bracketCheck}>✓</span>}
       </button>
     );
   };
@@ -152,14 +155,12 @@ function BracketMatchRow({
     <div className={styles.bracketMatchRow}>
       <div className={styles.bracketMatchMeta}>
         <span className={styles.bracketMatchId}>Match {displayIds.get(match.id) ?? match.id}</span>
-        {ms === "saving" && <span className={styles.bracketSaving}>·</span>}
-        {ms === "error" && <span className={styles.bracketError}>!</span>}
         <span className={styles.bracketMatchStatus}>
           {isFinished ? (
             match.home_score !== null ? `${match.home_score}–${match.away_score}` : "Finished"
           ) : pickedId ? (
             <span className={styles.bracketStatusSaved}>Pick saved</span>
-          ) : locked ? (
+          ) : isLocked ? (
             "Locked"
           ) : empty ? (
             ""
@@ -169,9 +170,9 @@ function BracketMatchRow({
         </span>
       </div>
       <div className={styles.bracketMatchTeams}>
-        {renderTeam(home, match.home_team_id, homeUpstream)}
+        {renderTeam(effectiveHomeId, homeIsDerived, slots?.home.label ?? null)}
         <span className={styles.bracketVs}>vs</span>
-        {renderTeam(away, match.away_team_id, awayUpstream)}
+        {renderTeam(effectiveAwayId, awayIsDerived, slots?.away.label ?? null)}
       </div>
       {isFinished && pickedId && actualWinner && (
         <div className={pickedId === actualWinner ? styles.bracketResultWon : styles.bracketResultLost}>
@@ -182,60 +183,16 @@ function BracketMatchRow({
   );
 }
 
-export default function KnockoutForm({ groupId, userId, matches, teams, existingPicks }: Props) {
-  const [picks, setPicks] = useState<Record<string, string>>(
-    () => Object.fromEntries(existingPicks.map((p) => [p.match_id, p.winner_id]))
-  );
-  const [saveState, setSaveState] = useState<Record<string, MatchSaveState>>({});
+export default function KnockoutForm({ groupId, userId, matches, teams, existingPicks, isKnockoutLocked }: Props) {
+  const initialPicks = Object.fromEntries(existingPicks.map((p) => [p.match_id, p.winner_id]));
+
+  const [picks, setPicks] = useState<Record<string, string>>(initialPicks);
+  const [savedPicks, setSavedPicks] = useState<Record<string, string>>(initialPicks);
+  const [isEditMode, setIsEditMode] = useState(existingPicks.length === 0);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const teamById = new Map(teams.map((t) => [t.id, t]));
-
-  function isMatchLocked(match: WcMatch): boolean {
-    return new Date() >= new Date(match.kickoff_at);
-  }
-
-  async function pickWinner(match: WcMatch, teamId: string) {
-    if (isMatchLocked(match) || match.status === "finished" || !teamId) return;
-
-    const supabase = createClient();
-
-    if (picks[match.id] === teamId) {
-      setPicks((prev) => { const next = { ...prev }; delete next[match.id]; return next; });
-      setSaveState((prev) => ({ ...prev, [match.id]: "saving" }));
-      const { error } = await supabase
-        .from("knockout_picks")
-        .delete()
-        .eq("group_id", groupId)
-        .eq("user_id", userId)
-        .eq("match_id", match.id);
-      setSaveState((prev) => ({ ...prev, [match.id]: error ? "error" : "idle" }));
-      if (error) setPicks((prev) => ({ ...prev, [match.id]: teamId }));
-      return;
-    }
-
-    setPicks((prev) => ({ ...prev, [match.id]: teamId }));
-    setSaveState((prev) => ({ ...prev, [match.id]: "saving" }));
-
-    const { error } = await supabase
-      .from("knockout_picks")
-      .upsert(
-        { group_id: groupId, user_id: userId, match_id: match.id, winner_id: teamId, updated_at: new Date().toISOString() },
-        { onConflict: "group_id,user_id,match_id" }
-      );
-
-    if (error) {
-      setPicks((prev) => {
-        const next = { ...prev };
-        const original = existingPicks.find((p) => p.match_id === match.id);
-        if (original) next[match.id] = original.winner_id;
-        else delete next[match.id];
-        return next;
-      });
-      setSaveState((prev) => ({ ...prev, [match.id]: "error" }));
-    } else {
-      setSaveState((prev) => ({ ...prev, [match.id]: "saved" }));
-    }
-  }
 
   const rounds = ROUND_ORDER.map((round) => {
     const dbMatches = matches.filter((m) => m.round === round);
@@ -263,46 +220,137 @@ export default function KnockoutForm({ groupId, userId, matches, teams, existing
     return { round, label: ROUND_LABEL[round] ?? round, matches: roundMatches };
   });
 
-  // Build short display IDs (M1, R16-1, QF1, SF1, F) for all matches
   const displayIds = new Map<string, string>();
   for (const { round, matches: roundMatches } of rounds) {
     const prefix = DISPLAY_ID_PREFIX[round] ?? "";
     roundMatches.forEach((m, i) => {
-      displayIds.set(m.id, `${prefix}${round === "R32" ? i + 1 : round === "R16" ? i + 1 : round === "FINAL" ? "" : i + 1}`);
+      displayIds.set(m.id, `${prefix}${round === "FINAL" ? "" : i + 1}`);
     });
   }
 
-  // Compute upstream winner labels for null team slots
-  const upstreamLabels = new Map<string, { home: string | null; away: string | null }>();
+  // For each later-round match, track which upstream match feeds each slot.
+  // 3RD is fed by SF losers — can't derive from winner picks, skip it.
+  const upstreamSlots = new Map<string, { home: UpstreamSlot; away: UpstreamSlot }>();
   for (let r = 1; r < rounds.length; r++) {
+    const { round, matches: curMatches } = rounds[r];
+    if (round === "3RD") continue;
     const prev = rounds[r - 1].matches;
-    rounds[r].matches.forEach((m, i) => {
-      const labels: { home: string | null; away: string | null } = { home: null, away: null };
+    curMatches.forEach((m, i) => {
       const prevHome = prev[2 * i];
       const prevAway = prev[2 * i + 1];
-      if (!m.home_team_id && prevHome) labels.home = `Winner ${displayIds.get(prevHome.id) ?? prevHome.id}`;
-      if (!m.away_team_id && prevAway) labels.away = `Winner ${displayIds.get(prevAway.id) ?? prevAway.id}`;
-      if (labels.home || labels.away) upstreamLabels.set(m.id, labels);
+      upstreamSlots.set(m.id, {
+        home: {
+          matchId: !m.home_team_id && prevHome ? prevHome.id : null,
+          label: !m.home_team_id && prevHome ? `Winner ${displayIds.get(prevHome.id) ?? prevHome.id}` : null,
+        },
+        away: {
+          matchId: !m.away_team_id && prevAway ? prevAway.id : null,
+          label: !m.away_team_id && prevAway ? `Winner ${displayIds.get(prevAway.id) ?? prevAway.id}` : null,
+        },
+      });
     });
+  }
+
+  // Reverse lookup: matchId → downstream matchId (for cascade)
+  const reverseUpstream = new Map<string, string>();
+  for (const [downstreamId, { home, away }] of upstreamSlots) {
+    if (home.matchId) reverseUpstream.set(home.matchId, downstreamId);
+    if (away.matchId) reverseUpstream.set(away.matchId, downstreamId);
+  }
+
+  function handlePick(match: WcMatch, teamId: string) {
+    if (isKnockoutLocked || match.status === "finished") return;
+
+    setPicks((prev) => {
+      if (prev[match.id] === teamId) {
+        // Toggle off: remove pick and cascade-remove downstream picks for this team
+        let newPicks = { ...prev };
+        delete newPicks[match.id];
+        let cur = match.id;
+        while (true) {
+          const downstream = reverseUpstream.get(cur);
+          if (!downstream) break;
+          if (newPicks[downstream] === teamId) {
+            const next = { ...newPicks };
+            delete next[downstream];
+            newPicks = next;
+            cur = downstream;
+          } else {
+            break;
+          }
+        }
+        return newPicks;
+      }
+
+      // Pick: set and cascade forward, replacing old team at each step
+      const prevTeam = prev[match.id] ?? null;
+      let newPicks = { ...prev, [match.id]: teamId };
+      let cur = match.id;
+      while (true) {
+        const downstream = reverseUpstream.get(cur);
+        if (!downstream) break;
+        const downstreamPick = newPicks[downstream];
+        // Cascade if slot is empty OR held the team being replaced
+        if (!downstreamPick || downstreamPick === prevTeam) {
+          newPicks = { ...newPicks, [downstream]: teamId };
+          cur = downstream;
+        } else {
+          break;
+        }
+      }
+      return newPicks;
+    });
+  }
+
+  async function saveAllPicks() {
+    setIsSaving(true);
+    setSaveError(null);
+    const supabase = createClient();
+
+    const toUpsert = Object.entries(picks).map(([match_id, winner_id]) => ({
+      group_id: groupId,
+      user_id: userId,
+      match_id,
+      winner_id,
+      updated_at: new Date().toISOString(),
+    }));
+
+    const toDelete = Object.keys(savedPicks).filter((mid) => !picks[mid]);
+
+    try {
+      if (toUpsert.length > 0) {
+        const { error } = await supabase
+          .from("knockout_picks")
+          .upsert(toUpsert, { onConflict: "group_id,user_id,match_id" });
+        if (error) throw error;
+      }
+      if (toDelete.length > 0) {
+        const { error } = await supabase
+          .from("knockout_picks")
+          .delete()
+          .eq("group_id", groupId)
+          .eq("user_id", userId)
+          .in("match_id", toDelete);
+        if (error) throw error;
+      }
+      setSavedPicks({ ...picks });
+      setIsEditMode(false);
+    } catch {
+      setSaveError("Failed to save. Try again.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   const hasRealMatches = matches.length > 0;
-  const openMatches = matches.filter((m) => !isMatchLocked(m) && m.home_team_id && m.away_team_id && m.status !== "finished");
-  const pickedOpen = openMatches.filter((m) => picks[m.id]).length;
-  const totalPicked = matches.filter((m) => picks[m.id]).length;
-  const saveStates = Object.values(saveState);
-  const hasErrors = saveStates.some((s) => s === "error");
-  const isSaving = saveStates.some((s) => s === "saving");
+  const totalPicked = Object.keys(picks).length;
+  const hasUnsavedChanges = JSON.stringify(picks) !== JSON.stringify(savedPicks);
 
   return (
     <>
-      {hasRealMatches && (
-        <div className={styles.progress}>
-          <span>{pickedOpen}/{openMatches.length} open matches</span>
-          <div className={styles.progressBar}>
-            <div className={styles.progressFill} style={{ width: `${openMatches.length > 0 ? (pickedOpen / openMatches.length) * 100 : 100}%` }} />
-          </div>
-          <span>{totalPicked} picks saved</span>
+      {isKnockoutLocked && (
+        <div className={styles.lockedBanner}>
+          Knockout picks are locked — first match has started.
         </div>
       )}
 
@@ -334,10 +382,9 @@ export default function KnockoutForm({ groupId, userId, matches, teams, existing
                       match={match}
                       teamById={teamById}
                       picks={picks}
-                      saveState={saveState}
-                      onPick={pickWinner}
-                      isMatchLocked={isMatchLocked}
-                      upstreamLabels={upstreamLabels}
+                      isLocked={isKnockoutLocked || !isEditMode}
+                      onPick={handlePick}
+                      upstreamSlots={upstreamSlots}
                       displayIds={displayIds}
                     />
                   </li>
@@ -348,21 +395,34 @@ export default function KnockoutForm({ groupId, userId, matches, teams, existing
         })}
       </div>
 
-      {hasRealMatches && (
+      {hasRealMatches && !isKnockoutLocked && (
         <div className={styles.saveBar}>
           <span className={styles.saveStatus}>
-            {hasErrors
-              ? "Some picks failed to save"
-              : isSaving
-                ? "Saving…"
+            {saveError
+              ? saveError
+              : isEditMode && hasUnsavedChanges
+                ? `${totalPicked} picks — unsaved`
                 : totalPicked > 0
                   ? `${totalPicked} picks saved`
                   : "No picks yet"}
           </span>
           <div className={styles.saveBtns}>
-            <button className={styles.saveBtn} disabled>
-              Auto-saving
-            </button>
+            {isEditMode ? (
+              <button
+                className={styles.saveBtn}
+                onClick={saveAllPicks}
+                disabled={isSaving || !hasUnsavedChanges}
+              >
+                {isSaving ? "Saving…" : "Save picks"}
+              </button>
+            ) : (
+              <button
+                className={styles.saveBtn}
+                onClick={() => setIsEditMode(true)}
+              >
+                Edit picks
+              </button>
+            )}
           </div>
         </div>
       )}

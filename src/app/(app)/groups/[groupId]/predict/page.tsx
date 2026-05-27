@@ -124,6 +124,9 @@ export default async function PredictPage({ params }: Props) {
     knockoutPicks = (koPicksRaw ?? []) as { match_id: string; winner_id: string }[];
   }
 
+  const firstR32Match = matches.find((m) => m.round === "R32");
+  const isKnockoutLocked = group.phase2_locked || (!!firstR32Match && now >= new Date(firstR32Match.kickoff_at));
+
   const groupScore = hasGroupResults ? calcGroupScore(existingPicks, groupResults) : null;
   const bestThirdScore = officialBestThirdIds.length === 8
     ? calcBestThirdScore(existingBestThirdIds, officialBestThirdIds)
@@ -206,6 +209,7 @@ export default async function PredictPage({ params }: Props) {
           matches={matches}
           teams={teams}
           existingPicks={knockoutPicks}
+          isKnockoutLocked={isKnockoutLocked}
         />
       )}
     </>

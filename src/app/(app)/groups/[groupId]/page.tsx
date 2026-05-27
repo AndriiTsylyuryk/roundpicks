@@ -383,6 +383,10 @@ export default async function GroupPage({ params }: Props) {
               <div className={styles.ctaHeadline}>
                 Think your friends know football?
               </div>
+              <div className={styles.ctaInviteHint}>
+                Click "Invite Friends" to copy the link, then share it with
+                others so they can join your group.
+              </div>
               {phase1Deadline && phase1IsOpen && (
                 <div className={styles.ctaInviteExpires}>
                   Expires{" "}

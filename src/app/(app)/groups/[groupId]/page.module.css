@@ -293,6 +293,13 @@
   word-break: break-all;
 }
 
+.ctaInviteHint {
+  font-size: 0.8rem;
+  color: #fff;
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
 .ctaInviteExpires {
   font-family: var(--font-mono), monospace;
   font-size: 11px;

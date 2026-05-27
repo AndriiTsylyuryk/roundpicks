@@ -734,6 +734,11 @@
   color: var(--color-ink-soft);
 }
 
+.bracketNameDerived {
+  opacity: 0.55;
+  font-style: italic;
+}
+
 .bracketTbd {
   font-size: 14px;
   color: var(--color-ink-soft);
