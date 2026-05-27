@@ -29,6 +29,8 @@ export function deriveGroupStandings(
     teams.map((t) => [t.id, { pts: 0, gd: 0, gf: 0 }]),
   );
 
+  const teamsWithResults = new Set<string>();
+
   for (const m of matches) {
     if (m.status !== "finished") continue;
     if (!m.home_team_id || !m.away_team_id) continue;
@@ -36,6 +38,8 @@ export function deriveGroupStandings(
     const h = stats.get(m.home_team_id);
     const a = stats.get(m.away_team_id);
     if (!h || !a) continue;
+    teamsWithResults.add(m.home_team_id);
+    teamsWithResults.add(m.away_team_id);
     h.gf += m.home_score;
     h.gd += m.home_score - m.away_score;
     a.gf += m.away_score;
@@ -54,6 +58,11 @@ export function deriveGroupStandings(
 
   const results: GroupResult[] = [];
   for (const [letter, ids] of byGroup) {
+    const hasResults = ids.some((id) => teamsWithResults.has(id));
+    if (!hasResults) {
+      results.push({ wc_group: letter, rank1_id: null, rank2_id: null, rank3_id: null });
+      continue;
+    }
     const sorted = [...ids].sort((a, b) => {
       const sa = stats.get(a)!;
       const sb = stats.get(b)!;

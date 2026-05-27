@@ -570,3 +570,5 @@ alter table public.site_notifications enable row level security;
 create policy "Anyone can read notifications"
   on public.site_notifications for select
   using (true);
+
+grant select on public.site_notifications to authenticated;
