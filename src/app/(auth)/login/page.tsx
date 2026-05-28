@@ -141,6 +141,11 @@ function LoginForm() {
           {loading ? "Signing in…" : "Sign in"}
         </button>
       </form>
+
+      <p className={styles.footer}>
+        No account yet?{" "}
+        <Link href={`/signup${redirectTo !== "/dashboard" ? `?redirectTo=${encodeURIComponent(redirectTo)}` : ""}`}>Create one free</Link>
+      </p>
     </>
   );
 }
@@ -154,11 +159,6 @@ export default function LoginPage() {
       <Suspense fallback={<div className={styles.form} />}>
         <LoginForm />
       </Suspense>
-
-      <p className={styles.footer}>
-        No account yet?{" "}
-        <Link href="/signup">Create one free</Link>
-      </p>
     </>
   );
 }

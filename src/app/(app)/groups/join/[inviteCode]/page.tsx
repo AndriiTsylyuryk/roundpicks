@@ -14,7 +14,7 @@ export default async function JoinGroupPage({ params }: Props) {
   // User auth via regular client
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect(`/login?redirectTo=/groups/join/${inviteCode}`);
+  if (!user) redirect(`/signup?redirectTo=/groups/join/${inviteCode}`);
 
   // Group lookup via admin client — bypasses RLS so any logged-in user can find a group by invite code
   const admin = createAdminClient();

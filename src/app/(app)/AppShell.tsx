@@ -47,6 +47,9 @@ export function AppShell({ displayName, children }: Props) {
           </div>
         </nav>
         <main className={styles.main}>{children}</main>
+        <footer className={styles.footer}>
+          <Link href="/legal" className={styles.footerLink}>Terms &amp; Privacy</Link>
+        </footer>
       </motion.div>
 
       <AnimatePresence>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./page.module.css";
@@ -35,7 +36,10 @@ function EyeOff() {
   );
 }
 
-export default function SignupPage() {
+function SignupForm() {
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo") || "/dashboard";
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,6 +48,8 @@ export default function SignupPage() {
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  const isInvite = redirectTo.startsWith("/groups/join/");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,7 +62,7 @@ export default function SignupPage() {
       password,
       options: {
         data: { full_name: name },
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
       },
     });
 
@@ -75,7 +81,7 @@ export default function SignupPage() {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
         queryParams: { prompt: "select_account" },
       },
     });
@@ -86,7 +92,11 @@ export default function SignupPage() {
       <>
         <h1 className={styles.title}>Check your inbox ✉️</h1>
         <p className={styles.subtitle}>We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account.</p>
-        <div className={styles.success}>After confirming, you can sign in and start predicting!</div>
+        <div className={styles.success}>
+          {isInvite
+            ? "After confirming, you'll be taken straight to the group to make your picks!"
+            : "After confirming, you can sign in and start predicting!"}
+        </div>
         <p className={styles.footer}><Link href="/login">Back to sign in</Link></p>
       </>
     );
@@ -173,8 +183,16 @@ export default function SignupPage() {
 
       <p className={styles.footer}>
         Already have an account?{" "}
-        <Link href="/login">Sign in</Link>
+        <Link href={`/login${redirectTo !== "/dashboard" ? `?redirectTo=${encodeURIComponent(redirectTo)}` : ""}`}>Sign in</Link>
       </p>
     </>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className={styles.form} />}>
+      <SignupForm />
+    </Suspense>
   );
 }

@@ -139,7 +139,7 @@ export default function PicksModal({ isOpen, onClose, groupId, userName, userId 
 
   const groupPickStatus = (pickTeamId: string | null, group: string, rankIndex: number) => {
     const result = groupResults.find((r) => r.wc_group === group);
-    if (!result || !pickTeamId) return "pending";
+    if (!result || !pickTeamId || result.rank1_id === null) return "pending";
     const officialIds = [result.rank1_id, result.rank2_id, result.rank3_id];
     if (officialIds[rankIndex] === pickTeamId) return "correct";
     if (officialIds.includes(pickTeamId)) return "wrong-rank";
@@ -166,17 +166,18 @@ export default function PicksModal({ isOpen, onClose, groupId, userName, userId 
   let correctGroup = 0, wrongGroup = 0;
   for (const p of groupPicks) {
     const result = groupResults.find((r) => r.wc_group === p.wc_group);
-    if (!result) continue;
+    if (!result || result.rank1_id === null) continue;
     for (let i = 0; i < 2; i++) {
       const tid = [p.rank1_id, p.rank2_id][i];
       const official = [result.rank1_id, result.rank2_id, result.rank3_id][i];
       if (tid && official === tid) correctGroup++;
-      else if (tid) wrongGroup++;
+      else if (tid && official !== null) wrongGroup++;
     }
   }
 
-  const correctBestThird = bestThirdIds.filter((id) => officialBestThirdSet.has(id)).length;
-  const wrongBestThird = bestThirdIds.length - correctBestThird;
+  const bestThirdResultKnown = officialBestThird.length > 0;
+  const correctBestThird = bestThirdResultKnown ? bestThirdIds.filter((id) => officialBestThirdSet.has(id)).length : 0;
+  const wrongBestThird = bestThirdResultKnown ? bestThirdIds.length - correctBestThird : 0;
 
   const correctKo = knockoutPicks.filter((kp) => knockPickStatus(kp.match_id, kp.winner_id) === "correct").length;
   const wrongKo = knockoutPicks.filter((kp) => knockPickStatus(kp.match_id, kp.winner_id) === "wrong").length;
@@ -186,7 +187,7 @@ export default function PicksModal({ isOpen, onClose, groupId, userName, userId 
 
   const totalCorrect = correctGroup + correctBestThird + correctKo;
   const totalWrong = wrongGroup + wrongBestThird + wrongKo;
-  const totalPending = (allGroupRankCount - correctGroup - wrongGroup) + pendingKo;
+  const totalPending = (allGroupRankCount - correctGroup - wrongGroup) + (!bestThirdResultKnown ? bestThirdIds.length : 0) + pendingKo;
   const totalOverall = allGroupRankCount + bestThirdIds.length + matches.length;
 
   return (
@@ -242,7 +243,7 @@ export default function PicksModal({ isOpen, onClose, groupId, userName, userId 
                             return (
                               <div key={rankI} className={styles.pickGroupSlot}>
                                 <div className={styles.pickGroupSlotHeader}>
-                                  Group {letter} · {["1st", "2nd"][rankI]}
+                                  GROUP {letter} · {["1ST", "2ND"][rankI]}
                                 </div>
                                 <div className={styles.pickGroupSlotRow}>
                                   <span className={styles.pickGroupSlotLabel}>Your pick</span>
@@ -260,10 +261,10 @@ export default function PicksModal({ isOpen, onClose, groupId, userName, userId 
                                     {actual ? (
                                       <>{teamFlag(actual.name)} {actual.name}</>
                                     ) : (
-                                      <span className={styles.pickEmptySlot}>—</span>
+                                      <span className={styles.pickEmptySlot}>TBC</span>
                                     )}
                                   </span>
-                                  {pickIcon(status)}
+                                  {status !== "pending" && pickIcon(status)}
                                 </div>
                               </div>
                             );
@@ -284,6 +285,7 @@ export default function PicksModal({ isOpen, onClose, groupId, userName, userId 
                   <div className={styles.pickThirdList}>
                     {bestThirdIds.map((tid) => {
                       const team = tm(tid);
+                      const resultKnown = officialBestThird.length > 0;
                       const isOfficial = officialBestThirdSet.has(tid);
                       return (
                         <span key={tid} className={styles.pickThirdItem}>
@@ -292,9 +294,11 @@ export default function PicksModal({ isOpen, onClose, groupId, userName, userId 
                           ) : (
                             <span className={styles.pickEmptySlot}>—</span>
                           )}
-                          <span className={isOfficial ? styles.pickIconCorrect : styles.pickIconWrong}>
-                            {isOfficial ? "✓" : "✕"}
-                          </span>
+                          {resultKnown && (
+                            <span className={isOfficial ? styles.pickIconCorrect : styles.pickIconWrong}>
+                              {isOfficial ? "✓" : "✕"}
+                            </span>
+                          )}
                         </span>
                       );
                     })}
@@ -333,9 +337,9 @@ export default function PicksModal({ isOpen, onClose, groupId, userName, userId 
                             <div className={styles.pickKoSlotRow}>
                               <span className={styles.pickGroupSlotLabel}>Actual</span>
                               <span className={styles.pickGroupSlotValue}>
-                                {actual ? <>{teamFlag(actual.name)} {actual.name}</> : <span className={styles.pickEmptySlot}>—</span>}
+                                {actual ? <>{teamFlag(actual.name)} {actual.name}</> : <span className={styles.pickEmptySlot}>TBC</span>}
                               </span>
-                              {kp && pickIcon(status)}
+                              {kp && status !== "pending" && pickIcon(status)}
                             </div>
                           </div>
                         );

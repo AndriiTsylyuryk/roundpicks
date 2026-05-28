@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Logo } from "./Logo";
 import styles from "./Footer.module.css";
 
@@ -9,6 +10,7 @@ export function Footer() {
         <span>© 2026 RoundPicks</span>
         <span>Not affiliated with FIFA</span>
         <span>No gambling · No money</span>
+        <Link href="/legal">Terms &amp; Privacy</Link>
       </div>
     </footer>
   );

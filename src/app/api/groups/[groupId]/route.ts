@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server-admin";
 
 export async function PATCH(
   req: Request,
@@ -24,4 +25,29 @@ export async function PATCH(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ name: trimmed });
+}
+
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ groupId: string }> }
+) {
+  const { groupId } = await params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { data: group } = await supabase
+    .from("groups")
+    .select("creator_id")
+    .eq("id", groupId)
+    .single();
+
+  if (!group) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (group.creator_id !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("groups").delete().eq("id", groupId);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  return NextResponse.json({ ok: true });
 }

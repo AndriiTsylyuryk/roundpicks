@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./page.module.css";
+import { Trash2 } from "lucide-react";
 
 interface Group {
   id: string;
@@ -22,11 +23,26 @@ export default function AdminControls({
 }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   function showMsg(type: "success" | "error", text: string) {
     setMsg({ type, text });
     setTimeout(() => setMsg(null), 4000);
+  }
+
+  async function deleteGroup() {
+    setDeleting(true);
+    const res = await fetch(`/api/groups/${group.id}`, { method: "DELETE" });
+    if (res.ok) {
+      router.push("/dashboard");
+    } else {
+      const { error } = await res.json();
+      showMsg("error", error ?? "Failed to delete group");
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
   }
 
   async function setPhase1Locked(locked: boolean) {
@@ -77,11 +93,11 @@ export default function AdminControls({
                 <button className={`${styles.actionBtn} ${styles.unlockBtn}`} onClick={() => setPhase1Locked(false)} disabled={saving}>
                   Reopen (override)
                 </button>
-              ) : (
+              ) : !phase1AutoClosed ? (
                 <button className={`${styles.actionBtn} ${styles.lockBtn}`} onClick={() => setPhase1Locked(true)} disabled={saving}>
                   Lock now (override)
                 </button>
-              )}
+              ) : null}
             </div>
           </div>
 
@@ -104,6 +120,53 @@ export default function AdminControls({
           <p className={styles.resultsNote}>
             Voting for each match automatically closes at kickoff. Fixtures, scores, and group results sync automatically every 10 minutes.
           </p>
+        </div>
+      </div>
+
+      {/* Danger zone */}
+      <div className={styles.section} style={{ borderColor: "rgba(255,80,80,0.25)" }}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle} style={{ color: "#ff6b6b" }}>Danger Zone</h2>
+        </div>
+        <div className={styles.sectionBody}>
+          <div className={styles.row}>
+            <div>
+              <div className={styles.label}>Delete group</div>
+              <p className={styles.resultsNote} style={{ marginTop: 2 }}>
+                Permanently removes the group and all picks. This cannot be undone.
+              </p>
+            </div>
+            <div>
+              {confirmDelete ? (
+                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.6)" }}>Sure?</span>
+                  <button
+                    className={`${styles.actionBtn} ${styles.lockBtn}`}
+                    style={{ background: "#c0392b" }}
+                    onClick={deleteGroup}
+                    disabled={deleting}
+                  >
+                    {deleting ? "Deleting…" : "Yes, delete"}
+                  </button>
+                  <button
+                    className={`${styles.actionBtn} ${styles.unlockBtn}`}
+                    onClick={() => setConfirmDelete(false)}
+                    disabled={deleting}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className={`${styles.actionBtn} ${styles.lockBtn}`}
+                  style={{ background: "#c0392b" }}
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  <Trash2 size={14} /> Delete group
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
