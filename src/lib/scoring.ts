@@ -130,7 +130,7 @@ export function calcKnockoutScore(picks: KnockoutPick[], matches: WcMatchResult[
 // +1 per correct W/D/L prediction for group matches
 export function calcMatchPredictionScore(
   predictions: { match_id: string; prediction: "home" | "draw" | "away" }[],
-  matches: { id: string; home_team_id: string | null; away_team_id: string | null; home_score: number | null; away_score: number | null; status: string }[],
+  matches: { id: string; status: string; home_score: number | null; away_score: number | null }[],
 ): number {
   const matchById = new Map(matches.map((m) => [m.id, m]));
   let score = 0;
