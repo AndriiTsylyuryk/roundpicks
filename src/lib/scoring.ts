@@ -127,6 +127,25 @@ export function calcKnockoutScore(picks: KnockoutPick[], matches: WcMatchResult[
   return score;
 }
 
+// +1 per correct W/D/L prediction for group matches
+export function calcMatchPredictionScore(
+  predictions: { match_id: string; prediction: "home" | "draw" | "away" }[],
+  matches: { id: string; home_team_id: string | null; away_team_id: string | null; home_score: number | null; away_score: number | null; status: string }[],
+): number {
+  const matchById = new Map(matches.map((m) => [m.id, m]));
+  let score = 0;
+  for (const p of predictions) {
+    const m = matchById.get(p.match_id);
+    if (!m || m.status !== "finished" || m.home_score === null || m.away_score === null) continue;
+    const actual: "home" | "draw" | "away" =
+      m.home_score > m.away_score ? "home"
+      : m.away_score > m.home_score ? "away"
+      : "draw";
+    if (p.prediction === actual) score += 1;
+  }
+  return score;
+}
+
 // +2 correct team + correct rank, +1 correct team wrong rank
 export function calcGroupScore(picks: GroupPick[], results: GroupResult[]): number {
   const resultByGroup = new Map(results.map((r) => [r.wc_group, r]));

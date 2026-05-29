@@ -1,9 +1,11 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { calcGroupScore, calcBestThirdScore, calcKnockoutScore, deriveGroupStandings } from "@/lib/scoring";
+import { calcGroupScore, calcBestThirdScore, calcKnockoutScore, calcMatchPredictionScore, deriveGroupStandings } from "@/lib/scoring";
 import PredictForm from "./PredictForm";
 import KnockoutForm from "./KnockoutForm";
+import AdvancedGroupForm from "./AdvancedGroupForm";
+import BestThirdForm from "./BestThirdForm";
 import styles from "./page.module.css";
 
 interface GroupBasic {
@@ -11,7 +13,18 @@ interface GroupBasic {
   name: string;
   phase1_locked: boolean;
   phase2_locked: boolean;
+  mode: string;
   group_members: { user_id: string }[];
+}
+
+interface AdvancedMatch {
+  id: string;
+  home_team_id: string | null;
+  away_team_id: string | null;
+  kickoff_at: string;
+  status: string;
+  home_score: number | null;
+  away_score: number | null;
 }
 
 interface WcMatch {
@@ -27,21 +40,26 @@ interface WcMatch {
 
 interface Props {
   params: Promise<{ groupId: string }>;
+  searchParams: Promise<{ step?: string }>;
 }
 
-export default async function PredictPage({ params }: Props) {
+export default async function PredictPage({ params, searchParams }: Props) {
   const { groupId } = await params;
+  const stepParam = (await searchParams).step;
+  const currentStep = stepParam ? parseInt(stepParam, 10) : 1;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
   const { data: group } = await supabase
     .from("groups")
-    .select("id, name, phase1_locked, group_members(user_id)")
+    .select("id, name, phase1_locked, phase2_locked, mode, group_members(user_id)")
     .eq("id", groupId)
     .single() as unknown as { data: GroupBasic | null };
 
   if (!group) notFound();
+
+  const totalSteps = group.mode === "advanced" ? 3 : 2;
 
   const isMember = group.group_members.some((m) => m.user_id === user.id);
   if (!isMember) notFound();
@@ -128,14 +146,42 @@ export default async function PredictPage({ params }: Props) {
   const firstR32Match = matches.find((m) => m.round === "R32");
   const isKnockoutLocked = group.phase2_locked || (!!firstR32Match && now >= new Date(firstR32Match.kickoff_at));
 
+  // Advanced mode: load all group matches + user's W/D/L predictions
+  let advancedMatches: AdvancedMatch[] = [];
+  let matchPredictions: { match_id: string; prediction: "home" | "draw" | "away" }[] = [];
+
+  if (group.mode === "advanced") {
+    const { data: advRaw } = await supabase
+      .from("wc_matches")
+      .select("id, home_team_id, away_team_id, kickoff_at, status, home_score, away_score")
+      .eq("round", "GROUP")
+      .order("kickoff_at");
+    advancedMatches = (advRaw ?? []) as AdvancedMatch[];
+
+    const { data: predsRaw } = await supabase
+      .from("match_predictions")
+      .select("match_id, prediction")
+      .eq("group_id", groupId)
+      .eq("user_id", user.id);
+    matchPredictions = (predsRaw ?? []) as { match_id: string; prediction: "home" | "draw" | "away" }[];
+  }
+
+  // Compute third-place candidates: teams not picked as rank 1 or 2
+  const pickedRankIds = new Set(existingPicks.flatMap((p) => [p.rank1_id, p.rank2_id]));
+  const thirdPlaceTeams = teams.filter((t) => !pickedRankIds.has(t.id));
+
   const groupScore = hasGroupResults ? calcGroupScore(existingPicks, groupResults) : null;
   const bestThirdScore = officialBestThirdIds.length === 8
     ? calcBestThirdScore(existingBestThirdIds, officialBestThirdIds)
     : null;
   const hasKnockoutResults = matches.some((m) => m.status === "finished");
   const knockoutScore = hasKnockoutResults ? calcKnockoutScore(knockoutPicks, matches) : null;
+  const hasAdvancedResults = advancedMatches.some((m) => m.status === "finished");
+  const matchPredictionScore = group.mode === "advanced" && hasAdvancedResults
+    ? calcMatchPredictionScore(matchPredictions, advancedMatches)
+    : null;
   const totalScore = groupScore !== null
-    ? groupScore + (bestThirdScore ?? 0) + (knockoutScore ?? 0)
+    ? groupScore + (bestThirdScore ?? 0) + (knockoutScore ?? 0) + (matchPredictionScore ?? 0)
     : null;
 
   const deadlineStr = phase1Deadline
@@ -151,7 +197,7 @@ export default async function PredictPage({ params }: Props) {
           <Link href={`/groups/${groupId}`} className={styles.heroBack}>← {group.name}</Link>
           <div className={styles.heroLabels}>
             <div className={`eyebrow ${styles.heroEyebrow}`}>
-              {phase1IsOpen ? "Phase 1 · Group Rankings" : "Phase 2 · Knockout Picks"}
+              {phase1IsOpen ? `Step ${currentStep} of ${totalSteps}` : "Phase 2 · Knockout Picks"}
             </div>
             {deadlineStr && phase1IsOpen && (
               <span className={styles.heroDeadline}>Closes {deadlineStr}</span>
@@ -184,12 +230,34 @@ export default async function PredictPage({ params }: Props) {
                 <span className={styles.scoreBreakdownVal}>{knockoutScore}</span>
               </span>
             )}
+            {matchPredictionScore !== null && (
+              <span className={styles.scoreBreakdownItem}>
+                <span className={styles.scoreBreakdownKey}>Match picks</span>
+                <span className={styles.scoreBreakdownVal}>{matchPredictionScore}</span>
+              </span>
+            )}
           </div>
         </div>
       )}
 
-      {/* Phase 1: Group stage + best third */}
+      {/* Phase 1 step 1 (advanced only): W/D/L for each group match */}
+      {phase1IsOpen && group.mode === "advanced" && currentStep === 1 && (
+        <AdvancedGroupForm
+          groupId={groupId}
+          userId={user.id}
+          matches={advancedMatches}
+          teams={teams}
+          existingPicks={matchPredictions}
+          isLocked={false}
+          nextStepUrl={`/groups/${groupId}/predict?step=2`}
+        />
+      )}
+
+      {/* Phase 1 step 2 (advanced) / step 1 (simple): Group Rankings */}
       {phase1IsOpen && (
+        (group.mode === "advanced" && currentStep === 2) ||
+        (group.mode !== "advanced" && currentStep === 1)
+      ) && (
         <PredictForm
           groupId={groupId}
           userId={user.id}
@@ -197,8 +265,26 @@ export default async function PredictPage({ params }: Props) {
           existingPicks={existingPicks}
           isLocked={false}
           groupResults={groupResults}
-          existingBestThirdIds={existingBestThirdIds}
+          nextStepUrl={group.mode === "advanced"
+            ? `/groups/${groupId}/predict?step=3`
+            : `/groups/${groupId}/predict?step=2`
+          }
+        />
+      )}
+
+      {/* Phase 1 step 3 (advanced) / step 2 (simple): Best 3rd-Place Teams */}
+      {phase1IsOpen && (
+        (group.mode === "advanced" && currentStep === 3) ||
+        (group.mode !== "advanced" && currentStep === 2)
+      ) && (
+        <BestThirdForm
+          groupId={groupId}
+          userId={user.id}
+          thirdPlaceTeams={thirdPlaceTeams}
+          isLocked={false}
+          existingSelectedIds={existingBestThirdIds}
           officialBestThirdIds={officialBestThirdIds}
+          nextStepUrl={`/groups/${groupId}`}
         />
       )}
 

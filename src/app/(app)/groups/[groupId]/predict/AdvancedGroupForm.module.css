@@ -1,0 +1,351 @@
+/* ── Hero card ── */
+.hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--color-paper-deep);
+  padding: 28px 32px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: 20px;
+}
+
+.heroOrb {
+  position: absolute;
+  right: -140px;
+  top: -160px;
+  width: 460px;
+  height: 460px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-teal) 0%, var(--color-mint) 100%);
+  opacity: 0.55;
+  filter: blur(70px);
+  pointer-events: none;
+}
+
+.heroBody {
+  position: relative;
+  flex: 1;
+}
+
+.heroMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.heroModePill {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-mint);
+  background: rgba(120, 255, 214, 0.16);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+
+.heroDeadline {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.heroTitle {
+  margin: 10px 0 0;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: #fff;
+}
+
+.heroSub {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 560px;
+}
+
+.heroProgress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.heroProgressTrack {
+  flex: 1;
+  max-width: 360px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.10);
+  overflow: hidden;
+}
+
+.heroProgressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--color-teal) 0%, var(--color-mint) 100%);
+  transition: width 0.2s;
+}
+
+.heroProgressLabel {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+}
+
+.heroSaveBtn {
+  position: relative;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 10px;
+  background: #fff;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-ink);
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  transition: transform 0.1s;
+}
+
+.heroSaveBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.heroSaveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Groups grid ── */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 20px;
+  }
+
+  .heroSaveBtn {
+    width: 100%;
+  }
+}
+
+/* ── Group card ── */
+.groupCard {
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-paper-card);
+  overflow: hidden;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-paper-deep);
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.groupHeaderCount {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.groupHeaderCountDone {
+  color: var(--color-mint);
+}
+
+.matchList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+}
+
+/* ── Match row ── */
+.matchRow {
+  display: grid;
+  grid-template-columns: 1fr 68px 1fr;
+  align-items: stretch;
+  gap: 4px;
+  border: 1px solid rgba(6, 39, 49, 0.08);
+  border-radius: 10px;
+  background: var(--color-paper);
+  padding: 6px;
+}
+
+.matchRowLocked {
+  opacity: 0.55;
+}
+
+/* ── Team button ── */
+.teamBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-paper-card);
+  padding: 8px 10px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.teamBtn:disabled {
+  cursor: default;
+}
+
+.teamBtnActive {
+  border-color: var(--color-teal);
+  background: rgba(0, 121, 145, 0.10);
+}
+
+.teamFlag {
+  flex-shrink: 0;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.teamName {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teamNameActive {
+  font-weight: 600;
+}
+
+.teamCheck {
+  flex-shrink: 0;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--color-teal);
+  line-height: 1;
+}
+
+/* ── Draw button ── */
+.drawBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: 1.5px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-paper-card);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.drawBtn:disabled {
+  cursor: default;
+}
+
+.drawBtnActive {
+  border-color: var(--color-teal);
+  background: linear-gradient(135deg, var(--color-teal) 0%, var(--color-mint) 100%);
+  color: var(--color-ink);
+}
+
+/* ── Sticky save bar ── */
+.saveBar {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid var(--color-border);
+  background: rgba(242, 239, 231, 0.92);
+  backdrop-filter: blur(8px);
+  padding: 12px 0;
+  margin-top: 20px;
+}
+
+.saveBarLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.unsaved {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #9a4d00;
+}
+
+.unsavedDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e1a000;
+  flex-shrink: 0;
+}
+
+.saveBarBtn {
+  border: none;
+  border-radius: 10px;
+  background: var(--color-paper-deep);
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.12s;
+  white-space: nowrap;
+}
+
+.saveBarBtn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.saveBarBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

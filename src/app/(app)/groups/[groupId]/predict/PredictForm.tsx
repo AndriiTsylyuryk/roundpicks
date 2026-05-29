@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getFlagCode } from "@/lib/team-flags";
-import BestThirdForm from "./BestThirdForm";
 import styles from "./page.module.css";
 
 interface Team {
@@ -33,8 +33,7 @@ interface Props {
   existingPicks: Pick[];
   isLocked: boolean;
   groupResults: GroupResult[];
-  existingBestThirdIds: string[];
-  officialBestThirdIds: string[];
+  nextStepUrl?: string;
 }
 
 const WC_GROUPS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
@@ -59,8 +58,9 @@ function calcRankPoints(
 
 export default function PredictForm({
   groupId, userId, teams, existingPicks, isLocked,
-  groupResults, existingBestThirdIds, officialBestThirdIds,
+  groupResults, nextStepUrl,
 }: Props) {
+  const router = useRouter();
   const initRanks = (): Record<string, GroupRanks> => {
     const m: Record<string, GroupRanks> = {};
     for (const g of WC_GROUPS) m[g] = [null, null];
@@ -76,8 +76,6 @@ export default function PredictForm({
   const [savedGroups, setSavedGroups] = useState<Set<string>>(
     new Set(existingPicks.map((p) => p.wc_group))
   );
-  const [step, setStep] = useState<1 | 2>(existingBestThirdIds.length > 0 ? 2 : 1);
-  const [bestThirdEditMode, setBestThirdEditMode] = useState(false);
 
   const resultByGroup = new Map(groupResults.map((r) => [r.wc_group, r]));
 
@@ -111,7 +109,6 @@ export default function PredictForm({
     (g) => ranks[g][0] !== null && ranks[g][1] !== null
   );
   const progress = completedGroups.length;
-  const allComplete = progress === 12;
 
   const groupsToDelete = WC_GROUPS.filter(
     (g) => savedGroups.has(g) && !completedGroups.includes(g)
@@ -163,7 +160,7 @@ export default function PredictForm({
 
     setSavedGroups(new Set(completedGroups));
     setSaving(false);
-    if (allComplete) { setBestThirdEditMode(existingBestThirdIds.length > 0); setStep(2); }
+    if (nextStepUrl) router.push(nextStepUrl);
   }
 
   if (!allGroupsHaveTeams) {
@@ -174,26 +171,6 @@ export default function PredictForm({
     );
   }
 
-  if (step === 2) {
-    const thirdPlaceTeams = WC_GROUPS.flatMap((g) => {
-      const picked = new Set([ranks[g][0], ranks[g][1]].filter(Boolean));
-      return teamsByGroup[g].filter((t) => !picked.has(t.id));
-    });
-
-    return (
-      <BestThirdForm
-        groupId={groupId}
-        userId={userId}
-        thirdPlaceTeams={thirdPlaceTeams}
-        isLocked={isLocked}
-        onBack={() => { setStep(1); setBestThirdEditMode(false); }}
-        editMode={bestThirdEditMode}
-        existingSelectedIds={existingBestThirdIds}
-        officialBestThirdIds={officialBestThirdIds}
-      />
-    );
-  }
-
   return (
     <>
       {isLocked && (
@@ -201,11 +178,6 @@ export default function PredictForm({
           🔒 Predictions are closed. Your picks are saved below.
         </div>
       )}
-
-      <div className={styles.stepHeader}>
-        <span className={styles.stepBadge}>Step 1 of 2</span>
-        <span className={styles.stepTitle}>Group Rankings</span>
-      </div>
 
       <div className={styles.progress}>
         <span>{progress}/12 groups</span>
@@ -326,8 +298,8 @@ export default function PredictForm({
             >
               {saving ? "Saving…" : "Save predictions"}
             </button>
-            {allComplete && !hasUnsaved && (
-              <button className={`${styles.saveBtn} ${styles.nextBtn}`} onClick={() => { setBestThirdEditMode(existingBestThirdIds.length > 0); setStep(2); }}>
+            {progress === 12 && !hasUnsaved && (
+              <button className={`${styles.saveBtn} ${styles.nextBtn}`} onClick={() => { if (nextStepUrl) router.push(nextStepUrl); }}>
                 Next: Best 3rd →
               </button>
             )}

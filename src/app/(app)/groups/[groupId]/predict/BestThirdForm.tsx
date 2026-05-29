@@ -17,29 +17,26 @@ interface Props {
   userId: string;
   thirdPlaceTeams: Team[];
   isLocked: boolean;
-  onBack: () => void;
-  editMode: boolean;
   existingSelectedIds: string[];
   officialBestThirdIds: string[];
+  nextStepUrl?: string;
 }
 
 const REQUIRED = 8;
 
 export default function BestThirdForm({
-  groupId, userId, thirdPlaceTeams, isLocked, onBack, editMode,
-  existingSelectedIds, officialBestThirdIds,
+  groupId, userId, thirdPlaceTeams, isLocked,
+  existingSelectedIds, officialBestThirdIds, nextStepUrl,
 }: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set(existingSelectedIds));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const isSaved = existingSelectedIds.length === REQUIRED && !editMode;
-
   const hasOfficialResults = officialBestThirdIds.length === 8;
 
   function toggle(teamId: string) {
-    if (isLocked || isSaved) return;
+    if (isLocked) return;
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(teamId)) {
@@ -62,7 +59,7 @@ export default function BestThirdForm({
     );
     setSaving(false);
     if (dbError) setError(dbError.message);
-    else router.push(`/groups/${groupId}`);
+    else if (nextStepUrl) router.push(nextStepUrl);
   }
 
   const count = selected.size;
@@ -75,16 +72,6 @@ export default function BestThirdForm({
 
   return (
     <>
-      <div className={styles.stepHeader}>
-        <span className={styles.stepBadge}>Step 2 of 2</span>
-        <span className={styles.stepTitle}>Best 3rd-Place Teams</span>
-        {bestThirdScore !== null && (
-          <span className={`${styles.stepScore} ${bestThirdScore > 0 ? styles.stepScorePos : ""}`}>
-            +{bestThirdScore} pts
-          </span>
-        )}
-      </div>
-
       <p className={styles.stepDesc}>
         Select <strong>8 teams</strong> you think will finish 3rd in their group and qualify for the Round of 32.
       </p>
@@ -106,7 +93,7 @@ export default function BestThirdForm({
       <div className={styles.thirdGrid}>
         {thirdPlaceTeams.map((team) => {
           const isSelected = selected.has(team.id);
-          const isDisabled = isLocked || isSaved || (!isSelected && count >= REQUIRED);
+          const isDisabled = isLocked || (!isSelected && count >= REQUIRED);
           const isCorrect = hasOfficialResults && officialBestThirdIds.includes(team.id);
           const isWrong = hasOfficialResults && isSelected && !isCorrect;
 
@@ -151,25 +138,18 @@ export default function BestThirdForm({
 
       {!isLocked && (
         <div className={styles.saveBar}>
-          {isSaved ? (
-            <>
-              <button className={styles.saveBtn} disabled>Saved ✓</button>
-              <button className={styles.editPicksBtn} onClick={onBack}>
-                Edit picks
-              </button>
-            </>
-          ) : (
-            <>
-              <button className={styles.backBtn} onClick={onBack} disabled={saving}>← Back</button>
-              <button
-                className={styles.saveBtn}
-                onClick={save}
-                disabled={saving || !isComplete}
-              >
-                {saving ? "Saving…" : "Save picks"}
-              </button>
-            </>
-          )}
+          <span className={styles.saveStatus}>
+            {error ? error : ""}
+          </span>
+          <div className={styles.saveBtns}>
+            <button
+              className={styles.saveBtn}
+              onClick={save}
+              disabled={saving || !isComplete}
+            >
+              {saving ? "Saving…" : "Save picks"}
+            </button>
+          </div>
         </div>
       )}
     </>
