@@ -6,6 +6,7 @@ import {
   calcGroupScore,
   calcBestThirdScore,
   calcKnockoutScore,
+  calcMatchPredictionScore,
   deriveGroupStandings,
 } from "@/lib/scoring";
 import CopyInviteButton from "./CopyInviteButton";
@@ -20,6 +21,7 @@ interface GroupRow {
   name: string;
   creator_id: string;
   invite_code: string;
+  mode: string;
   phase1_locked: boolean;
   phase1_deadline: string | null;
   phase2_locked: boolean;
@@ -163,6 +165,31 @@ export default async function GroupPage({ params }: Props) {
     koPicksByUser[p.user_id].push(p);
   }
 
+  type MpRow = { user_id: string; match_id: string; prediction: "home" | "draw" | "away" };
+  type GmScoreRow = { id: string; status: string; home_score: number | null; away_score: number | null };
+
+  const matchPredsByUser: Record<string, MpRow[]> = {};
+  let groupMatchesForScore: GmScoreRow[] = [];
+  let hasAdvancedResults = false;
+
+  if (group.mode === "advanced") {
+    const { data: gmRaw } = await supabase
+      .from("wc_matches")
+      .select("id, status, home_score, away_score")
+      .eq("round", "GROUP");
+    groupMatchesForScore = (gmRaw ?? []) as GmScoreRow[];
+    hasAdvancedResults = groupMatchesForScore.some((m) => m.status === "finished");
+
+    const { data: mpRaw } = await supabase
+      .from("match_predictions")
+      .select("user_id, match_id, prediction")
+      .eq("group_id", groupId);
+    for (const mp of (mpRaw ?? []) as MpRow[]) {
+      if (!matchPredsByUser[mp.user_id]) matchPredsByUser[mp.user_id] = [];
+      matchPredsByUser[mp.user_id].push(mp);
+    }
+  }
+
   type PickRow = {
     user_id: string;
     wc_group: string;
@@ -188,10 +215,13 @@ export default async function GroupPage({ params }: Props) {
       const knockoutScore = hasKnockoutResults
         ? calcKnockoutScore(koPicksByUser[uid] ?? [], knockoutMatches)
         : null;
-      const totalScore =
-        groupScore !== null
-          ? groupScore + (bestThirdScore ?? 0) + (knockoutScore ?? 0)
-          : null;
+      const matchPredScore = group.mode === "advanced" && hasAdvancedResults
+        ? calcMatchPredictionScore(matchPredsByUser[uid] ?? [], groupMatchesForScore)
+        : null;
+      const anyScoreKnown = groupScore !== null || matchPredScore !== null;
+      const totalScore = anyScoreKnown
+        ? (groupScore ?? 0) + (bestThirdScore ?? 0) + (knockoutScore ?? 0) + (matchPredScore ?? 0)
+        : null;
       return {
         userId: uid,
         name: nameById[uid] ?? "Unknown",
@@ -199,6 +229,7 @@ export default async function GroupPage({ params }: Props) {
         groupScore,
         bestThirdScore,
         knockoutScore,
+        matchPredScore,
         score: totalScore,
       };
     })
@@ -451,7 +482,7 @@ export default async function GroupPage({ params }: Props) {
                       ) : (
                         <span className={styles.lbDone}>✓</span>
                       )}
-                      <ViewPicksButton userId={m.userId} userName={m.name} groupId={groupId} />
+                      <ViewPicksButton userId={m.userId} userName={m.name} groupId={groupId} groupMode={group.mode} />
                     </span>
                   </li>
                 );

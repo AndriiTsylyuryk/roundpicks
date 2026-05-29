@@ -8,9 +8,10 @@ interface Props {
   userId: string;
   userName: string;
   groupId: string;
+  groupMode: string;
 }
 
-export default function ViewPicksButton({ userId, userName, groupId }: Props) {
+export default function ViewPicksButton({ userId, userName, groupId, groupMode }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -27,6 +28,7 @@ export default function ViewPicksButton({ userId, userName, groupId }: Props) {
         groupId={groupId}
         userName={userName}
         userId={userId}
+        groupMode={groupMode}
       />
     </>
   );

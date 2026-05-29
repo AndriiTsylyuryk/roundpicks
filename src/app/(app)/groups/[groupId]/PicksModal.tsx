@@ -24,12 +24,27 @@ interface KnockoutPick {
   winner_id: string;
 }
 
+interface MatchPrediction {
+  match_id: string;
+  prediction: "home" | "draw" | "away";
+}
+
+interface GroupMatch {
+  id: string;
+  home_team_id: string | null;
+  away_team_id: string | null;
+  status: string;
+  home_score: number | null;
+  away_score: number | null;
+}
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   groupId: string;
   userName: string;
   userId: string;
+  groupMode: string;
 }
 
 const ROUND_LABEL: Record<string, string> = {
@@ -43,7 +58,7 @@ const teamFlag = (name: string, cls = styles.pickFlag) => {
   return <img className={cls} src={`https://flagcdn.com/20x15/${cc}.png`} alt="" />;
 };
 
-export default function PicksModal({ isOpen, onClose, groupId, userName, userId }: Props) {
+export default function PicksModal({ isOpen, onClose, groupId, userName, userId, groupMode }: Props) {
   const [teams, setTeams] = useState<Map<string, TeamInfo>>(new Map());
   const [groupPicks, setGroupPicks] = useState<GroupPick[]>([]);
   const [bestThirdIds, setBestThirdIds] = useState<string[]>([]);
@@ -52,6 +67,8 @@ export default function PicksModal({ isOpen, onClose, groupId, userName, userId 
   const [loading, setLoading] = useState(false);
   const [groupResults, setGroupResults] = useState<{ wc_group: string; rank1_id: string | null; rank2_id: string | null; rank3_id: string | null }[]>([]);
   const [officialBestThird, setOfficialBestThird] = useState<string[]>([]);
+  const [matchPredictions, setMatchPredictions] = useState<MatchPrediction[]>([]);
+  const [groupMatches, setGroupMatches] = useState<GroupMatch[]>([]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -121,14 +138,54 @@ export default function PicksModal({ isOpen, onClose, groupId, userName, userId 
       const official = r32TeamIds.size > 0 ? [...thirdPlaceIds].filter((id: string) => r32TeamIds.has(id)) : [];
       setOfficialBestThird(official);
 
+      if (groupMode === "advanced") {
+        const { data: mpRaw } = await supabase
+          .from("match_predictions")
+          .select("match_id, prediction")
+          .eq("group_id", groupId)
+          .eq("user_id", userId);
+        setMatchPredictions((mpRaw ?? []) as MatchPrediction[]);
+
+        const { data: gmRaw } = await supabase
+          .from("wc_matches")
+          .select("id, home_team_id, away_team_id, status, home_score, away_score")
+          .eq("round", "GROUP")
+          .order("kickoff_at");
+        setGroupMatches((gmRaw ?? []) as GroupMatch[]);
+      }
+
       setLoading(false);
     })();
-  }, [isOpen, groupId, userId]);
+  }, [isOpen, groupId, userId, groupMode]);
 
   const tm = (id: string | null) => (id && teams.get(id)) ?? null;
 
   const groupPicksByGroup = new Map(groupPicks.map((p) => [p.wc_group, p]));
   const officialBestThirdSet = new Set(officialBestThird);
+
+  // Match predictions helpers
+  const matchPredMap = new Map(matchPredictions.map((mp) => [mp.match_id, mp.prediction]));
+
+  const getMatchPredStatus = (matchId: string): "correct" | "wrong" | "pending" | null => {
+    const pred = matchPredMap.get(matchId);
+    if (pred === undefined) return null;
+    const m = groupMatches.find((gm) => gm.id === matchId);
+    if (!m || m.status !== "finished" || m.home_score === null || m.away_score === null) return "pending";
+    const actual = m.home_score > m.away_score ? "home" : m.home_score < m.away_score ? "away" : "draw";
+    return actual === pred ? "correct" : "wrong";
+  };
+
+  const groupedGroupMatches: [string, GroupMatch[]][] = (() => {
+    const map = new Map<string, GroupMatch[]>();
+    for (const m of groupMatches) {
+      const t = teams.get(m.home_team_id ?? "") ?? teams.get(m.away_team_id ?? "");
+      const letter = (t as TeamInfo | undefined)?.group_letter;
+      if (!letter) continue;
+      if (!map.has(letter)) map.set(letter, []);
+      map.get(letter)!.push(m);
+    }
+    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
+  })();
 
   const actualGroupRank = (group: string, rankIndex: number) => {
     const result = groupResults.find((r) => r.wc_group === group);
@@ -161,7 +218,7 @@ export default function PicksModal({ isOpen, onClose, groupId, userName, userId 
   };
 
   // Stats
-  const allGroupRankCount = groupPicks.length * 2; // count 1st and 2nd only
+  const allGroupRankCount = groupPicks.length * 2;
 
   let correctGroup = 0, wrongGroup = 0;
   for (const p of groupPicks) {
@@ -185,10 +242,23 @@ export default function PicksModal({ isOpen, onClose, groupId, userName, userId 
   const unpickedKo = matches.length - pickedKo.size;
   const pendingKo = knockoutPicks.filter((kp) => knockPickStatus(kp.match_id, kp.winner_id) === "pending").length + unpickedKo;
 
-  const totalCorrect = correctGroup + correctBestThird + correctKo;
-  const totalWrong = wrongGroup + wrongBestThird + wrongKo;
-  const totalPending = (allGroupRankCount - correctGroup - wrongGroup) + (!bestThirdResultKnown ? bestThirdIds.length : 0) + pendingKo;
-  const totalOverall = allGroupRankCount + bestThirdIds.length + matches.length;
+  const correctMatchPred = groupMode === "advanced"
+    ? matchPredictions.filter((mp) => getMatchPredStatus(mp.match_id) === "correct").length : 0;
+  const wrongMatchPred = groupMode === "advanced"
+    ? matchPredictions.filter((mp) => getMatchPredStatus(mp.match_id) === "wrong").length : 0;
+  const pendingMatchPred = groupMode === "advanced"
+    ? matchPredictions.filter((mp) => getMatchPredStatus(mp.match_id) === "pending").length : 0;
+  const totalGroupMatchesPossible = groupMode === "advanced"
+    ? groupMatches.filter((m) => m.home_team_id && m.away_team_id).length : 0;
+  const unpickedMatchPred = totalGroupMatchesPossible - matchPredictions.length;
+
+  const totalCorrect = correctGroup + correctBestThird + correctKo + correctMatchPred;
+  const totalWrong = wrongGroup + wrongBestThird + wrongKo + wrongMatchPred;
+  const totalPending = (allGroupRankCount - correctGroup - wrongGroup)
+    + (!bestThirdResultKnown ? bestThirdIds.length : 0)
+    + pendingKo
+    + pendingMatchPred + (unpickedMatchPred > 0 ? unpickedMatchPred : 0);
+  const totalOverall = allGroupRankCount + bestThirdIds.length + matches.length + totalGroupMatchesPossible;
 
   return (
     <Modal
@@ -223,10 +293,62 @@ export default function PicksModal({ isOpen, onClose, groupId, userName, userId 
             <p className={styles.picksLoading}>Loading picks…</p>
           ) : (
             <>
+              {/* ── Match predictions (Advanced mode) ── */}
+              {groupMode === "advanced" && (
+                <section className={styles.picksSection}>
+                  <h3 className={styles.picksSectionTitle}>Match predictions</h3>
+                  <p className={styles.picksSectionSub}>W / D / L for each group match · +1 pt each</p>
+                  {groupMatches.length === 0 ? (
+                    <p className={styles.picksEmpty}>No match predictions yet</p>
+                  ) : (
+                    <div className={styles.pickMatchList}>
+                      {groupedGroupMatches.map(([letter, gMatches]) => (
+                        <div key={letter} className={styles.pickMatchGroup}>
+                          <div className={styles.pickMatchGroupLabel}>Group {letter}</div>
+                          {gMatches.map((match) => {
+                            const homeTeam = tm(match.home_team_id);
+                            const awayTeam = tm(match.away_team_id);
+                            const pred = matchPredMap.get(match.id);
+                            const status = getMatchPredStatus(match.id);
+                            const predLabel = pred === "home"
+                              ? (homeTeam?.name ?? "Home")
+                              : pred === "away"
+                              ? (awayTeam?.name ?? "Away")
+                              : pred === "draw"
+                              ? "Draw"
+                              : null;
+                            const resultLabel = match.status === "finished" && match.home_score !== null && match.away_score !== null
+                              ? `${match.home_score}–${match.away_score}`
+                              : "TBC";
+                            return (
+                              <div key={match.id} className={styles.pickMatchRow}>
+                                <span className={styles.pickMatchTeams}>
+                                  {homeTeam && teamFlag(homeTeam.name)}
+                                  <span className={styles.pickMatchTeamName}>{homeTeam?.name ?? "TBD"}</span>
+                                  <span className={styles.pickMatchVs}>vs</span>
+                                  {awayTeam && teamFlag(awayTeam.name)}
+                                  <span className={styles.pickMatchTeamName}>{awayTeam?.name ?? "TBD"}</span>
+                                </span>
+                                {predLabel !== null
+                                  ? <span className={styles.pickMatchPick}>{predLabel}</span>
+                                  : <span className={styles.pickMatchNoPick}>—</span>
+                                }
+                                <span className={styles.pickMatchResult}>{resultLabel}</span>
+                                {status !== null && status !== "pending" && pickIcon(status)}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )}
+
               {/* ── Group stage rankings ── */}
               <section className={styles.picksSection}>
                 <h3 className={styles.picksSectionTitle}>Group stage rankings</h3>
-                <p className={styles.picksSectionSub}>6 groups · 1st & 2nd in each</p>
+                <p className={styles.picksSectionSub}>12 groups · 1st & 2nd in each</p>
                 {groupPicks.length === 0 ? (
                   <p className={styles.picksEmpty}>No group picks yet</p>
                 ) : (

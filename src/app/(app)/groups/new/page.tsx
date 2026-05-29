@@ -1,48 +1,128 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./page.module.css";
 
-interface Event {
-  id: string;
-  name: string;
-  slug: string;
-}
+type Mode = "simple" | "advanced";
+type MaxParticipants = 10 | 25 | 50 | 100;
 
 function generateInviteCode() {
   const chars = "abcdefghijkmnpqrstuvwxyz23456789";
   return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
 }
 
+/* ── Section ── */
+function Section({ step, label, sub, children }: { step: number; label: string; sub?: string; children: React.ReactNode }) {
+  return (
+    <section className={styles.section}>
+      <div className={styles.sectionHead}>
+        <span className={styles.stepPill}>{step}</span>
+        <h2 className={styles.sectionLabel}>{label}</h2>
+      </div>
+      {sub && <p className={styles.sectionSub}>{sub}</p>}
+      <div className={styles.sectionCard}>{children}</div>
+    </section>
+  );
+}
+
+/* ── Field ── */
+function Field({ label, hint, htmlFor, children }: { label: string; hint?: string; htmlFor?: string; children: React.ReactNode }) {
+  return (
+    <div className={styles.field}>
+      <label className={styles.fieldLabel} htmlFor={htmlFor}>{label}</label>
+      {children}
+      {hint && <div className={styles.fieldHint}>{hint}</div>}
+    </div>
+  );
+}
+
+/* ── TournamentRow ── */
+function TournamentRow({ name, meta }: { name: string; meta: string }) {
+  return (
+    <div className={styles.tournamentRow}>
+      <span className={styles.tournamentOrb} aria-hidden />
+      <div className={styles.tournamentInfo}>
+        <div className={styles.tournamentName}>{name}</div>
+        <div className={styles.tournamentMeta}>{meta}</div>
+      </div>
+      <span className={styles.tournamentDefault}>Default</span>
+    </div>
+  );
+}
+
+/* ── ModeCard ── */
+function ModeCard({ id, selected, onSelect, title, tagline, description, bullets, effort, badge }: {
+  id: string; selected: boolean; onSelect: () => void;
+  title: string; tagline: string; description: string;
+  bullets: string[]; effort: string; badge?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      role="radio"
+      aria-checked={selected}
+      aria-labelledby={`${id}-title`}
+      className={`${styles.modeCard} ${selected ? styles.modeCardSelected : ""}`}
+    >
+      <span className={`${styles.modeRadio} ${selected ? styles.modeRadioSelected : ""}`} aria-hidden>
+        {selected ? "✓" : ""}
+      </span>
+
+      {badge && <span className={styles.modeBadge}>{badge}</span>}
+
+      <div id={`${id}-title`} className={styles.modeTitle}>{title}</div>
+      <div className={styles.modeTagline}>{tagline}</div>
+      <p className={styles.modeDesc}>{description}</p>
+
+      <ul className={styles.modeBullets}>
+        {bullets.map((b, i) => (
+          <li key={i} className={styles.modeBullet}>
+            <span className={styles.modeBulletDot} aria-hidden>·</span>
+            <span>{b}</span>
+          </li>
+        ))}
+      </ul>
+
+      <div className={styles.modeEffort}>{effort}</div>
+    </button>
+  );
+}
+
+/* ── ParticipantsPicker ── */
+function ParticipantsPicker({ value, onChange }: { value: MaxParticipants; onChange: (n: MaxParticipants) => void }) {
+  const options: MaxParticipants[] = [10, 25, 50, 100];
+  return (
+    <div className={styles.pills}>
+      {options.map((n) => (
+        <button
+          key={n}
+          type="button"
+          onClick={() => onChange(n)}
+          aria-pressed={n === value}
+          className={`${styles.pill} ${n === value ? styles.pillActive : ""}`}
+        >
+          {n}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ── Page ── */
 export default function NewGroupPage() {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [maxParticipants, setMaxParticipants] = useState("50");
-  const [events, setEvents] = useState<Event[]>([]);
-  const [eventId, setEventId] = useState("");
+  const [mode, setMode] = useState<Mode>("simple");
+  const [maxParticipants, setMaxParticipants] = useState<MaxParticipants>(25);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const supabase = createClient();
-    supabase
-      .from("events")
-      .select("id, name, slug")
-      .eq("status", "active")
-      .order("starts_at")
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          setEvents(data as Event[]);
-          setEventId(data[0].id);
-        }
-      });
-  }, []);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit() {
+    if (!name.trim()) return;
     setError("");
     setLoading(true);
 
@@ -58,8 +138,8 @@ export default function NewGroupPage() {
         name: name.trim(),
         creator_id: user.id,
         invite_code,
-        max_participants: parseInt(maxParticipants),
-        event_id: eventId || null,
+        max_participants: maxParticipants,
+        mode,
       } as never)
       .select("id")
       .single();
@@ -70,81 +150,107 @@ export default function NewGroupPage() {
       return;
     }
 
-    const { error: joinError } = await supabase.from("group_members").insert({
+    await supabase.from("group_members").insert({
       group_id: (group as { id: string }).id,
       user_id: user.id,
     });
-
-    if (joinError) console.error("Auto-join failed:", joinError.message);
 
     router.push(`/groups/${(group as { id: string }).id}`);
   }
 
   return (
     <div className={styles.page}>
-      <Link href="/dashboard" className={styles.back}>← Back to groups</Link>
-      <h1 className={styles.title}>Create a group</h1>
-      <p className={styles.subtitle}>Set up a prediction group and invite friends or family.</p>
+      <div className={styles.inner}>
 
-      <form onSubmit={handleSubmit} className={styles.form}>
+        <Link href="/dashboard" className={styles.back}>← Dashboard</Link>
+
+        <header className={styles.header}>
+          <div className="eyebrow" style={{ color: "var(--color-text-light)" }}>Create a group</div>
+          <h1 className={styles.title}>Set up your group</h1>
+        </header>
+
         {error && <p className={styles.error}>{error}</p>}
 
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="name">Group name</label>
-          <input
-            id="name"
-            type="text"
-            className={styles.input}
-            placeholder="e.g. Family WC 2026"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            maxLength={60}
-          />
-        </div>
+        <Section step={1} label="Basics">
+          <Field label="Group name" hint="Visible to anyone you invite." htmlFor="group-name">
+            <input
+              id="group-name"
+              type="text"
+              className={styles.input}
+              placeholder="e.g. Family WC 2026"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={60}
+            />
+          </Field>
+          <Field label="Tournament" hint="More tournaments coming after the World Cup.">
+            <TournamentRow
+              name="FIFA World Cup 2026"
+              meta="Jun 11 — Jul 19 · 48 teams · 104 matches"
+            />
+          </Field>
+        </Section>
 
-        {events.length > 1 && (
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="event">Tournament</label>
-            <select
-              id="event"
-              className={styles.select}
-              value={eventId}
-              onChange={(e) => setEventId(e.target.value)}
+        <Section
+          step={2}
+          label="Prediction mode"
+          sub="Pick how deep the group goes. You can't change this once predictions open."
+        >
+          <div className={styles.modeGrid}>
+            <ModeCard
+              id="simple"
+              selected={mode === "simple"}
+              onSelect={() => setMode("simple")}
+              title="Simple"
+              tagline="Just the big picture."
+              description="Predict which teams will advance from each group, plus the knockout winners."
+              bullets={[
+                "Rank 1st / 2nd in each group",
+                "Pick best third-placed teams",
+                "Predict every knockout winner",
+              ]}
+              effort="≈ 5 minutes to fill in"
+            />
+            <ModeCard
+              id="advanced"
+              selected={mode === "advanced"}
+              onSelect={() => setMode("advanced")}
+              title="Advanced"
+              tagline="Call every match."
+              description="Predict the result of every group-stage match — win, draw, or lose. Then knockouts as usual."
+              bullets={[
+                "Pick W / D / L for each of the 72 group matches",
+                "Plus rankings and best third-placed teams",
+                "Predict every knockout winner",
+              ]}
+              effort="≈ 20 minutes to fill in"
+              badge="More points up for grabs"
+            />
+          </div>
+        </Section>
+
+        <Section step={3} label="Invites">
+          <Field label="Max participants" hint="You can change this later.">
+            <ParticipantsPicker value={maxParticipants} onChange={setMaxParticipants} />
+          </Field>
+        </Section>
+
+        <footer className={styles.footerBar}>
+          <span className={styles.footerHint}>You can invite people right after creating the group.</span>
+          <div className={styles.footerBtns}>
+            <Link href="/dashboard" className={styles.cancelBtn}>Cancel</Link>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={loading || !name.trim()}
+              className={styles.submitBtn}
             >
-              {events.map((ev) => (
-                <option key={ev.id} value={ev.id}>{ev.name}</option>
-              ))}
-            </select>
+              {loading ? "Creating…" : "Create group →"}
+            </button>
           </div>
-        )}
+        </footer>
 
-        {events.length === 1 && (
-          <div className={styles.field}>
-            <label className={styles.label}>Tournament</label>
-            <div className={styles.eventBadge}>⚽ {events[0].name}</div>
-          </div>
-        )}
-
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="max">Max participants</label>
-          <select
-            id="max"
-            className={styles.select}
-            value={maxParticipants}
-            onChange={(e) => setMaxParticipants(e.target.value)}
-          >
-            <option value="10">Up to 10</option>
-            <option value="20">Up to 20</option>
-            <option value="50">Up to 50</option>
-          </select>
-          <span className={styles.hint}>You can always invite more later (up to the limit).</span>
-        </div>
-
-        <button type="submit" className={styles.submit} disabled={loading || !name.trim()}>
-          {loading ? "Creating…" : "Create group →"}
-        </button>
-      </form>
+      </div>
     </div>
   );
 }
