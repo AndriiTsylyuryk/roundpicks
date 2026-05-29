@@ -158,7 +158,7 @@ export default function PicksModal({ isOpen, onClose, groupId, userName, userId,
     })();
   }, [isOpen, groupId, userId, groupMode]);
 
-  const tm = (id: string | null) => (id && teams.get(id)) ?? null;
+  const tm = (id: string | null) => (id ? teams.get(id) ?? null : null);
 
   const groupPicksByGroup = new Map(groupPicks.map((p) => [p.wc_group, p]));
   const officialBestThirdSet = new Set(officialBestThird);
