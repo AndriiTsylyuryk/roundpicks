@@ -55,7 +55,7 @@ const ROUND_LABEL: Record<string, string> = {
 const teamFlag = (name: string, cls = styles.pickFlag) => {
   const c = getFlagCode(name);
   if (!c) return <span className={styles.pickFlagFallback}>?</span>;
-  const cc = c.length > 2 ? c.slice(0, 2) : c;
+  const cc = c;
   return <img className={cls} src={`https://flagcdn.com/20x15/${cc}.png`} alt="" />;
 };
 

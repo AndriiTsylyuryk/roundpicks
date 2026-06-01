@@ -152,7 +152,7 @@ function BracketMatchRow({
               const code = getFlagCode(team.name);
               if (!code)
                 return <span className={styles.bracketFlagFallback}>?</span>;
-              const cc = code.length > 2 ? code.slice(0, 2) : code;
+              const cc = code;
               return (
                 <img
                   className={styles.bracketFlag}

@@ -236,7 +236,7 @@ export default function PredictForm({
                           {(() => {
                             const c = getFlagCode(team.name);
                             if (!c) return "⚽";
-                            return <img className={styles.rankFlag} src={`https://flagcdn.com/28x21/${c.length > 2 ? c.slice(0, 2) : c}.png`} alt="" />;
+                            return <img className={styles.rankFlag} src={`https://flagcdn.com/28x21/${c}.png`} alt="" />;
                           })()} {team.name}
                         </span>
                       ) : (
@@ -269,7 +269,7 @@ export default function PredictForm({
                         {(() => {
                           const c = getFlagCode(team.name);
                           if (!c) return "⚽";
-                          return <img className={styles.flagImg} src={`https://flagcdn.com/28x21/${c.length > 2 ? c.slice(0, 2) : c}.png`} alt="" />;
+                          return <img className={styles.flagImg} src={`https://flagcdn.com/28x21/${c}.png`} alt="" />;
                         })()}
                       </span>
                       <span className={styles.teamName}>{team.name}</span>
