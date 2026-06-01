@@ -44,6 +44,10 @@ export default function HelpPage() {
                 <li className={styles.li}>+2 points for each team placed in the exact correct position</li>
                 <li className={styles.li}>+1 point for a correct team placed in the wrong spot</li>
               </ul>
+              <p className={styles.subhead}>Group stage game results scoring: (Advanced mode only)</p>
+              <ul className={styles.list}>
+                <li className={styles.li}>+1 point for every correctly predicted game result (either correct winner or draw)</li>
+              </ul>
               <p className={styles.subhead}>Best third-placed teams:</p>
               <ul className={styles.list}>
                 <li className={styles.li}>+2 points for each correctly predicted team</li>

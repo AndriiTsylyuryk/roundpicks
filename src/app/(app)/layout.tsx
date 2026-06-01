@@ -1,8 +1,10 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/server-admin";
 import { DrawerProvider } from "@/lib/drawer-context";
 import { AppShell } from "./AppShell";
+import Spinner from "@/components/Spinner";
 
 export default async function AppLayout({
   children,
@@ -32,7 +34,9 @@ export default async function AppLayout({
   return (
     <DrawerProvider>
       <AppShell displayName={displayName}>
-        {children}
+        <Suspense fallback={<Spinner size={48} />}>
+          {children}
+        </Suspense>
       </AppShell>
     </DrawerProvider>
   );

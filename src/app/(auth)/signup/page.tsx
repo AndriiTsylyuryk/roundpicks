@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Oval } from "react-loader-spinner";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./page.module.css";
 
@@ -114,7 +115,7 @@ function SignupForm() {
         disabled={googleLoading}
       >
         <GoogleIcon />
-        {googleLoading ? "Redirecting…" : "Continue with Google"}
+        {googleLoading ? <Oval height={16} width={16} color="currentColor" strokeWidth={5} /> : "Continue with Google"}
       </button>
 
       <div className={styles.divider}>or</div>
@@ -177,7 +178,7 @@ function SignupForm() {
         </div>
 
         <button type="submit" className={styles.submit} disabled={loading || !name.trim()}>
-          {loading ? "Creating account…" : "Create free account"}
+          {loading ? <Oval height={16} width={16} color="currentColor" strokeWidth={5} /> : "Create free account"}
         </button>
       </form>
 

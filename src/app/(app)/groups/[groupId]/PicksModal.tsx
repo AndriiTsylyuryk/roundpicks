@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Modal from "react-modal";
 import { createClient } from "@/lib/supabase/client";
 import { getFlagCode } from "@/lib/team-flags";
+import Spinner from "@/components/Spinner";
 import styles from "./page.module.css";
 
 interface GroupPick {
@@ -290,7 +291,7 @@ export default function PicksModal({ isOpen, onClose, groupId, userName, userId,
 
         <div className={styles.picksModalBody}>
           {loading ? (
-            <p className={styles.picksLoading}>Loading picks…</p>
+            <Spinner size={48} />
           ) : (
             <>
               {/* ── Match predictions (Advanced mode) ── */}

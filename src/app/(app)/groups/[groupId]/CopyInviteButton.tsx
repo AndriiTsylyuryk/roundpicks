@@ -1,20 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import toast from "react-hot-toast";
 import styles from "./page.module.css";
 
 export default function CopyInviteButton({ url }: { url: string }) {
-  const [copied, setCopied] = useState(false);
-
   async function copy() {
     await navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    toast.success("Link copied", { id: "copy-invite" });
   }
 
   return (
     <button onClick={copy} className={styles.copyBtn}>
-      {copied ? "Share the link" : "Invite a friend"}
+      Invite a friend
     </button>
   );
 }

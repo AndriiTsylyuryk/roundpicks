@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Oval } from "react-loader-spinner";
 import { createClient } from "@/lib/supabase/client";
 import { getFlagCode } from "@/lib/team-flags";
 import styles from "./page.module.css";
@@ -296,7 +297,7 @@ export default function PredictForm({
               onClick={save}
               disabled={saving || !hasUnsaved}
             >
-              {saving ? "Saving…" : "Save predictions"}
+              {saving ? <Oval height={16} width={16} color="currentColor" strokeWidth={5} /> : "Save predictions"}
             </button>
             {progress === 12 && !hasUnsaved && (
               <button className={`${styles.saveBtn} ${styles.nextBtn}`} onClick={() => { if (nextStepUrl) router.push(nextStepUrl); }}>

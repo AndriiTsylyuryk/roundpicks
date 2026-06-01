@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Oval } from "react-loader-spinner";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./page.module.css";
 
@@ -35,7 +36,7 @@ export default function JoinGroupButton({ groupId, groupName }: { groupId: strin
     <>
       {error && <p className={styles.error}>{error}</p>}
       <button onClick={join} disabled={loading} className={styles.joinBtn}>
-        {loading ? "Joining…" : `Join "${groupName}" →`}
+        {loading ? <Oval height={16} width={16} color="currentColor" strokeWidth={5} /> : `Join "${groupName}" →`}
       </button>
     </>
   );

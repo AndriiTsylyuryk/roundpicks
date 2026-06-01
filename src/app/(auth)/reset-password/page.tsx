@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Oval } from "react-loader-spinner";
 import { createClient } from "@/lib/supabase/client";
 import styles from "../login/page.module.css";
 
@@ -84,7 +85,7 @@ export default function ResetPasswordPage() {
         </div>
 
         <button type="submit" className={styles.submit} disabled={loading || !password}>
-          {loading ? "Saving…" : "Set new password"}
+          {loading ? <Oval height={16} width={16} color="currentColor" strokeWidth={5} /> : "Set new password"}
         </button>
       </form>
     </>

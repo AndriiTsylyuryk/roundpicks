@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Oval } from "react-loader-spinner";
 import { createClient } from "@/lib/supabase/client";
 import styles from "../login/page.module.css";
 
@@ -69,7 +70,7 @@ export default function ForgotPasswordPage() {
         </div>
 
         <button type="submit" className={styles.submit} disabled={loading || !email}>
-          {loading ? "Sending…" : "Send reset link"}
+          {loading ? <Oval height={16} width={16} color="currentColor" strokeWidth={5} /> : "Send reset link"}
         </button>
       </form>
 

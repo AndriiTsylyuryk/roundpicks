@@ -503,6 +503,8 @@ export default async function GroupPage({ params }: Props) {
           <p><strong>Scoring:</strong></p>
           <p>+2 points for a team in the exact correct position</p>
           <p>+1 point for a correct team placed in the wrong spot</p>
+          <p><strong>Group stage game results scoring: (Advanced mode only)</strong></p>
+          <p>+1 point for every correctly predicted game result (either correct winner or draw)</p>
           <p><strong>Best third-placed teams:</strong></p>
           <p>+2 points for each correctly predicted team</p>
           <p><strong>Knockout stage predictions:</strong></p>

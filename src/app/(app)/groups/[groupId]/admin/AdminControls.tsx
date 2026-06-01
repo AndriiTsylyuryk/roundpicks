@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Oval } from "react-loader-spinner";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./page.module.css";
 import { Trash2 } from "lucide-react";
@@ -146,7 +147,7 @@ export default function AdminControls({
                     onClick={deleteGroup}
                     disabled={deleting}
                   >
-                    {deleting ? "Deleting…" : "Yes, delete"}
+                    {deleting ? <Oval height={16} width={16} color="currentColor" strokeWidth={5} /> : "Yes, delete"}
                   </button>
                   <button
                     className={`${styles.actionBtn} ${styles.unlockBtn}`}

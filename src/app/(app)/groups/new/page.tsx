@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Oval } from "react-loader-spinner";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./page.module.css";
 
@@ -245,7 +246,7 @@ export default function NewGroupPage() {
               disabled={loading || !name.trim()}
               className={styles.submitBtn}
             >
-              {loading ? "Creating…" : "Create group →"}
+              {loading ? <Oval height={16} width={16} color="currentColor" strokeWidth={5} /> : "Create group →"}
             </button>
           </div>
         </footer>

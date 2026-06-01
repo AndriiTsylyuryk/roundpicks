@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
+import { Oval } from "react-loader-spinner";
 import styles from "./FeedbackWidget.module.css";
 
 export default function FeedbackWidget() {
@@ -53,7 +54,7 @@ export default function FeedbackWidget() {
                 <p className={styles.errorMsg}>Failed to send. Please try again.</p>
               )}
               <button type="submit" className={styles.sendBtn} disabled={status === "sending" || !message.trim()}>
-                {status === "sending" ? "Sending…" : "Send feedback"}
+                {status === "sending" ? <Oval height={16} width={16} color="currentColor" strokeWidth={5} /> : "Send feedback"}
               </button>
             </form>
           )}
