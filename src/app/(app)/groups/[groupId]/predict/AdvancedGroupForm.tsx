@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { getFlag } from "@/lib/team-flags";
+import { getFlagCode } from "@/lib/team-flags";
 import styles from "./AdvancedGroupForm.module.css";
 import pageStyles from "./page.module.css";
 
@@ -87,7 +87,6 @@ export default function AdvancedGroupForm({ groupId, userId, matches, teams, exi
     }
     setDirty(false);
     setSaving(false);
-    if (nextStepUrl) router.push(nextStepUrl);
   }
 
   return (
@@ -134,7 +133,7 @@ export default function AdvancedGroupForm({ groupId, userId, matches, teams, exi
                     <li key={match.id}>
                       <div className={`${styles.matchRow} ${matchLocked ? styles.matchRowLocked : ""}`}>
                         <TeamButton
-                          flag={homeTeam ? getFlag(homeTeam.name) : "🏳️"}
+                          flagCode={homeTeam ? getFlagCode(homeTeam.name) : null}
                           name={homeTeam?.name ?? "TBD"}
                           active={pick === "home"}
                           disabled={matchLocked || !homeTeam}
@@ -146,7 +145,7 @@ export default function AdvancedGroupForm({ groupId, userId, matches, teams, exi
                           onClick={() => handlePick(match.id, "draw")}
                         />
                         <TeamButton
-                          flag={awayTeam ? getFlag(awayTeam.name) : "🏳️"}
+                          flagCode={awayTeam ? getFlagCode(awayTeam.name) : null}
                           name={awayTeam?.name ?? "TBD"}
                           active={pick === "away"}
                           disabled={matchLocked || !awayTeam}
@@ -163,18 +162,17 @@ export default function AdvancedGroupForm({ groupId, userId, matches, teams, exi
         })}
       </div>
 
-      {/* Sticky save bar */}
-      {!isLocked && (dirty || picked === total) && (
+      {/* Sticky save bar — only visible once all picks are made */}
+      {!isLocked && picked === total && (
         <div className={pageStyles.saveBar}>
           <div className={styles.saveBarLeft}>
-            {dirty && (
+            {dirty ? (
               <span className={styles.unsaved}>
                 <span className={styles.unsavedDot} aria-hidden />
                 Unsaved changes
               </span>
-            )}
-            {!dirty && picked === total && (
-              <span className={pageStyles.saveStatus}>All picks saved</span>
+            ) : (
+              <span className={pageStyles.saveStatus}>Picks submitted ✓</span>
             )}
           </div>
           <div className={pageStyles.saveBtns}>
@@ -183,7 +181,7 @@ export default function AdvancedGroupForm({ groupId, userId, matches, teams, exi
                 {saving ? "Saving…" : "Save picks →"}
               </button>
             )}
-            {!dirty && picked === total && nextStepUrl && (
+            {!dirty && nextStepUrl && (
               <button className={`${pageStyles.saveBtn} ${pageStyles.nextBtn}`} onClick={() => router.push(nextStepUrl)}>
                 Next: Group Rankings →
               </button>
@@ -195,8 +193,8 @@ export default function AdvancedGroupForm({ groupId, userId, matches, teams, exi
   );
 }
 
-function TeamButton({ flag, name, active, disabled, onClick, alignRight }: {
-  flag: string; name: string; active: boolean; disabled: boolean; onClick: () => void; alignRight?: boolean;
+function TeamButton({ flagCode, name, active, disabled, onClick, alignRight }: {
+  flagCode: string | null; name: string; active: boolean; disabled: boolean; onClick: () => void; alignRight?: boolean;
 }) {
   return (
     <button
@@ -206,7 +204,19 @@ function TeamButton({ flag, name, active, disabled, onClick, alignRight }: {
       disabled={disabled}
       style={alignRight ? { flexDirection: "row-reverse" } : undefined}
     >
-      <span className={styles.teamFlag}>{flag}</span>
+      <span className={styles.teamFlag}>
+        {flagCode ? (
+          <img
+            src={`https://flagcdn.com/24x18/${flagCode}.png`}
+            width={24}
+            height={18}
+            alt=""
+            className={styles.teamFlagImg}
+          />
+        ) : (
+          <span className={styles.teamFlagFallback}>?</span>
+        )}
+      </span>
       <span className={`${styles.teamName} ${active ? styles.teamNameActive : ""}`}>{name}</span>
       {active && <span className={styles.teamCheck} aria-hidden>✓</span>}
     </button>

@@ -232,8 +232,31 @@
 
 .teamFlag {
   flex-shrink: 0;
-  font-size: 18px;
-  line-height: 1;
+  width: 24px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.teamFlagImg {
+  width: 24px;
+  height: 18px;
+  border-radius: 1px;
+  object-fit: cover;
+  display: block;
+}
+
+.teamFlagFallback {
+  width: 24px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  background: rgba(6, 39, 49, 0.06);
+  border-radius: 2px;
+  color: var(--color-ink-soft);
 }
 
 .teamName {

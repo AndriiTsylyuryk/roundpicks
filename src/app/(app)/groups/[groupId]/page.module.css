@@ -569,6 +569,18 @@
   color: var(--color-mint);
 }
 
+.youBadge {
+  margin-left: 8px;
+  border-radius: 999px;
+  background: rgba(0, 121, 145, 0.10);
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-teal);
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
 .lbScore {
   display: flex;
   align-items: center;

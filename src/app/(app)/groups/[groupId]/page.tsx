@@ -423,7 +423,7 @@ export default async function GroupPage({ params }: Props) {
                 Think your friends know football?
               </div>
               <div className={styles.ctaInviteHint}>
-                Click "Invite Friends" to copy the link, then share it with
+                Click "Invite a friend" to copy the link, then share it with
                 others so they can join your group.
               </div>
               {phase1Deadline && phase1IsOpen && (
@@ -465,7 +465,7 @@ export default async function GroupPage({ params }: Props) {
                     </span>
                     <span className={styles.lbName}>
                       {m.name}
-                      {m.userId === user!.id ? " (you)" : ""}
+                      {m.userId === user!.id && <span className={styles.youBadge}>you</span>}
                       {hasGroupResults && i === 0 && (
                         <span className={styles.hotBadge}>HOT</span>
                       )}
