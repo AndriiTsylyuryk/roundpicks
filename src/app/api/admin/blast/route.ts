@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
 
-  const FROM_EMAIL = process.env.BLAST_FROM_EMAIL ?? "no-reply@roundpicks.app";
+  const FROM_EMAIL = process.env.BLAST_FROM_EMAIL ?? "no-reply@roundpicks.com";
 
   // Chunk into 99 (Brevo BCC limit)
   const CHUNK = 99;
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
         bcc: chunk,
         subject: notif.title,
         htmlContent: buildHtml(notif.title, notif.body),
-        textContent: `${notif.title}\n\n${notif.body}\n\nhttps://roundpicks.app/dashboard`,
+        textContent: `${notif.title}\n\n${notif.body}\n\nhttps://roundpicks.com/dashboard`,
       }),
     });
 
@@ -123,7 +123,7 @@ function buildHtml(title: string, body: string) {
           <td style="padding:40px 40px 32px;">
             <h1 style="margin:0 0 20px;font-size:26px;font-weight:800;line-height:1.15;color:#fff;">${title}</h1>
             ${bodyHtml}
-            <a href="https://roundpicks.app/dashboard"
+            <a href="https://roundpicks.com/dashboard"
             style="display:inline-block;margin-top:16px;background:#78ffd6;color:#06222b;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;">
               Go to my groups →
             </a>
@@ -132,7 +132,7 @@ function buildHtml(title: string, body: string) {
         <tr>
           <td style="padding:16px 40px 24px;border-top:1px solid rgba(255,255,255,0.08);">
             <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.3);">
-              You're receiving this because you signed up at roundpicks.app.
+              You're receiving this because you signed up at roundpicks.com.
             </p>
           </td>
         </tr>

@@ -27,19 +27,20 @@ export default function NotificationBell() {
       if (!user) return;
       setUserId(user.id);
 
-      const { data: notifs } = await supabase
+      const { data: notifs, error: notifError } = await supabase
         .from("site_notifications")
         .select("*")
-        .order("created_at", { ascending: false }) as unknown as { data: SiteNotification[] | null };
-      if (!notifs || notifs.length === 0) return;
-      setNotifications(notifs);
+        .order("created_at", { ascending: false });
+      if (notifError || !notifs || notifs.length === 0) return;
+      setNotifications(notifs as SiteNotification[]);
 
       const { data: profile } = await supabase
         .from("profiles")
         .select("dismissed_notifications")
         .eq("id", user.id)
-        .single() as unknown as { data: { dismissed_notifications: string[] } | null };
-      const dismissed = new Set(profile?.dismissed_notifications ?? []);
+        .single();
+      const dismissedArr = (profile?.dismissed_notifications ?? []) as string[];
+      const dismissed = new Set(dismissedArr);
       setDismissedIds(dismissed);
 
       const latest = notifs[0];
@@ -56,10 +57,12 @@ export default function NotificationBell() {
     setShowModal(false);
 
     const supabase = createClient();
-    await supabase
+    const { error } = await supabase
       .from("profiles")
-      .update({ dismissed_notifications: [...next] } as never)
+      .update({ dismissed_notifications: [...next] })
       .eq("id", userId);
+
+    if (error) console.error("Failed to dismiss notification:", error);
   }
 
   return (
