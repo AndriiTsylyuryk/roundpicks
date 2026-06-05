@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
   "/legal",
   "/groups/join",
   "/api/matches/sync",
+  "/api/admin/blast",
 ];
 
 export async function proxy(request: NextRequest) {
