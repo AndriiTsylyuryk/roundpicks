@@ -67,20 +67,16 @@ export async function POST(req: NextRequest) {
 
   const FROM_EMAIL = process.env.BLAST_FROM_EMAIL ?? "no-reply@roundpicks.com";
 
-  // Chunk into 99 (Brevo BCC limit)
-  const CHUNK = 99;
   let sent = 0;
   const errors: string[] = [];
 
-  for (let i = 0; i < recipients.length; i += CHUNK) {
-    const chunk = recipients.slice(i, i + CHUNK);
+  for (const r of recipients) {
     const res = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: { "api-key": BREVO_KEY, "Content-Type": "application/json" },
       body: JSON.stringify({
         sender: { name: "RoundPicks", email: FROM_EMAIL },
-        to: [{ email: FROM_EMAIL }],
-        bcc: chunk,
+        to: [{ email: r.email, name: r.name }],
         subject: notif.title,
         htmlContent: buildHtml(notif.title, notif.body),
         textContent: `${notif.title}\n\n${notif.body}\n\nhttps://roundpicks.com/dashboard`,
@@ -90,7 +86,7 @@ export async function POST(req: NextRequest) {
     if (!res.ok) {
       errors.push(await res.text());
     } else {
-      sent += chunk.length;
+      sent++;
     }
   }
 
