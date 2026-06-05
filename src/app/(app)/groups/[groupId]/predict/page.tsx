@@ -151,7 +151,7 @@ export default async function PredictPage({ params, searchParams }: Props) {
     .select("has_rated")
     .eq("id", user.id)
     .maybeSingle();
-  const userHasRated = profileRaw?.has_rated ?? false;
+  const userHasRated = (profileRaw as { has_rated?: boolean } | null)?.has_rated ?? false;
 
   // Advanced mode: load all group matches + user's W/D/L predictions
   let advancedMatches: AdvancedMatch[] = [];
