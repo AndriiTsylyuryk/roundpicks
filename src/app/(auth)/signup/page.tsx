@@ -78,14 +78,7 @@ function SignupForm() {
 
   async function handleGoogle() {
     setGoogleLoading(true);
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
-        queryParams: { prompt: "select_account" },
-      },
-    });
+    window.location.href = `/api/auth/google?next=${encodeURIComponent(redirectTo)}`;
   }
 
   if (done) {

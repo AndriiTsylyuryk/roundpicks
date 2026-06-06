@@ -12,6 +12,7 @@ const PUBLIC_PATHS = [
   "/groups/join",
   "/api/matches/sync",
   "/api/admin/blast",
+  "/api/auth/google",
 ];
 
 export async function proxy(request: NextRequest) {

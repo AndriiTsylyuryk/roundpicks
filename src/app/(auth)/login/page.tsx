@@ -69,14 +69,7 @@ function LoginForm() {
 
   async function handleGoogle() {
     setGoogleLoading(true);
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${redirectTo}`,
-        queryParams: { prompt: "select_account" },
-      },
-    });
+    window.location.href = `/api/auth/google?next=${encodeURIComponent(redirectTo)}`;
   }
 
   return (
