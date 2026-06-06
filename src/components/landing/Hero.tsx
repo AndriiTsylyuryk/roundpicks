@@ -1,3 +1,4 @@
+import HeroAnimation from "./HeroAnimation";
 import styles from "./Hero.module.css";
 
 type LeaderRow = {
@@ -18,8 +19,9 @@ const ROWS: LeaderRow[] = [
 
 export function Hero() {
   return (
-    <section className={styles.section}>
-      <div className={styles.inner}>
+    <section className={styles.section} style={{ position: "relative" }}>
+      <HeroAnimation />
+      <div className={styles.inner} style={{ position: "relative", zIndex: 1 }}>
         <div className={styles.copy}>
           <div className={`eyebrow ${styles.eyebrow}`}>
             ● Group stage open · World Cup 2026

@@ -1,6 +1,7 @@
 .section {
   background: var(--color-paper);
   padding: 0 var(--px);
+  overflow-x: clip;
 }
 
 .inner {
