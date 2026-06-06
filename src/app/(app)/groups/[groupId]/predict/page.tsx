@@ -146,6 +146,13 @@ export default async function PredictPage({ params, searchParams }: Props) {
   const firstR32Match = matches.find((m) => m.round === "R32");
   const isKnockoutLocked = group.phase2_locked || (!!firstR32Match && now >= new Date(firstR32Match.kickoff_at));
 
+  const { data: profileRaw } = await supabase
+    .from("profiles")
+    .select("has_rated")
+    .eq("id", user.id)
+    .maybeSingle();
+  const userHasRated = profileRaw?.has_rated ?? false;
+
   // Advanced mode: load all group matches + user's W/D/L predictions
   let advancedMatches: AdvancedMatch[] = [];
   let matchPredictions: { match_id: string; prediction: "home" | "draw" | "away" }[] = [];
@@ -207,38 +214,13 @@ export default async function PredictPage({ params, searchParams }: Props) {
       </div>
 
       {/* Score summary */}
-      {totalScore !== null && (
-        <div className={styles.scoreSummary}>
-          <div className={styles.scoreTotalLabel}>Your score</div>
-          <div className={styles.scoreTotalValue}>{totalScore} pts</div>
-          <div className={styles.scoreBreakdown}>
-            {groupScore !== null && (
-              <span className={styles.scoreBreakdownItem}>
-                <span className={styles.scoreBreakdownKey}>Groups</span>
-                <span className={styles.scoreBreakdownVal}>{groupScore}</span>
-              </span>
-            )}
-            {bestThirdScore !== null && (
-              <span className={styles.scoreBreakdownItem}>
-                <span className={styles.scoreBreakdownKey}>Best 3rd</span>
-                <span className={styles.scoreBreakdownVal}>{bestThirdScore}</span>
-              </span>
-            )}
-            {knockoutScore !== null && (
-              <span className={styles.scoreBreakdownItem}>
-                <span className={styles.scoreBreakdownKey}>Knockouts</span>
-                <span className={styles.scoreBreakdownVal}>{knockoutScore}</span>
-              </span>
-            )}
-            {matchPredictionScore !== null && (
-              <span className={styles.scoreBreakdownItem}>
-                <span className={styles.scoreBreakdownKey}>Match picks</span>
-                <span className={styles.scoreBreakdownVal}>{matchPredictionScore}</span>
-              </span>
-            )}
-          </div>
-        </div>
-      )}
+      <div className={styles.scoreSummary}>
+        <p className={styles.scoreDesc}>
+          Tap a team in each match to pick the winner — each pick auto-fills the
+          next round. Opens once the last group-stage match finishes (the full
+          bracket is set) and closes at kickoff of the first Round of 32 match.
+        </p>
+      </div>
 
       {/* Phase 1 step 1 (advanced only): W/D/L for each group match */}
       {phase1IsOpen && group.mode === "advanced" && currentStep === 1 && (
@@ -297,6 +279,7 @@ export default async function PredictPage({ params, searchParams }: Props) {
           teams={teams}
           existingPicks={knockoutPicks}
           isKnockoutLocked={isKnockoutLocked}
+          userHasRated={userHasRated}
         />
       )}
     </>

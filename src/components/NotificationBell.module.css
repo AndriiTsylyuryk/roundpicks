@@ -58,7 +58,7 @@
   width: 100%;
   padding: 1.75rem;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  text-align: center;
+  text-align: left;
 }
 
 .modalTitle {
@@ -67,13 +67,18 @@
   font-weight: 700;
   color: var(--color-ink);
   margin: 0 0 0.5rem;
+  text-align: center;
 }
 
 .modalBody {
   font-size: 0.9rem;
   color: var(--color-ink-soft);
   line-height: 1.5;
-  margin: 0 0 1.25rem;
+  margin: 0 0 0.6rem;
+}
+
+.modalBody:last-child {
+  margin-bottom: 1.25rem;
 }
 
 .ackBtn {
@@ -87,6 +92,8 @@
   color: #fff;
   cursor: pointer;
   transition: opacity 150ms ease;
+  display: block;
+  margin: 0 auto;
 }
 
 .ackBtn:hover {
@@ -167,7 +174,11 @@
   font-size: 0.78rem;
   color: var(--color-ink-soft);
   line-height: 1.4;
-  margin-bottom: 0.3rem;
+  margin: 0 0 0.2rem;
+}
+
+.panelItemBody + .panelItemBody {
+  margin-top: 0.3rem;
 }
 
 .panelItemMeta {

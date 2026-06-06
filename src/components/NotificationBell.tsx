@@ -13,11 +13,20 @@ interface SiteNotification {
   created_at: string;
 }
 
+function BodyLines({ text, className }: { text: string; className: string }) {
+  const lines = text.split("\n").filter(Boolean);
+  return lines.length > 1 ? (
+    lines.map((line, i) => <p key={i} className={className}>{line}</p>)
+  ) : (
+    <p className={className}>{text}</p>
+  );
+}
+
 export default function NotificationBell() {
-  const [notifications, setNotifications] = useState<SiteNotification[]>([]);
+  const [notification, setNotification] = useState<SiteNotification | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
-  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+  const [dismissed, setDismissed] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -27,23 +36,28 @@ export default function NotificationBell() {
       if (!user) return;
       setUserId(user.id);
 
-      const { data: notifs } = await supabase
+      const { data: notifs, error: notifError } = await supabase
         .from("site_notifications")
         .select("*")
-        .order("created_at", { ascending: false }) as unknown as { data: SiteNotification[] | null };
-      if (!notifs || notifs.length === 0) return;
-      setNotifications(notifs);
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (notifError || !notifs || notifs.length === 0) return;
+
+      const notif = notifs[0];
+      if (user.created_at && new Date(notif.created_at) < new Date(user.created_at)) return;
+
+      setNotification(notif);
 
       const { data: profile } = await supabase
         .from("profiles")
         .select("dismissed_notifications")
         .eq("id", user.id)
-        .single() as unknown as { data: { dismissed_notifications: string[] } | null };
-      const dismissed = new Set(profile?.dismissed_notifications ?? []);
-      setDismissedIds(dismissed);
+        .single();
+      const dismissedArr = (profile?.dismissed_notifications ?? []) as string[];
+      const isDismissed = dismissedArr.includes(notif.id);
+      setDismissed(isDismissed);
 
-      const latest = notifs[0];
-      if (!dismissed.has(latest.id)) {
+      if (!isDismissed) {
         setShowModal(true);
       }
     })();
@@ -51,15 +65,23 @@ export default function NotificationBell() {
 
   async function dismiss(notifId: string) {
     if (!userId) return;
-    const next = new Set(dismissedIds).add(notifId);
-    setDismissedIds(next);
+    setDismissed(true);
     setShowModal(false);
 
     const supabase = createClient();
-    await supabase
+    const { data: profile } = await supabase
       .from("profiles")
-      .update({ dismissed_notifications: [...next] } as never)
+      .select("dismissed_notifications")
+      .eq("id", userId)
+      .single();
+    const existing = (profile?.dismissed_notifications ?? []) as string[];
+    const next = [...new Set([...existing, notifId])];
+    const { error } = await supabase
+      .from("profiles")
+      .update({ dismissed_notifications: next })
       .eq("id", userId);
+
+    if (error) console.error("Failed to dismiss notification:", error);
   }
 
   return (
@@ -70,13 +92,13 @@ export default function NotificationBell() {
         aria-label="Notifications"
       >
         <Bell size={18} />
-        {notifications.filter((n) => !dismissedIds.has(n.id)).length > 0 && (
-          <span className={styles.bellBadge}>{notifications.filter((n) => !dismissedIds.has(n.id)).length}</span>
+        {notification && !dismissed && (
+          <span className={styles.bellBadge}>1</span>
         )}
       </button>
 
       <AnimatePresence>
-        {showModal && notifications.length > 0 && (
+        {showModal && notification && (
           <motion.div
             className={styles.modalOverlay}
             initial={{ opacity: 0 }}
@@ -91,9 +113,9 @@ export default function NotificationBell() {
               exit={{ opacity: 0, scale: 0.92, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
             >
-              <h2 className={styles.modalTitle}>{notifications[0].title}</h2>
-              <p className={styles.modalBody}>{notifications[0].body}</p>
-              <button className={styles.ackBtn} onClick={() => dismiss(notifications[0].id)}>
+              <h2 className={styles.modalTitle}>{notification.title}</h2>
+              <BodyLines className={styles.modalBody} text={notification.body} />
+              <button className={styles.ackBtn} onClick={() => dismiss(notification.id)}>
                 Acknowledge
               </button>
             </motion.div>
@@ -119,16 +141,14 @@ export default function NotificationBell() {
               transition={{ duration: 0.15 }}
             >
               <div className={styles.panelHeader}>Notifications</div>
-              {notifications.length === 0 ? (
+              {!notification ? (
                 <p className={styles.panelEmpty}>No notifications yet</p>
               ) : (
                 <ul className={styles.panelList}>
-                  {notifications.map((n) => (
-                    <li key={n.id} className={`${styles.panelItem} ${dismissedIds.has(n.id) ? "" : styles.panelItemUnread}`}>
-                      <div className={styles.panelItemTitle}>{n.title}</div>
-                      <div className={styles.panelItemBody}>{n.body}</div>
-                    </li>
-                  ))}
+                  <li className={`${styles.panelItem} ${dismissed ? "" : styles.panelItemUnread}`}>
+                    <div className={styles.panelItemTitle}>{notification.title}</div>
+                    <BodyLines className={styles.panelItemBody} text={notification.body} />
+                  </li>
                 </ul>
               )}
             </motion.div>

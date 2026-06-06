@@ -241,14 +241,24 @@ export default async function GroupPage({ params }: Props) {
 
   const currentUserMember = members.find((m) => m.userId === user!.id);
   const userHasAllGroupPicks = (currentUserMember?.groupsSubmitted ?? 0) >= 12;
+  const userHasKnockoutPicks = (koPicksByUser[user!.id]?.length ?? 0) > 0;
 
-  const { data: firstGroupMatch } = await supabase
-    .from("wc_matches")
-    .select("kickoff_at")
-    .eq("round", "GROUP")
-    .order("kickoff_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  const [{ data: firstGroupMatch }, { data: firstKoMatch }] = await Promise.all([
+    supabase
+      .from("wc_matches")
+      .select("kickoff_at")
+      .eq("round", "GROUP")
+      .order("kickoff_at", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("wc_matches")
+      .select("kickoff_at")
+      .eq("round", "R32")
+      .order("kickoff_at", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
   const now = new Date();
   const phase1Deadline = firstGroupMatch?.kickoff_at
@@ -258,6 +268,9 @@ export default async function GroupPage({ params }: Props) {
     !group.phase1_locked && (!phase1Deadline || now < phase1Deadline);
   const knockoutsStarted =
     group.phase1_locked || (!!phase1Deadline && now >= phase1Deadline);
+
+  const firstKoKickoff = firstKoMatch?.kickoff_at ? new Date(firstKoMatch.kickoff_at) : null;
+  const knockoutsHaveStarted = !!firstKoKickoff && now >= firstKoKickoff;
 
   const phase2DeadlineRaw = group.phase2_deadline
     ? new Date(group.phase2_deadline)
@@ -271,6 +284,41 @@ export default async function GroupPage({ params }: Props) {
 
   const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/groups/join/${group.invite_code}`;
   const anyPicksSubmitted = members.some((m) => m.groupsSubmitted > 0);
+
+  const leaderboardSection = anyPicksSubmitted ? (
+    <div className={styles.leaderboard} style={{ marginBottom: "1.5rem" }}>
+      <div className={`eyebrow ${styles.lbEyebrow}`}>
+        Leaderboard · {group.name} · {members.length} participant
+        {members.length !== 1 ? "s" : ""}
+      </div>
+      {members.length === 0 ? (
+        <p className={styles.noPicksMsg}>No participants yet. Share the invite link!</p>
+      ) : (
+        <ul className={styles.lbList}>
+          {members.map((m, i) => (
+            <li key={m.userId} className={`${styles.lbRow} ${m.userId === user!.id ? styles.me : ""}`}>
+              <span className={styles.lbRank}>{String(i + 1).padStart(2, "0")}</span>
+              <span className={styles.lbName}>
+                {m.name}
+                {m.userId === user!.id && <span className={styles.youBadge}>you</span>}
+                {hasGroupResults && i === 0 && <span className={styles.hotBadge}>HOT</span>}
+              </span>
+              <span className={styles.lbScore}>
+                {hasGroupResults && m.score !== null ? (
+                  <span className={styles.lbPoints}>{m.score}</span>
+                ) : m.groupsSubmitted < 12 ? (
+                  <span className={styles.lbPending}>{m.groupsSubmitted}/12</span>
+                ) : (
+                  <span className={styles.lbDone}>✓</span>
+                )}
+                <ViewPicksButton userId={m.userId} userName={m.name} groupId={groupId} groupMode={group.mode} />
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  ) : null;
 
   return (
     <>
@@ -309,6 +357,9 @@ export default async function GroupPage({ params }: Props) {
         </span>
       </div> */}
 
+      {/* ── Leaderboard (top position after KO start) ── */}
+      {knockoutsHaveStarted && leaderboardSection}
+
       {/* ── Timeline ── */}
       <div className={styles.progressCard}>
         <div className={styles.progressTrack}>
@@ -316,7 +367,7 @@ export default async function GroupPage({ params }: Props) {
             className={styles.progressFill}
             style={{
               width:
-                !phase1IsOpen && !phase2IsOpen
+                knockoutsHaveStarted
                   ? "100%"
                   : !phase1IsOpen
                     ? "50%"
@@ -384,9 +435,16 @@ export default async function GroupPage({ params }: Props) {
           {phase1IsOpen || phase2IsOpen ? (
             <Link
               href={`/groups/${groupId}/predict`}
-              className={`${styles.ctaPredictBtn} ${userHasAllGroupPicks && phase1IsOpen ? styles.ctaPredictBtnDone : ""}`}
+              className={[
+                styles.ctaPredictBtn,
+                (userHasAllGroupPicks && phase1IsOpen) || (userHasKnockoutPicks && phase2IsOpen)
+                  ? styles.ctaPredictBtnDone
+                  : (phase1IsOpen && !userHasAllGroupPicks) || (phase2IsOpen && !userHasKnockoutPicks)
+                    ? styles.ctaPredictBtnIdle
+                    : "",
+              ].filter(Boolean).join(" ")}
             >
-              {userHasAllGroupPicks && phase1IsOpen
+              {(userHasAllGroupPicks && phase1IsOpen) || (userHasKnockoutPicks && phase2IsOpen)
                 ? "Picks submitted · Edit picks"
                 : "Make your Picks"}
             </Link>
@@ -399,7 +457,26 @@ export default async function GroupPage({ params }: Props) {
       </div>
 
       {/* ── Invite card ── */}
-      {members.length >= group.max_participants ? (
+      {!phase1IsOpen ? (
+        <div className={styles.inviteClosedCard}>
+          <div className={styles.ctaInviteRow}>
+            <div>
+              <div className={styles.ctaInviteClosed}>
+                INVITES CLOSED · {members.length} / {group.max_participants} JOINED
+              </div>
+              <div className={styles.inviteClosedHeadline}>
+                Joining is closed for this group.
+              </div>
+              <div className={styles.inviteClosedHint}>
+                The tournament has started, so new players can no longer join. Everyone in the group is locked in for the rest of the competition.
+              </div>
+            </div>
+            <span className={styles.inviteClosedBtn}>
+              Link disabled
+            </span>
+          </div>
+        </div>
+      ) : members.length >= group.max_participants ? (
         <div className={styles.ctaCard}>
           <div className={styles.ctaInviteFull}>
             <span>
@@ -441,56 +518,8 @@ export default async function GroupPage({ params }: Props) {
         </div>
       )}
 
-      {/* ── Leaderboard ── */}
-      {anyPicksSubmitted && (
-        <div className={styles.leaderboard} style={{ marginBottom: "1.5rem" }}>
-          <div className={`eyebrow ${styles.lbEyebrow}`}>
-            Leaderboard · {group.name} · {members.length} participant
-            {members.length !== 1 ? "s" : ""}
-          </div>
-          {members.length === 0 ? (
-            <p className={styles.noPicksMsg}>
-              No participants yet. Share the invite link!
-            </p>
-          ) : (
-            <ul className={styles.lbList}>
-              {members.map((m, i) => {
-                return (
-                  <li
-                    key={m.userId}
-                    className={`${styles.lbRow} ${m.userId === user!.id ? styles.me : ""}`}
-                  >
-                    <span className={styles.lbRank}>
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <span className={styles.lbName}>
-                      {m.name}
-                      {m.userId === user!.id && <span className={styles.youBadge}>you</span>}
-                      {hasGroupResults && i === 0 && (
-                        <span className={styles.hotBadge}>HOT</span>
-                      )}
-                    </span>
-                    <span className={styles.lbScore}>
-                      {hasGroupResults && m.score !== null ? (
-                        <span className={styles.lbPoints}>
-                          {m.score}
-                        </span>
-                      ) : m.groupsSubmitted < 12 ? (
-                        <span className={styles.lbPending}>
-                          {m.groupsSubmitted}/12
-                        </span>
-                      ) : (
-                        <span className={styles.lbDone}>✓</span>
-                      )}
-                      <ViewPicksButton userId={m.userId} userName={m.name} groupId={groupId} groupMode={group.mode} />
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-      )}
+      {/* ── Leaderboard (bottom position before KO start) ── */}
+      {!knockoutsHaveStarted && leaderboardSection}
 
       {/* ── How scoring works ── */}
       <details className={styles.expandable}>

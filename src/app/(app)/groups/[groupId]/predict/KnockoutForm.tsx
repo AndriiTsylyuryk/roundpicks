@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import FeedbackModal from "@/components/FeedbackModal";
 import { getFlagCode } from "@/lib/team-flags";
 import { ROUND_POINTS } from "@/lib/scoring";
 import styles from "./page.module.css";
@@ -29,6 +31,7 @@ interface Props {
   teams: Team[];
   existingPicks: { match_id: string; winner_id: string }[];
   isKnockoutLocked: boolean;
+  userHasRated: boolean;
 }
 
 const ROUND_ORDER = ["R32", "R16", "QF", "SF", "FINAL", "3RD"];
@@ -231,12 +234,15 @@ export default function KnockoutForm({
   teams,
   existingPicks,
   isKnockoutLocked,
+  userHasRated,
 }: Props) {
+  const router = useRouter();
   const initialPicks = Object.fromEntries(
     existingPicks.map((p) => [p.match_id, p.winner_id]),
   );
 
   const [picks, setPicks] = useState<Record<string, string>>(initialPicks);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [savedPicks, setSavedPicks] =
     useState<Record<string, string>>(initialPicks);
   const [isEditMode, setIsEditMode] = useState(existingPicks.length === 0);
@@ -390,6 +396,11 @@ export default function KnockoutForm({
       }
       setSavedPicks({ ...picks });
       setIsEditMode(false);
+      if (userHasRated) {
+        router.push("/dashboard");
+      } else {
+        setShowFeedback(true);
+      }
     } catch {
       setSaveError("Failed to save. Try again.");
     } finally {
@@ -492,6 +503,10 @@ export default function KnockoutForm({
             )}
           </div>
         </div>
+      )}
+
+      {showFeedback && (
+        <FeedbackModal onDone={() => router.push("/dashboard")} />
       )}
     </>
   );
