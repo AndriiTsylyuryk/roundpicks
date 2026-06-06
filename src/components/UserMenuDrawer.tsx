@@ -108,7 +108,7 @@ export default function UserMenuDrawer({ displayName }: Props) {
             <span className={styles.drawerItemLabel}>Leave a feedback</span>
           </button>
           <button className={styles.drawerItem} onClick={() => setView("support")}>
-            <Heart size={16} className={styles.drawerItemIcon} />
+            <span className={styles.drawerHeartIcon}><Heart size={14} /></span>
             <span className={styles.drawerItemLabel}>Support the project</span>
           </button>
 

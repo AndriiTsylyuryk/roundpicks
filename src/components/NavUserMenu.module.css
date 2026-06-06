@@ -137,6 +137,28 @@
   justify-content: center;
 }
 
+@keyframes drawerHeartBeat {
+  0%   { transform: scale(1); }
+  15%  { transform: scale(1.25); }
+  30%  { transform: scale(1); }
+  45%  { transform: scale(1.15); }
+  60%  { transform: scale(1); }
+  100% { transform: scale(1); }
+}
+
+.drawerHeartIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+  animation: drawerHeartBeat 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
 .drawerItemLabel {
   flex: 1;
 }

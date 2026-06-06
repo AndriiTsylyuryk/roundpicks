@@ -13,6 +13,15 @@ interface SiteNotification {
   created_at: string;
 }
 
+function BodyLines({ text, className }: { text: string; className: string }) {
+  const lines = text.split("\n").filter(Boolean);
+  return lines.length > 1 ? (
+    lines.map((line, i) => <p key={i} className={className}>{line}</p>)
+  ) : (
+    <p className={className}>{text}</p>
+  );
+}
+
 export default function NotificationBell() {
   const [notification, setNotification] = useState<SiteNotification | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -105,7 +114,7 @@ export default function NotificationBell() {
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
             >
               <h2 className={styles.modalTitle}>{notification.title}</h2>
-              <p className={styles.modalBody}>{notification.body}</p>
+              <BodyLines className={styles.modalBody} text={notification.body} />
               <button className={styles.ackBtn} onClick={() => dismiss(notification.id)}>
                 Acknowledge
               </button>
@@ -138,7 +147,7 @@ export default function NotificationBell() {
                 <ul className={styles.panelList}>
                   <li className={`${styles.panelItem} ${dismissed ? "" : styles.panelItemUnread}`}>
                     <div className={styles.panelItemTitle}>{notification.title}</div>
-                    <div className={styles.panelItemBody}>{notification.body}</div>
+                    <BodyLines className={styles.panelItemBody} text={notification.body} />
                   </li>
                 </ul>
               )}
