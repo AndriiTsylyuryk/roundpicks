@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getFlagCode } from "@/lib/team-flags";
+import SuccessAnimation from "@/components/SuccessAnimation";
 import styles from "./page.module.css";
 
 interface Team {
@@ -30,6 +31,7 @@ export default function BestThirdForm({
 }: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set(existingSelectedIds));
+  const [showAnimation, setShowAnimation] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -59,7 +61,7 @@ export default function BestThirdForm({
     );
     setSaving(false);
     if (dbError) setError(dbError.message);
-    else if (nextStepUrl) router.push(nextStepUrl);
+    else setShowAnimation(true);
   }
 
   const count = selected.size;
@@ -151,6 +153,10 @@ export default function BestThirdForm({
             </button>
           </div>
         </div>
+      )}
+
+      {showAnimation && (
+        <SuccessAnimation onDone={() => { setShowAnimation(false); if (nextStepUrl) router.push(nextStepUrl); }} />
       )}
     </>
   );

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Oval } from "react-loader-spinner";
 import { createClient } from "@/lib/supabase/client";
 import { getFlagCode } from "@/lib/team-flags";
+import SuccessAnimation from "@/components/SuccessAnimation";
 import styles from "./page.module.css";
 
 interface Team {
@@ -72,6 +73,7 @@ export default function PredictForm({
   };
 
   const [ranks, setRanks] = useState<Record<string, GroupRanks>>(initRanks);
+  const [showAnimation, setShowAnimation] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [savedGroups, setSavedGroups] = useState<Set<string>>(
@@ -161,7 +163,7 @@ export default function PredictForm({
 
     setSavedGroups(new Set(completedGroups));
     setSaving(false);
-    if (nextStepUrl) router.push(nextStepUrl);
+    setShowAnimation(true);
   }
 
   if (!allGroupsHaveTeams) {
@@ -306,6 +308,10 @@ export default function PredictForm({
             )}
           </div>
         </div>
+      )}
+
+      {showAnimation && (
+        <SuccessAnimation onDone={() => { setShowAnimation(false); if (nextStepUrl) router.push(nextStepUrl); }} />
       )}
     </>
   );

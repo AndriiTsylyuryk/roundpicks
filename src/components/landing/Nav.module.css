@@ -102,3 +102,20 @@
     font-size: 0.8125rem;
   }
 }
+
+/* ── Small mobile (iPhone 12 Pro / 390px and below) ── */
+@media (max-width: 420px) {
+  .links {
+    gap: 6px;
+  }
+
+  .signInBtn {
+    padding: 8px 10px;
+    font-size: 0.75rem;
+  }
+
+  .createBtn {
+    padding: 8px 10px;
+    font-size: 0.75rem;
+  }
+}

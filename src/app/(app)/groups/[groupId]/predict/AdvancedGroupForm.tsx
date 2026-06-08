@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getFlagCode } from "@/lib/team-flags";
+import SuccessAnimation from "@/components/SuccessAnimation";
 import styles from "./AdvancedGroupForm.module.css";
 import pageStyles from "./page.module.css";
 
@@ -42,6 +43,7 @@ export default function AdvancedGroupForm({ groupId, userId, matches, teams, exi
     for (const p of existingPicks) init[p.match_id] = p.prediction;
     return init;
   });
+  const [showAnimation, setShowAnimation] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -87,6 +89,7 @@ export default function AdvancedGroupForm({ groupId, userId, matches, teams, exi
     }
     setDirty(false);
     setSaving(false);
+    setShowAnimation(true);
   }
 
   return (
@@ -188,6 +191,10 @@ export default function AdvancedGroupForm({ groupId, userId, matches, teams, exi
             )}
           </div>
         </div>
+      )}
+
+      {showAnimation && (
+        <SuccessAnimation onDone={() => setShowAnimation(false)} />
       )}
     </>
   );

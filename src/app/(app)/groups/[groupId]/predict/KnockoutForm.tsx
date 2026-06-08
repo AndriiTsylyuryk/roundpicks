@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import FeedbackModal from "@/components/FeedbackModal";
+import SuccessAnimation from "@/components/SuccessAnimation";
 import { getFlagCode } from "@/lib/team-flags";
 import { ROUND_POINTS } from "@/lib/scoring";
 import styles from "./page.module.css";
@@ -242,6 +243,7 @@ export default function KnockoutForm({
   );
 
   const [picks, setPicks] = useState<Record<string, string>>(initialPicks);
+  const [showAnimation, setShowAnimation] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [savedPicks, setSavedPicks] =
     useState<Record<string, string>>(initialPicks);
@@ -399,7 +401,7 @@ export default function KnockoutForm({
       if (userHasRated) {
         router.push("/dashboard");
       } else {
-        setShowFeedback(true);
+        setShowAnimation(true);
       }
     } catch {
       setSaveError("Failed to save. Try again.");
@@ -503,6 +505,10 @@ export default function KnockoutForm({
             )}
           </div>
         </div>
+      )}
+
+      {showAnimation && (
+        <SuccessAnimation onDone={() => { setShowAnimation(false); setShowFeedback(true); }} />
       )}
 
       {showFeedback && (
