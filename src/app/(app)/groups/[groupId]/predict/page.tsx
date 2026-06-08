@@ -96,7 +96,7 @@ export default async function PredictPage({ params, searchParams }: Props) {
     .eq("group_id", groupId)
     .eq("user_id", user.id)
     .maybeSingle();
-  const existingBestThirdIds: string[] = bestThirdPick?.team_ids ?? [];
+  const existingBestThirdIdsRaw: string[] = bestThirdPick?.team_ids ?? [];
 
   const { data: firstGroupMatch } = await supabase
     .from("wc_matches")
@@ -176,6 +176,7 @@ export default async function PredictPage({ params, searchParams }: Props) {
   // Compute third-place candidates: teams not picked as rank 1 or 2
   const pickedRankIds = new Set(existingPicks.flatMap((p) => [p.rank1_id, p.rank2_id]));
   const thirdPlaceTeams = teams.filter((t) => !pickedRankIds.has(t.id));
+  const existingBestThirdIds = existingBestThirdIdsRaw.filter((id) => !pickedRankIds.has(id));
 
   const groupScore = hasGroupResults ? calcGroupScore(existingPicks, groupResults) : null;
   const bestThirdScore = officialBestThirdIds.length === 8

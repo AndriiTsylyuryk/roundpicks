@@ -44,12 +44,11 @@ function Field({ label, hint, htmlFor, children }: { label: string; hint?: strin
 function TournamentRow({ name, meta }: { name: string; meta: string }) {
   return (
     <div className={styles.tournamentRow}>
-      <span className={styles.tournamentOrb} aria-hidden />
+      <span className={styles.tournamentCheck} aria-hidden>✓</span>
       <div className={styles.tournamentInfo}>
         <div className={styles.tournamentName}>{name}</div>
         <div className={styles.tournamentMeta}>{meta}</div>
       </div>
-      <span className={styles.tournamentDefault}>Default</span>
     </div>
   );
 }

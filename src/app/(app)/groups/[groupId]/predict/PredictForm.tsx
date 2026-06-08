@@ -161,6 +161,18 @@ export default function PredictForm({
       return;
     }
 
+    // Remove any best-third picks that conflict with the new group rankings
+    const rankedIds = new Set(completedGroups.flatMap((g) => [ranks[g][0]!, ranks[g][1]!]));
+    supabase.from("best_third_picks").select("team_ids").eq("group_id", groupId).eq("user_id", userId)
+      .maybeSingle().then(({ data: b }) => {
+        if (b?.team_ids) {
+          const cleaned = b.team_ids.filter((id: string) => !rankedIds.has(id));
+          if (cleaned.length !== b.team_ids.length) {
+            supabase.from("best_third_picks").update({ team_ids: cleaned }).eq("group_id", groupId).eq("user_id", userId).then();
+          }
+        }
+      });
+
     setSavedGroups(new Set(completedGroups));
     setSaving(false);
     setShowAnimation(true);
