@@ -347,21 +347,7 @@
   font-weight: 600;
 }
 
-.noPicksBadge {
-  display: inline-block;
-  margin-left: 8px;
-  font-family: var(--font-mono), monospace;
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(6, 39, 49, 0.06);
-  color: rgba(6, 39, 49, 0.45);
-  white-space: nowrap;
-  vertical-align: middle;
-}
+
 
 .lbPoints {
   font-family: var(--font-display), system-ui, sans-serif;

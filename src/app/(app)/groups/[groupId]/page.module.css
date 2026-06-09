@@ -644,6 +644,19 @@
   flex-shrink: 0;
 }
 
+.noPicksBadge {
+  margin-left: 8px;
+  border-radius: 4px;
+  background: rgba(255, 183, 77, 0.15);
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #b76e00;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .lbScore {
   display: flex;
   align-items: center;

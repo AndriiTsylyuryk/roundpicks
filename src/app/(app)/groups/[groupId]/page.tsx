@@ -108,7 +108,10 @@ export default async function GroupPage({ params }: Props) {
     .select("home_team_id, away_team_id, home_score, away_score, status")
     .eq("round", "GROUP")
     .eq("status", "finished");
-  const groupResults = deriveGroupStandings(finishedGroupMatchesRaw ?? [], wcTeams);
+  const groupResults = deriveGroupStandings(
+    finishedGroupMatchesRaw ?? [],
+    wcTeams,
+  );
   const hasGroupResults = groupResults.some((r) => r.rank1_id);
 
   const { data: bestThirdPicksRaw } = await supabase
@@ -140,7 +143,9 @@ export default async function GroupPage({ params }: Props) {
   );
 
   const thirdPlaceIds = new Set(
-    groupResults.map((r) => r.rank3_id).filter((id): id is string => id !== null),
+    groupResults
+      .map((r) => r.rank3_id)
+      .filter((id): id is string => id !== null),
   );
   const r32TeamIds = new Set(
     knockoutMatches
@@ -165,8 +170,17 @@ export default async function GroupPage({ params }: Props) {
     koPicksByUser[p.user_id].push(p);
   }
 
-  type MpRow = { user_id: string; match_id: string; prediction: "home" | "draw" | "away" };
-  type GmScoreRow = { id: string; status: string; home_score: number | null; away_score: number | null };
+  type MpRow = {
+    user_id: string;
+    match_id: string;
+    prediction: "home" | "draw" | "away";
+  };
+  type GmScoreRow = {
+    id: string;
+    status: string;
+    home_score: number | null;
+    away_score: number | null;
+  };
 
   const matchPredsByUser: Record<string, MpRow[]> = {};
   let groupMatchesForScore: GmScoreRow[] = [];
@@ -178,7 +192,9 @@ export default async function GroupPage({ params }: Props) {
       .select("id, status, home_score, away_score")
       .eq("round", "GROUP");
     groupMatchesForScore = (gmRaw ?? []) as GmScoreRow[];
-    hasAdvancedResults = groupMatchesForScore.some((m) => m.status === "finished");
+    hasAdvancedResults = groupMatchesForScore.some(
+      (m) => m.status === "finished",
+    );
 
     const { data: mpRaw } = await supabase
       .from("match_predictions")
@@ -215,12 +231,19 @@ export default async function GroupPage({ params }: Props) {
       const knockoutScore = hasKnockoutResults
         ? calcKnockoutScore(koPicksByUser[uid] ?? [], knockoutMatches)
         : null;
-      const matchPredScore = group.mode === "advanced" && hasAdvancedResults
-        ? calcMatchPredictionScore(matchPredsByUser[uid] ?? [], groupMatchesForScore)
-        : null;
+      const matchPredScore =
+        group.mode === "advanced" && hasAdvancedResults
+          ? calcMatchPredictionScore(
+              matchPredsByUser[uid] ?? [],
+              groupMatchesForScore,
+            )
+          : null;
       const anyScoreKnown = groupScore !== null || matchPredScore !== null;
       const totalScore = anyScoreKnown
-        ? (groupScore ?? 0) + (bestThirdScore ?? 0) + (knockoutScore ?? 0) + (matchPredScore ?? 0)
+        ? (groupScore ?? 0) +
+          (bestThirdScore ?? 0) +
+          (knockoutScore ?? 0) +
+          (matchPredScore ?? 0)
         : null;
       return {
         userId: uid,
@@ -243,22 +266,24 @@ export default async function GroupPage({ params }: Props) {
   const userHasAllGroupPicks = (currentUserMember?.groupsSubmitted ?? 0) >= 12;
   const userHasKnockoutPicks = (koPicksByUser[user!.id]?.length ?? 0) > 0;
 
-  const [{ data: firstGroupMatch }, { data: firstKoMatch }] = await Promise.all([
-    supabase
-      .from("wc_matches")
-      .select("kickoff_at")
-      .eq("round", "GROUP")
-      .order("kickoff_at", { ascending: true })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("wc_matches")
-      .select("kickoff_at")
-      .eq("round", "R32")
-      .order("kickoff_at", { ascending: true })
-      .limit(1)
-      .maybeSingle(),
-  ]);
+  const [{ data: firstGroupMatch }, { data: firstKoMatch }] = await Promise.all(
+    [
+      supabase
+        .from("wc_matches")
+        .select("kickoff_at")
+        .eq("round", "GROUP")
+        .order("kickoff_at", { ascending: true })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("wc_matches")
+        .select("kickoff_at")
+        .eq("round", "R32")
+        .order("kickoff_at", { ascending: true })
+        .limit(1)
+        .maybeSingle(),
+    ],
+  );
 
   const now = new Date();
   const phase1Deadline = firstGroupMatch?.kickoff_at
@@ -269,7 +294,9 @@ export default async function GroupPage({ params }: Props) {
   const knockoutsStarted =
     group.phase1_locked || (!!phase1Deadline && now >= phase1Deadline);
 
-  const firstKoKickoff = firstKoMatch?.kickoff_at ? new Date(firstKoMatch.kickoff_at) : null;
+  const firstKoKickoff = firstKoMatch?.kickoff_at
+    ? new Date(firstKoMatch.kickoff_at)
+    : null;
   const knockoutsHaveStarted = !!firstKoKickoff && now >= firstKoKickoff;
 
   const phase2DeadlineRaw = group.phase2_deadline
@@ -292,26 +319,47 @@ export default async function GroupPage({ params }: Props) {
         {members.length !== 1 ? "s" : ""}
       </div>
       {members.length === 0 ? (
-        <p className={styles.noPicksMsg}>No participants yet. Share the invite link!</p>
+        <p className={styles.noPicksMsg}>
+          No participants yet. Share the invite link!
+        </p>
       ) : (
         <ul className={styles.lbList}>
           {members.map((m, i) => (
-            <li key={m.userId} className={`${styles.lbRow} ${m.userId === user!.id ? styles.me : ""}`}>
-              <span className={styles.lbRank}>{String(i + 1).padStart(2, "0")}</span>
+            <li
+              key={m.userId}
+              className={`${styles.lbRow} ${m.userId === user!.id ? styles.me : ""}`}
+            >
+              <span className={styles.lbRank}>
+                {String(i + 1).padStart(2, "0")}
+              </span>
               <span className={styles.lbName}>
                 {m.name}
-                {m.userId === user!.id && <span className={styles.youBadge}>you</span>}
-                {hasGroupResults && i === 0 && <span className={styles.hotBadge}>HOT</span>}
+                {m.userId === user!.id && (
+                  <span className={styles.youBadge}>you</span>
+                )}
+                {m.groupsSubmitted === 0 && (
+                  <span className={styles.noPicksBadge}>No picks made</span>
+                )}
+                {hasGroupResults && i === 0 && (
+                  <span className={styles.hotBadge}>HOT</span>
+                )}
               </span>
               <span className={styles.lbScore}>
                 {hasGroupResults && m.score !== null ? (
                   <span className={styles.lbPoints}>{m.score}</span>
                 ) : m.groupsSubmitted < 12 ? (
-                  <span className={styles.lbPending}>{m.groupsSubmitted}/12</span>
+                  <span className={styles.lbPending}>
+                    {m.groupsSubmitted}/12
+                  </span>
                 ) : (
                   <span className={styles.lbDone}>✓</span>
                 )}
-                <ViewPicksButton userId={m.userId} userName={m.name} groupId={groupId} groupMode={group.mode} />
+                <ViewPicksButton
+                  userId={m.userId}
+                  userName={m.name}
+                  groupId={groupId}
+                  groupMode={group.mode}
+                />
               </span>
             </li>
           ))}
@@ -366,12 +414,11 @@ export default async function GroupPage({ params }: Props) {
           <div
             className={styles.progressFill}
             style={{
-              width:
-                knockoutsHaveStarted
-                  ? "100%"
-                  : !phase1IsOpen
-                    ? "50%"
-                    : "0%",
+              width: knockoutsHaveStarted
+                ? "100%"
+                : !phase1IsOpen
+                  ? "50%"
+                  : "0%",
             }}
           />
         </div>
@@ -411,7 +458,9 @@ export default async function GroupPage({ params }: Props) {
         <div className={styles.ctaTop}>
           <div>
             <div className={`eyebrow ${styles.ctaEyebrow}`}>
-              {phase1IsOpen || phase2IsOpen ? "Predictions open" : "Predictions closed"}
+              {phase1IsOpen || phase2IsOpen
+                ? "Predictions open"
+                : "Predictions closed"}
             </div>
             <div className={styles.ctaHeadline}>
               {phase1IsOpen
@@ -437,19 +486,26 @@ export default async function GroupPage({ params }: Props) {
               href={`/groups/${groupId}/predict`}
               className={[
                 styles.ctaPredictBtn,
-                (userHasAllGroupPicks && phase1IsOpen) || (userHasKnockoutPicks && phase2IsOpen)
+                (userHasAllGroupPicks && phase1IsOpen) ||
+                (userHasKnockoutPicks && phase2IsOpen)
                   ? styles.ctaPredictBtnDone
-                  : (phase1IsOpen && !userHasAllGroupPicks) || (phase2IsOpen && !userHasKnockoutPicks)
+                  : (phase1IsOpen && !userHasAllGroupPicks) ||
+                      (phase2IsOpen && !userHasKnockoutPicks)
                     ? styles.ctaPredictBtnIdle
                     : "",
-              ].filter(Boolean).join(" ")}
+              ]
+                .filter(Boolean)
+                .join(" ")}
             >
-              {(userHasAllGroupPicks && phase1IsOpen) || (userHasKnockoutPicks && phase2IsOpen)
+              {(userHasAllGroupPicks && phase1IsOpen) ||
+              (userHasKnockoutPicks && phase2IsOpen)
                 ? "Picks submitted · Edit picks"
                 : "Make your Picks"}
             </Link>
           ) : (
-            <span className={`${styles.ctaPredictBtn} ${styles.ctaPredictBtnDisabled}`}>
+            <span
+              className={`${styles.ctaPredictBtn} ${styles.ctaPredictBtnDisabled}`}
+            >
               Predictions closed
             </span>
           )}
@@ -462,18 +518,19 @@ export default async function GroupPage({ params }: Props) {
           <div className={styles.ctaInviteRow}>
             <div>
               <div className={styles.ctaInviteClosed}>
-                INVITES CLOSED · {members.length} / {group.max_participants} JOINED
+                INVITES CLOSED · {members.length} / {group.max_participants}{" "}
+                JOINED
               </div>
               <div className={styles.inviteClosedHeadline}>
                 Joining is closed for this group.
               </div>
               <div className={styles.inviteClosedHint}>
-                The tournament has started, so new players can no longer join. Everyone in the group is locked in for the rest of the competition.
+                The tournament has started, so new players can no longer join.
+                Everyone in the group is locked in for the rest of the
+                competition.
               </div>
             </div>
-            <span className={styles.inviteClosedBtn}>
-              Link disabled
-            </span>
+            <span className={styles.inviteClosedBtn}>Link disabled</span>
           </div>
         </div>
       ) : members.length >= group.max_participants ? (
@@ -529,15 +586,31 @@ export default async function GroupPage({ params }: Props) {
         </summary>
         <div className={styles.expandableBody}>
           <p>Predict each World Cup group by ranking teams 1st–3rd.</p>
-          <p><strong>Scoring:</strong></p>
+          <p>
+            <strong>Scoring:</strong>
+          </p>
           <p>+2 points for a team in the exact correct position</p>
           <p>+1 point for a correct team placed in the wrong spot</p>
-          <p><strong>Group stage game results scoring: (Advanced mode only)</strong></p>
-          <p>+1 point for every correctly predicted game result (either correct winner or draw)</p>
-          <p><strong>Best third-placed teams:</strong></p>
+          <p>
+            <strong>
+              Group stage game results scoring: (Advanced mode only)
+            </strong>
+          </p>
+          <p>
+            +1 point for every correctly predicted game result (either correct
+            winner or draw)
+          </p>
+          <p>
+            <strong>Best third-placed teams:</strong>
+          </p>
           <p>+2 points for each correctly predicted team</p>
-          <p><strong>Knockout stage predictions:</strong></p>
-          <p>1–5 points awarded for each correctly predicted winner, depending on the round.</p>
+          <p>
+            <strong>Knockout stage predictions:</strong>
+          </p>
+          <p>
+            1–5 points awarded for each correctly predicted winner, depending on
+            the round.
+          </p>
         </div>
       </details>
 

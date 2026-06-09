@@ -22,7 +22,6 @@ interface StandingRow {
   name: string;
   you: boolean;
   points: number | null;
-  noPicks: boolean;
 }
 
 function fmtDate(d: Date): string {
@@ -374,7 +373,6 @@ export default async function DashboardPage() {
                 name: nameById[uid] ?? "User",
                 you: uid === user!.id,
                 points: total,
-                noPicks: userPicks.length === 0,
               };
             })
             .sort((a, b) =>
@@ -476,11 +474,6 @@ export default async function DashboardPage() {
                           className={`${styles.lbName} ${row.you ? styles.lbNameYou : ""}`}
                         >
                           {row.you ? `${row.name} (you)` : row.name}
-                          {row.noPicks && (
-                            <span className={styles.noPicksBadge}>
-                              No picks made
-                            </span>
-                          )}
                         </span>
                         <span
                           className={`${styles.lbPoints} ${row.you ? styles.lbPointsYou : ""}`}
