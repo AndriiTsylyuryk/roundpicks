@@ -517,211 +517,211 @@ export default function PicksModal({
               <Spinner size={48} />
             </div>
           ) : (
-            <>
-              {/* Group stage rankings */}
-              <ModalSection
-                label="Group stage rankings"
-                sub={`${groupPicks.length} groups · ranked 1st–2nd · 2 pts exact, 1 pt right team`}
-              >
-                {groupPicks.length === 0 ? (
-                  <p className={styles.picksEmpty}>No group picks yet</p>
-                ) : (
-                  <div className={styles.picksGroupGrid}>
-                    {[...groupPicksByGroup.entries()]
-                      .sort(([a], [b]) => a.localeCompare(b))
-                      .map(([letter, pick]) => (
-                        <div key={letter} className={styles.picksGroupCard}>
-                          <div className={styles.picksGroupCardHeader}>
-                            Group {letter}
-                          </div>
-                          {(
-                            [
-                              [pick.rank1_id, "1st"],
-                              [pick.rank2_id, "2nd"],
-                            ] as [string | null, string][]
-                          ).map(([tid, pos], i) => {
-                            const team = tm(tid);
-                            const status = groupPickStatus(tid, letter, i);
-                            const pts = groupPickPts(status);
-                            return (
-                              <div key={pos} className={styles.picksPosRow}>
-                                <span className={styles.picksPosNum}>
-                                  {pos}
-                                </span>
-                                <span>{team ? teamFlag(team.name) : null}</span>
-                                <span
-                                  className={`${styles.picksTeamName}${status === "pending" ? ` ${styles.picksTeamNamePending}` : ""}`}
-                                >
-                                  {team?.name ?? "—"}
-                                </span>
-                                <PointsPill pts={pts} status={status} />
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ))}
-                  </div>
+              <>
+                {/* Advanced: group stage matches (shown first in advanced flow) */}
+                {groupMode === "advanced" && (
+                  <ModalSection
+                    label="Group stage matches"
+                    sub={`${matchPredictions.length} predictions · W / D / L per match`}
+                  >
+                    {groupMatches.length === 0 ? (
+                      <p className={styles.picksEmpty}>
+                        No match predictions yet
+                      </p>
+                    ) : (
+                      groupedGroupMatches.flatMap(([, gMatches]) =>
+                        gMatches.map((match, mi) => {
+                          const homeTeam = tm(match.home_team_id);
+                          const awayTeam = tm(match.away_team_id);
+                          const pred = matchPredMap.get(match.id);
+                          const status = getMatchPredStatus(match.id);
+                          const abbr = (team: { name: string } | null) =>
+                            (
+                              getFlagCode(team?.name ?? "") ??
+                              team?.name?.slice(0, 2) ??
+                              "?"
+                            ).toUpperCase();
+                          const predLabel =
+                            pred === "home"
+                              ? (homeTeam?.name ?? "Home")
+                              : pred === "away"
+                                ? (awayTeam?.name ?? "Away")
+                                : pred === "draw"
+                                  ? "Draw"
+                                  : "—";
+                          const resultLabel =
+                            match.status === "finished" &&
+                            match.home_score !== null &&
+                            match.away_score !== null
+                              ? `${match.home_score}–${match.away_score}`
+                              : null;
+                          const matchPts = status === "hit" ? 1 : status === "pending" ? null : 0;
+                          const isLast = mi === gMatches.length - 1;
+                          return (
+                            <PredRow
+                              key={match.id}
+                              left={`${abbr(homeTeam)} vs ${abbr(awayTeam)}`}
+                              pick={predLabel}
+                              actual={resultLabel}
+                              status={status}
+                              pts={matchPts}
+                              isLast={isLast}
+                            />
+                          );
+                        }),
+                      )
+                    )}
+                  </ModalSection>
                 )}
-              </ModalSection>
 
-              {/* Advanced: group stage matches */}
-              {groupMode === "advanced" && (
+                {/* Group stage rankings */}
                 <ModalSection
-                  label="Group stage matches"
-                  sub={`${matchPredictions.length} predictions · W / D / L per match`}
+                  label="Group stage rankings"
+                  sub={`${groupPicks.length} groups · ranked 1st–2nd · 2 pts exact, 1 pt right team`}
                 >
-                  {groupMatches.length === 0 ? (
-                    <p className={styles.picksEmpty}>
-                      No match predictions yet
-                    </p>
+                  {groupPicks.length === 0 ? (
+                    <p className={styles.picksEmpty}>No group picks yet</p>
                   ) : (
-                    groupedGroupMatches.flatMap(([, gMatches]) =>
-                      gMatches.map((match, mi) => {
-                        const homeTeam = tm(match.home_team_id);
-                        const awayTeam = tm(match.away_team_id);
-                        const pred = matchPredMap.get(match.id);
-                        const status = getMatchPredStatus(match.id);
-                        const abbr = (team: { name: string } | null) =>
-                          (
-                            getFlagCode(team?.name ?? "") ??
-                            team?.name?.slice(0, 2) ??
-                            "?"
-                          ).toUpperCase();
-                        const predLabel =
-                          pred === "home"
-                            ? (homeTeam?.name ?? "Home")
-                            : pred === "away"
-                              ? (awayTeam?.name ?? "Away")
-                              : pred === "draw"
-                                ? "Draw"
-                                : "—";
-                        const resultLabel =
+                    <div className={styles.picksGroupGrid}>
+                      {[...groupPicksByGroup.entries()]
+                        .sort(([a], [b]) => a.localeCompare(b))
+                        .map(([letter, pick]) => (
+                          <div key={letter} className={styles.picksGroupCard}>
+                            <div className={styles.picksGroupCardHeader}>
+                              Group {letter}
+                            </div>
+                            {(
+                              [
+                                [pick.rank1_id, "1st"],
+                                [pick.rank2_id, "2nd"],
+                              ] as [string | null, string][]
+                            ).map(([tid, pos], i) => {
+                              const team = tm(tid);
+                              const status = groupPickStatus(tid, letter, i);
+                              const pts = groupPickPts(status);
+                              return (
+                                <div key={pos} className={styles.picksPosRow}>
+                                  <span className={styles.picksPosNum}>
+                                    {pos}
+                                  </span>
+                                  <span>{team ? teamFlag(team.name) : null}</span>
+                                  <span
+                                    className={`${styles.picksTeamName}${status === "pending" ? ` ${styles.picksTeamNamePending}` : ""}`}
+                                  >
+                                    {team?.name ?? "—"}
+                                  </span>
+                                  <PointsPill pts={pts} status={status} />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </ModalSection>
+
+                {/* Best 3rd-place teams */}
+                <ModalSection
+                  label="Best 3rd-place teams"
+                  sub="8 picks · top 8 third-place finishers advance"
+                >
+                  {bestThirdIds.length === 0 ? (
+                    <p className={styles.picksEmpty}>No best third picks yet</p>
+                  ) : (
+                    <div className={styles.picksThirdGrid}>
+                      {bestThirdIds.map((tid, i) => {
+                        const team = tm(tid);
+                        const status = bestThirdStatus(tid);
+                        const pts = status === "hit" ? 2 : status === "pending" ? null : 0;
+                        const isLastRow = i >= bestThirdIds.length - 2;
+                        const isLeft = i % 2 === 0;
+                        return (
+                          <div
+                            key={tid}
+                            className={[
+                              styles.picksThirdCell,
+                              !isLastRow ? styles.picksThirdCellBorderBottom : "",
+                              isLeft ? styles.picksThirdCellBorderRight : "",
+                            ]
+                              .filter(Boolean)
+                              .join(" ")}
+                          >
+                            <span
+                              className={`${styles.picksThirdTeam}${status === "pending" ? ` ${styles.picksThirdTeamPending}` : status === "miss" ? ` ${styles.picksThirdTeamMiss}` : ""}`}
+                            >
+                              {team ? (
+                                <>
+                                  {teamFlag(team.name)} {team.name}
+                                </>
+                              ) : (
+                                "—"
+                              )}
+                            </span>
+                            <PointsPill pts={pts} status={status} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </ModalSection>
+
+                {/* Knockout matches */}
+                <ModalSection
+                  label="Knockout matches"
+                  sub={`${koMatchCount} of ${matches.length} played`}
+                >
+                  {matches.length === 0 ? (
+                    <p className={styles.picksEmpty}>No knockout matches yet</p>
+                  ) : (
+                    ROUND_ORDER.flatMap((round) => {
+                      const roundMatches = matches.filter(
+                        (m) => m.round === round,
+                      );
+                      return roundMatches.map((match, mi) => {
+                        const kp = knockoutPicks.find(
+                          (p) => p.match_id === match.id,
+                        );
+                        const winner = kp ? tm(kp.winner_id) : null;
+                        const actualId =
                           match.status === "finished" &&
                           match.home_score !== null &&
                           match.away_score !== null
-                            ? `${match.home_score}–${match.away_score}`
+                            ? match.home_score > match.away_score
+                              ? match.home_team_id
+                              : match.away_score > match.home_score
+                                ? match.away_team_id
+                                : null
                             : null;
-                        const matchPts = status === "hit" ? 1 : status === "pending" ? null : 0;
-                        const isLast = mi === gMatches.length - 1;
+                        const actual = tm(actualId);
+                        const status = kp
+                          ? knockPickStatus(match.id, kp.winner_id)
+                          : "pending";
+                        const koPts = status === "hit"
+                          ? (KO_ROUND_PTS[match.round] ?? 0)
+                          : status === "pending" ? null : 0;
+                        const totalMatches = matches.length;
+                        const flatIndex =
+                          ROUND_ORDER.slice(0, ROUND_ORDER.indexOf(round)).reduce(
+                            (sum, r) =>
+                              sum + matches.filter((m) => m.round === r).length,
+                            0,
+                          ) + mi;
                         return (
                           <PredRow
                             key={match.id}
-                            left={`${abbr(homeTeam)} vs ${abbr(awayTeam)}`}
-                            pick={predLabel}
-                            actual={resultLabel}
+                            left={`${ROUND_LABEL[round]} · ${mi + 1}`}
+                            pick={winner ? winner.name : "—"}
+                            actual={actual ? actual.name : null}
                             status={status}
-                            pts={matchPts}
-                            isLast={isLast}
+                            pts={koPts}
+                            isLast={flatIndex === totalMatches - 1}
                           />
                         );
-                      }),
-                    )
+                      });
+                    })
                   )}
                 </ModalSection>
-              )}
-
-              {/* Best 3rd-place teams */}
-              <ModalSection
-                label="Best 3rd-place teams"
-                sub="8 picks · top 8 third-place finishers advance"
-              >
-                {bestThirdIds.length === 0 ? (
-                  <p className={styles.picksEmpty}>No best third picks yet</p>
-                ) : (
-                  <div className={styles.picksThirdGrid}>
-                    {bestThirdIds.map((tid, i) => {
-                      const team = tm(tid);
-                      const status = bestThirdStatus(tid);
-                      const pts = status === "hit" ? 2 : status === "pending" ? null : 0;
-                      const isLastRow = i >= bestThirdIds.length - 2;
-                      const isLeft = i % 2 === 0;
-                      return (
-                        <div
-                          key={tid}
-                          className={[
-                            styles.picksThirdCell,
-                            !isLastRow ? styles.picksThirdCellBorderBottom : "",
-                            isLeft ? styles.picksThirdCellBorderRight : "",
-                          ]
-                            .filter(Boolean)
-                            .join(" ")}
-                        >
-                          <span
-                            className={`${styles.picksThirdTeam}${status === "pending" ? ` ${styles.picksThirdTeamPending}` : status === "miss" ? ` ${styles.picksThirdTeamMiss}` : ""}`}
-                          >
-                            {team ? (
-                              <>
-                                {teamFlag(team.name)} {team.name}
-                              </>
-                            ) : (
-                              "—"
-                            )}
-                          </span>
-                          <PointsPill pts={pts} status={status} />
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </ModalSection>
-
-              {/* Knockout matches */}
-              <ModalSection
-                label="Knockout matches"
-                sub={`${koMatchCount} of ${matches.length} played`}
-              >
-                {matches.length === 0 ? (
-                  <p className={styles.picksEmpty}>No knockout matches yet</p>
-                ) : (
-                  ROUND_ORDER.flatMap((round) => {
-                    const roundMatches = matches.filter(
-                      (m) => m.round === round,
-                    );
-                    return roundMatches.map((match, mi) => {
-                      const kp = knockoutPicks.find(
-                        (p) => p.match_id === match.id,
-                      );
-                      const winner = kp ? tm(kp.winner_id) : null;
-                      const actualId =
-                        match.status === "finished" &&
-                        match.home_score !== null &&
-                        match.away_score !== null
-                          ? match.home_score > match.away_score
-                            ? match.home_team_id
-                            : match.away_score > match.home_score
-                              ? match.away_team_id
-                              : null
-                          : null;
-                      const actual = tm(actualId);
-                      const status = kp
-                        ? knockPickStatus(match.id, kp.winner_id)
-                        : "pending";
-                      const koPts = status === "hit"
-                        ? (KO_ROUND_PTS[match.round] ?? 0)
-                        : status === "pending" ? null : 0;
-                      const totalMatches = matches.length;
-                      const flatIndex =
-                        ROUND_ORDER.slice(0, ROUND_ORDER.indexOf(round)).reduce(
-                          (sum, r) =>
-                            sum + matches.filter((m) => m.round === r).length,
-                          0,
-                        ) + mi;
-                      return (
-                        <PredRow
-                          key={match.id}
-                          left={`${ROUND_LABEL[round]} · ${mi + 1}`}
-                          pick={winner ? winner.name : "—"}
-                          actual={actual ? actual.name : null}
-                          status={status}
-                          pts={koPts}
-                          isLast={flatIndex === totalMatches - 1}
-                        />
-                      );
-                    });
-                  })
-                )}
-              </ModalSection>
-            </>
+              </>
           )}
         </div>
 

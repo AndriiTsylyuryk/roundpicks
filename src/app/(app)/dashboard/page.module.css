@@ -212,6 +212,62 @@
   white-space: nowrap;
 }
 
+/* ── Name row (group name + badges) ── */
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nameDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.nameDotDone {
+  background: #4caf50;
+}
+
+.nameDotNeeded {
+  background: #ffb74d;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+.nameBadges {
+  display: flex;
+  gap: 5px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.namePill {
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-family: var(--font-mono), monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.pillNeeded {
+  background: rgba(255, 183, 77, 0.15);
+  color: #b76e00;
+}
+
+.pillDone {
+  background: rgba(76, 175, 80, 0.12);
+  color: #2e7d32;
+}
+
 /* ── Mini leaderboard ── */
 .miniLb {
   display: flex;
@@ -289,6 +345,22 @@
 
 .lbNameYou {
   font-weight: 600;
+}
+
+.noPicksBadge {
+  display: inline-block;
+  margin-left: 8px;
+  font-family: var(--font-mono), monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(6, 39, 49, 0.06);
+  color: rgba(6, 39, 49, 0.45);
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 .lbPoints {

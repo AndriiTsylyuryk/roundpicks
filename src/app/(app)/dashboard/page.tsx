@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/server-admin";
-import { calcGroupScore, calcBestThirdScore, calcKnockoutScore, deriveGroupStandings } from "@/lib/scoring";
+import {
+  calcGroupScore,
+  calcBestThirdScore,
+  calcKnockoutScore,
+  deriveGroupStandings,
+} from "@/lib/scoring";
 import styles from "./page.module.css";
 
 interface GroupRow {
@@ -17,10 +22,15 @@ interface StandingRow {
   name: string;
   you: boolean;
   points: number | null;
+  noPicks: boolean;
 }
 
 function fmtDate(d: Date): string {
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 export default async function DashboardPage() {
@@ -54,9 +64,10 @@ export default async function DashboardPage() {
   const tournamentName = event?.name ?? "FIFA World Cup 2026";
   const tournamentStart = event?.starts_at ? new Date(event.starts_at) : null;
   const tournamentEnd = event?.ends_at ? new Date(event.ends_at) : null;
-  const tournamentRange = tournamentStart && tournamentEnd
-    ? `${fmtDate(tournamentStart)} – ${fmtDate(tournamentEnd)} · USA, Canada & Mexico`
-    : "USA, Canada & Mexico";
+  const tournamentRange =
+    tournamentStart && tournamentEnd
+      ? `${fmtDate(tournamentStart)} – ${fmtDate(tournamentEnd)} · USA, Canada & Mexico`
+      : "USA, Canada & Mexico";
 
   if (groupIds.length === 0) {
     return (
@@ -133,12 +144,12 @@ export default async function DashboardPage() {
       .select("home_team_id, away_team_id, home_score, away_score, status")
       .eq("round", "GROUP")
       .eq("status", "finished"),
-    supabase
-      .from("wc_teams")
-      .select("id, group_letter"),
+    supabase.from("wc_teams").select("id, group_letter"),
     supabase
       .from("wc_matches")
-      .select("id, round, home_team_id, away_team_id, home_score, away_score, status")
+      .select(
+        "id, round, home_team_id, away_team_id, home_score, away_score, status",
+      )
       .in("round", ["R32", "R16", "QF", "SF", "FINAL", "3RD"]),
     supabase
       .from("knockout_picks")
@@ -157,27 +168,63 @@ export default async function DashboardPage() {
   }[];
   const hasResults = (resultsCountResult.count ?? 0) > 0;
 
-  type GPickRow = { group_id: string; user_id: string; wc_group: string; rank1_id: string; rank2_id: string; rank3_id: string | null };
-  type KoPickRow = { group_id: string; user_id: string; match_id: string; winner_id: string };
+  type GPickRow = {
+    group_id: string;
+    user_id: string;
+    wc_group: string;
+    rank1_id: string;
+    rank2_id: string;
+    rank3_id: string | null;
+  };
+  type KoPickRow = {
+    group_id: string;
+    user_id: string;
+    match_id: string;
+    winner_id: string;
+  };
   type BtPickRow = { group_id: string; user_id: string; team_ids: string[] };
-  type KoMatchRow = { id: string; round: string; home_team_id: string | null; away_team_id: string | null; home_score: number | null; away_score: number | null; status: string };
+  type KoMatchRow = {
+    id: string;
+    round: string;
+    home_team_id: string | null;
+    away_team_id: string | null;
+    home_score: number | null;
+    away_score: number | null;
+    status: string;
+  };
 
   const allGroupPicks = (groupPicksResult.data ?? []) as GPickRow[];
-  const wcTeams = (wcTeamsResult.data ?? []) as { id: string; group_letter: string }[];
+  const wcTeams = (wcTeamsResult.data ?? []) as {
+    id: string;
+    group_letter: string;
+  }[];
   const knockoutMatches = (knockoutMatchesResult.data ?? []) as KoMatchRow[];
   const allKoPicks = (knockoutPicksResult.data ?? []) as KoPickRow[];
   const allBtPicks = (bestThirdPicksResult.data ?? []) as BtPickRow[];
 
-  const groupResults = deriveGroupStandings(finishedGroupMatchesResult.data ?? [], wcTeams);
-  const hasKnockoutResults = knockoutMatches.some((m) => m.status === "finished");
+  const groupResults = deriveGroupStandings(
+    finishedGroupMatchesResult.data ?? [],
+    wcTeams,
+  );
+  const hasKnockoutResults = knockoutMatches.some(
+    (m) => m.status === "finished",
+  );
 
-  const thirdPlaceIds = new Set(groupResults.map((r) => r.rank3_id).filter((id): id is string => id !== null));
+  const thirdPlaceIds = new Set(
+    groupResults
+      .map((r) => r.rank3_id)
+      .filter((id): id is string => id !== null),
+  );
   const r32TeamIds = new Set(
-    knockoutMatches.filter((m) => m.round === "R32")
+    knockoutMatches
+      .filter((m) => m.round === "R32")
       .flatMap((m) => [m.home_team_id, m.away_team_id])
       .filter((id): id is string => id !== null),
   );
-  const officialBestThirdIds = r32TeamIds.size > 0 ? [...thirdPlaceIds].filter((id) => r32TeamIds.has(id)) : [];
+  const officialBestThirdIds =
+    r32TeamIds.size > 0
+      ? [...thirdPlaceIds].filter((id) => r32TeamIds.has(id))
+      : [];
   const hasBestThird = officialBestThirdIds.length === 8;
 
   // Member IDs per group
@@ -262,7 +309,8 @@ export default async function DashboardPage() {
           <div className={styles.bannerSub}>
             {countdown ? (
               <>
-                <strong>Group stage closes in {countdown}</strong>{" · "}
+                <strong>Group stage closes in {countdown}</strong>
+                {" · "}
                 {phase1Deadline ? fmtDate(phase1Deadline) : ""}
               </>
             ) : groupStageOver ? (
@@ -288,7 +336,9 @@ export default async function DashboardPage() {
       {/* Grid */}
       <div className={styles.grid}>
         {orderedGroups.map((group) => {
-          const groupPicksForGroup = allGroupPicks.filter((p) => p.group_id === group.id);
+          const groupPicksForGroup = allGroupPicks.filter(
+            (p) => p.group_id === group.id,
+          );
           const picksByUser: Record<string, GPickRow[]> = {};
           for (const p of groupPicksForGroup) {
             if (!picksByUser[p.user_id]) picksByUser[p.user_id] = [];
@@ -306,23 +356,45 @@ export default async function DashboardPage() {
           const standings: StandingRow[] = (membersByGroup[group.id] ?? [])
             .map((uid) => {
               const userPicks = picksByUser[uid] ?? [];
-              const groupScore = hasResults ? calcGroupScore(userPicks, groupResults) : null;
-              const btScore = hasBestThird ? calcBestThirdScore(koBtMap[uid] ?? [], officialBestThirdIds) : null;
-              const koScore = hasKnockoutResults ? calcKnockoutScore(koPicksByUser[uid] ?? [], knockoutMatches) : null;
-              const total = groupScore !== null ? (groupScore ?? 0) + (btScore ?? 0) + (koScore ?? 0) : null;
-              return { userId: uid, name: nameById[uid] ?? "User", you: uid === user!.id, points: total };
+              const groupScore = hasResults
+                ? calcGroupScore(userPicks, groupResults)
+                : null;
+              const btScore = hasBestThird
+                ? calcBestThirdScore(koBtMap[uid] ?? [], officialBestThirdIds)
+                : null;
+              const koScore = hasKnockoutResults
+                ? calcKnockoutScore(koPicksByUser[uid] ?? [], knockoutMatches)
+                : null;
+              const total =
+                groupScore !== null
+                  ? (groupScore ?? 0) + (btScore ?? 0) + (koScore ?? 0)
+                  : null;
+              return {
+                userId: uid,
+                name: nameById[uid] ?? "User",
+                you: uid === user!.id,
+                points: total,
+                noPicks: userPicks.length === 0,
+              };
             })
             .sort((a, b) =>
-              a.points !== null && b.points !== null ? b.points - a.points : a.name.localeCompare(b.name),
+              a.points !== null && b.points !== null
+                ? b.points - a.points
+                : a.name.localeCompare(b.name),
             );
 
           const memberCount = standings.length;
           const isEmpty = memberCount <= 1;
           const isCreator = group.creator_id === user!.id;
 
-          const visibleRows: (StandingRow | null)[] = isEmpty ? [] : standings.slice(0, 3);
+          const visibleRows: (StandingRow | null)[] = isEmpty
+            ? []
+            : standings.slice(0, 3);
 
           const predictionsOpen = phase1IsOpen && !group.phase1_locked;
+          const userGroupPicks = picksByUser[user!.id] ?? [];
+          const userKoPicks = koPicksByUser[user!.id] ?? [];
+          const groupPicksDone = userGroupPicks.length > 0;
 
           return (
             <Link
@@ -336,7 +408,30 @@ export default async function DashboardPage() {
 
               <div className={styles.cardHeader}>
                 <div className={styles.cardHeaderLeft}>
-                  <div className={styles.cardName}>{group.name}</div>
+                  <div className={styles.nameRow}>
+                    <span
+                      className={`${styles.nameDot} ${groupPicksDone ? styles.nameDotDone : styles.nameDotNeeded}`}
+                    />
+                    <div className={styles.cardName}>{group.name}</div>
+                    <div className={styles.nameBadges}>
+                      <span
+                        className={`${styles.namePill} ${groupPicksDone ? styles.pillDone : styles.pillNeeded}`}
+                      >
+                        {groupPicksDone ? "PICKS DONE" : "PICKS NEEDED"}
+                      </span>
+                      {groupStageOver &&
+                        (() => {
+                          const koPicksDone = userKoPicks.length > 0;
+                          return (
+                            <span
+                              className={`${styles.namePill} ${koPicksDone ? styles.pillDone : styles.pillNeeded}`}
+                            >
+                              KO: {koPicksDone ? "DONE" : "NEEDED"}
+                            </span>
+                          );
+                        })()}
+                    </div>
+                  </div>
                   <div className={styles.cardMeta}>
                     {group.events && (
                       <span className={styles.tournChip}>
@@ -381,6 +476,11 @@ export default async function DashboardPage() {
                           className={`${styles.lbName} ${row.you ? styles.lbNameYou : ""}`}
                         >
                           {row.you ? `${row.name} (you)` : row.name}
+                          {row.noPicks && (
+                            <span className={styles.noPicksBadge}>
+                              No picks made
+                            </span>
+                          )}
                         </span>
                         <span
                           className={`${styles.lbPoints} ${row.you ? styles.lbPointsYou : ""}`}
