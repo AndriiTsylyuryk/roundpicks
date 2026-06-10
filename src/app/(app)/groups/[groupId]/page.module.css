@@ -695,9 +695,7 @@
 }
 
 .noPicksTip {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
+  position: fixed;
   transform: translateX(-50%);
   background: var(--color-ink);
   color: #fff;
