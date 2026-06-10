@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/server-admin";
+import { FinalCallBanner } from "@/components/FinalCallBanner";
 import {
   calcGroupScore,
   calcBestThirdScore,
@@ -81,6 +82,7 @@ export default async function DashboardPage() {
             <div className={styles.bannerSub}>{tournamentRange}</div>
           </div>
         </div>
+        <FinalCallBanner />
         <div className={styles.header}>
           <div>
             <div className={`eyebrow ${styles.headerEyebrow}`}>Your groups</div>
@@ -320,6 +322,8 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
+
+      <FinalCallBanner />
 
       {/* Header */}
       <div className={styles.header}>

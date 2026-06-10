@@ -495,8 +495,8 @@
 }
 
 .expandableChevron {
-  font-size: 0.7rem;
-  transition: transform 200ms ease;
+  font-size: 2rem;
+  transition: transform 250ms ease;
   color: var(--color-ink-soft);
 }
 
