@@ -644,7 +644,7 @@
   flex-shrink: 0;
 }
 
-.noPicksBadge {
+.noPicksBadgeTxt {
   margin-left: 8px;
   border-radius: 4px;
   background: rgba(255, 183, 77, 0.15);
@@ -655,6 +655,59 @@
   letter-spacing: 0.04em;
   flex-shrink: 0;
   white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .noPicksBadgeTxt {
+    display: none;
+  }
+}
+
+.noPicksWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+}
+
+.noPicksDot {
+  display: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffb74d;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .noPicksDot {
+    display: inline-flex;
+  }
+}
+
+.noPicksBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 19;
+}
+
+.noPicksTip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-ink);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  z-index: 20;
+  pointer-events: none;
 }
 
 .lbScore {

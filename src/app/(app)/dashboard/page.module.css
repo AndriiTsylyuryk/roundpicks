@@ -161,6 +161,10 @@
   letter-spacing: -0.02em;
   line-height: 1.1;
   color: var(--color-ink);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .cardMeta {
@@ -591,5 +595,12 @@
 
   .discoverCard {
     border-radius: var(--radius-lg);
+  }
+
+  .bannerOrb {
+    right: -200px;
+    top: -200px;
+    width: 300px;
+    height: 300px;
   }
 }

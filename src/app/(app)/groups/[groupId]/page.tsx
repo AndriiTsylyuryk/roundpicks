@@ -14,6 +14,7 @@ import ParticipantsList from "./ParticipantsList";
 import GroupNameEditor from "./GroupNameEditor";
 import LeaveGroupButton from "./LeaveGroupButton";
 import ViewPicksButton from "./ViewPicksButton";
+import NoPicksBadge from "./NoPicksBadge";
 import styles from "./page.module.css";
 
 interface GroupRow {
@@ -338,7 +339,7 @@ export default async function GroupPage({ params }: Props) {
                   <span className={styles.youBadge}>you</span>
                 )}
                 {m.groupsSubmitted === 0 && (
-                  <span className={styles.noPicksBadge}>No picks made</span>
+                  <NoPicksBadge />
                 )}
                 {hasGroupResults && i === 0 && (
                   <span className={styles.hotBadge}>HOT</span>
