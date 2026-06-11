@@ -1,3 +1,8 @@
+/* ── Page wrapper (relative for absolutely-positioned HeroAnimation) ── */
+.pageWrap {
+  position: relative;
+}
+
 /* ── Tournament banner ── */
 .banner {
   position: relative;

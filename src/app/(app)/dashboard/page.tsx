@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/server-admin";
 import { FinalCallBanner } from "@/components/FinalCallBanner";
+import HeroAnimation from "@/components/landing/HeroAnimation";
 import {
   calcGroupScore,
   calcBestThirdScore,
@@ -71,34 +72,37 @@ export default async function DashboardPage() {
 
   if (groupIds.length === 0) {
     return (
-      <>
-        <div className={styles.banner}>
-          <div className={styles.bannerOrb} />
-          <div className={styles.bannerLeft}>
-            <div className={`eyebrow ${styles.bannerEyebrow}`}>
-              Active tournament
+      <div className={styles.pageWrap}>
+        <HeroAnimation />
+        <div>
+          <div className={styles.banner}>
+            <div className={styles.bannerOrb} />
+            <div className={styles.bannerLeft}>
+              <div className={`eyebrow ${styles.bannerEyebrow}`}>
+                Active tournament
+              </div>
+              <div className={styles.bannerTitle}>{tournamentName}</div>
+              <div className={styles.bannerSub}>{tournamentRange}</div>
             </div>
-            <div className={styles.bannerTitle}>{tournamentName}</div>
-            <div className={styles.bannerSub}>{tournamentRange}</div>
+          </div>
+          <FinalCallBanner />
+          <div className={styles.header}>
+            <div>
+              <div className={`eyebrow ${styles.headerEyebrow}`}>Your groups</div>
+              <h1 className={styles.title}>Welcome back, {displayName}.</h1>
+            </div>
+          </div>
+          <div className={styles.grid}>
+            <div className={styles.empty}>
+              <h2>No groups yet</h2>
+              <p>Create a group and invite your friends to start predicting!</p>
+              <Link href="/groups/new" className={styles.createBtn}>
+                + Create your first group
+              </Link>
+            </div>
           </div>
         </div>
-        <FinalCallBanner />
-        <div className={styles.header}>
-          <div>
-            <div className={`eyebrow ${styles.headerEyebrow}`}>Your groups</div>
-            <h1 className={styles.title}>Welcome back, {displayName}.</h1>
-          </div>
-        </div>
-        <div className={styles.grid}>
-          <div className={styles.empty}>
-            <h2>No groups yet</h2>
-            <p>Create a group and invite your friends to start predicting!</p>
-            <Link href="/groups/new" className={styles.createBtn}>
-              + Create your first group
-            </Link>
-          </div>
-        </div>
-      </>
+      </div>
     );
   }
 
@@ -298,46 +302,48 @@ export default async function DashboardPage() {
     .filter(Boolean) as GroupRow[];
 
   return (
-    <>
-      {/* Tournament banner */}
-      <div className={styles.banner}>
-        <div className={styles.bannerOrb} />
-        <div className={styles.bannerLeft}>
-          <div className={`eyebrow ${styles.bannerEyebrow}`}>
-            {phase1IsOpen ? "Active tournament" : "Tournament"}
-          </div>
-          <div className={styles.bannerTitle}>{tournamentName}</div>
-          <div className={styles.bannerSub}>
-            {countdown ? (
-              <>
-                <strong>Group stage closes in {countdown}</strong>
-                {" · "}
-                {phase1Deadline ? fmtDate(phase1Deadline) : ""}
-              </>
-            ) : groupStageOver ? (
-              "Knockout phase · Predictions open"
-            ) : (
-              tournamentRange
-            )}
+    <div className={styles.pageWrap}>
+      <HeroAnimation />
+      <div>
+        {/* Tournament banner */}
+        <div className={styles.banner}>
+          <div className={styles.bannerOrb} />
+          <div className={styles.bannerLeft}>
+            <div className={`eyebrow ${styles.bannerEyebrow}`}>
+              {phase1IsOpen ? "Active tournament" : "Tournament"}
+            </div>
+            <div className={styles.bannerTitle}>{tournamentName}</div>
+            <div className={styles.bannerSub}>
+              {countdown ? (
+                <>
+                  <strong>Group stage closes in {countdown}</strong>
+                  {" · "}
+                  {phase1Deadline ? fmtDate(phase1Deadline) : ""}
+                </>
+              ) : groupStageOver ? (
+                "Knockout phase · Predictions open"
+              ) : (
+                tournamentRange
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      <FinalCallBanner />
+        <FinalCallBanner />
 
-      {/* Header */}
-      <div className={styles.header}>
-        <div>
-          <div className={`eyebrow ${styles.headerEyebrow}`}>Your groups</div>
-          <h1 className={styles.title}>Welcome back, {displayName}.</h1>
+        {/* Header */}
+        <div className={styles.header}>
+          <div>
+            <div className={`eyebrow ${styles.headerEyebrow}`}>Your groups</div>
+            <h1 className={styles.title}>Welcome back, {displayName}.</h1>
+          </div>
+          <Link href="/groups/new" className={styles.createBtn}>
+            ＋ Create group
+          </Link>
         </div>
-        <Link href="/groups/new" className={styles.createBtn}>
-          ＋ Create group
-        </Link>
-      </div>
 
-      {/* Grid */}
-      <div className={styles.grid}>
+        {/* Grid */}
+        <div className={styles.grid}>
         {orderedGroups.map((group) => {
           const groupPicksForGroup = allGroupPicks.filter(
             (p) => p.group_id === group.id,
@@ -523,6 +529,7 @@ export default async function DashboardPage() {
           <div className={styles.discoverBtn}>Create →</div>
         </Link>
       </div>
-    </>
-  );
+    </div>
+  </div>
+);
 }
