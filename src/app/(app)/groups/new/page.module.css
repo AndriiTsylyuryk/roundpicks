@@ -425,6 +425,28 @@
   cursor: not-allowed;
 }
 
+/* ── Blocked state ── */
+.blocked {
+  text-align: center;
+  padding: 4rem 1rem;
+}
+
+.blockedTitle {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: var(--color-ink);
+}
+
+.blockedBody {
+  font-size: 1rem;
+  color: var(--color-ink-soft);
+  line-height: 1.6;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
 @media (max-width: 600px) {
   .inner {
     padding: 20px 16px 40px;

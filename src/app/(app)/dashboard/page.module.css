@@ -522,6 +522,53 @@
   align-self: flex-start;
 }
 
+/* ── Disabled create-group states ── */
+.createBtnDisabled {
+  flex-shrink: 0;
+  background: rgba(6, 39, 49, 0.06);
+  color: rgba(6, 39, 49, 0.45);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  white-space: nowrap;
+  cursor: not-allowed;
+  display: inline-block;
+}
+
+.discoverCardDisabled {
+  border-radius: 18px;
+  border: 1.5px dashed rgba(6, 39, 49, 0.12);
+  background: rgba(6, 39, 49, 0.03);
+  padding: 22px;
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-decoration: none;
+  color: var(--color-ink);
+  cursor: not-allowed;
+}
+
+.discoverCardDisabled:hover {
+  background: rgba(6, 39, 49, 0.03);
+  text-decoration: none;
+  color: var(--color-ink);
+}
+
+.discoverBtnDisabled {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(6, 39, 49, 0.06);
+  color: rgba(6, 39, 49, 0.45);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  margin-top: 16px;
+  align-self: flex-start;
+}
+
 /* ── Empty state ── */
 .empty {
   grid-column: 1 / -1;

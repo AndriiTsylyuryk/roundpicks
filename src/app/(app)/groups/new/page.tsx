@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Oval } from "react-loader-spinner";
@@ -120,6 +120,26 @@ export default function NewGroupPage() {
   const [maxParticipants, setMaxParticipants] = useState<MaxParticipants>(25);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [competitionStarted, setCompetitionStarted] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    async function checkCompetition() {
+      const supabase = createClient();
+      const { data: firstMatch } = await supabase
+        .from("wc_matches")
+        .select("kickoff_at")
+        .eq("round", "GROUP")
+        .order("kickoff_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (firstMatch?.kickoff_at) {
+        setCompetitionStarted(new Date() >= new Date(firstMatch.kickoff_at));
+      }
+      setChecking(false);
+    }
+    checkCompetition();
+  }, []);
 
   async function handleSubmit() {
     if (!name.trim()) return;
@@ -156,6 +176,24 @@ export default function NewGroupPage() {
     });
 
     router.push(`/groups/${(group as { id: string }).id}`);
+  }
+
+  if (checking) return null;
+
+  if (competitionStarted) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.inner}>
+          <Link href="/dashboard" className={styles.back}>← Dashboard</Link>
+          <div className={styles.blocked}>
+            <h2 className={styles.blockedTitle}>Group creation closed</h2>
+            <p className={styles.blockedBody}>
+              The competition has already started, so no new groups can be created.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

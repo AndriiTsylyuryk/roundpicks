@@ -70,6 +70,21 @@ export default async function DashboardPage() {
       ? `${fmtDate(tournamentStart)} – ${fmtDate(tournamentEnd)} · USA, Canada & Mexico`
       : "USA, Canada & Mexico";
 
+  const { data: firstMatchData } = await supabase
+    .from("wc_matches")
+    .select("kickoff_at")
+    .eq("round", "GROUP")
+    .order("kickoff_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  const now = new Date();
+  const phase1Deadline = firstMatchData?.kickoff_at
+    ? new Date(firstMatchData.kickoff_at)
+    : null;
+  const groupStageOver = phase1Deadline ? now >= phase1Deadline : false;
+  const phase1IsOpen = phase1Deadline ? now < phase1Deadline : false;
+
   if (groupIds.length === 0) {
     return (
       <div className={styles.pageWrap}>
@@ -95,10 +110,21 @@ export default async function DashboardPage() {
           <div className={styles.grid}>
             <div className={styles.empty}>
               <h2>No groups yet</h2>
-              <p>Create a group and invite your friends to start predicting!</p>
-              <Link href="/groups/new" className={styles.createBtn}>
-                + Create your first group
-              </Link>
+              {groupStageOver ? (
+                <>
+                  <p>The competition has already started, no new groups can be created.</p>
+                  <span className={styles.createBtnDisabled} title="Group creation closed, competition has started">
+                    + Create your first group
+                  </span>
+                </>
+              ) : (
+                <>
+                  <p>Create a group and invite your friends to start predicting!</p>
+                  <Link href="/groups/new" className={styles.createBtn}>
+                    + Create your first group
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -112,7 +138,6 @@ export default async function DashboardPage() {
     groupsResult,
     allMembersResult,
     resultsCountResult,
-    firstMatchResult,
     groupPicksResult,
     finishedGroupMatchesResult,
     wcTeamsResult,
@@ -133,13 +158,6 @@ export default async function DashboardPage() {
       .select("id", { count: "exact", head: true })
       .eq("round", "GROUP")
       .eq("status", "finished"),
-    supabase
-      .from("wc_matches")
-      .select("kickoff_at")
-      .eq("round", "GROUP")
-      .order("kickoff_at", { ascending: true })
-      .limit(1)
-      .maybeSingle(),
     supabase
       .from("group_picks")
       .select("group_id, user_id, wc_group, rank1_id, rank2_id, rank3_id")
@@ -277,14 +295,6 @@ export default async function DashboardPage() {
     for (const id of noProfileIds) nameById[id] = emailById[id] ?? "User";
   }
 
-  // Phase deadline
-  const now = new Date();
-  const phase1Deadline = firstMatchResult.data?.kickoff_at
-    ? new Date(firstMatchResult.data.kickoff_at)
-    : null;
-  const phase1IsOpen = phase1Deadline ? now < phase1Deadline : false;
-  const groupStageOver = phase1Deadline ? now >= phase1Deadline : false;
-
   const countdown =
     phase1Deadline && phase1IsOpen
       ? (() => {
@@ -337,9 +347,15 @@ export default async function DashboardPage() {
             <div className={`eyebrow ${styles.headerEyebrow}`}>Your groups</div>
             <h1 className={styles.title}>Welcome back, {displayName}.</h1>
           </div>
-          <Link href="/groups/new" className={styles.createBtn}>
-            ＋ Create group
-          </Link>
+          {groupStageOver ? (
+            <span className={styles.createBtnDisabled} title="Group creation closed, competition has started">
+              ＋ Create group
+            </span>
+          ) : (
+            <Link href="/groups/new" className={styles.createBtn}>
+              ＋ Create group
+            </Link>
+          )}
         </div>
 
         {/* Grid */}
@@ -518,16 +534,29 @@ export default async function DashboardPage() {
         })}
 
         {/* Create-new card */}
-        <Link href="/groups/new" className={styles.discoverCard}>
-          <div>
-            <div className={styles.discoverIconWrap}>＋</div>
-            <div className={styles.discoverTitle}>Start a new group</div>
-            <div className={styles.discoverSub}>
-              Family, mates, the office — invite up to 50 players with one link.
+        {groupStageOver ? (
+          <div className={styles.discoverCardDisabled} title="Group creation closed, competition has started">
+            <div>
+              <div className={styles.discoverIconWrap}>＋</div>
+              <div className={styles.discoverTitle}>Start a new group</div>
+              <div className={styles.discoverSub}>
+                Family, mates, the office — invite up to 50 players with one link.
+              </div>
             </div>
+            <div className={styles.discoverBtnDisabled}>Create →</div>
           </div>
-          <div className={styles.discoverBtn}>Create →</div>
-        </Link>
+        ) : (
+          <Link href="/groups/new" className={styles.discoverCard}>
+            <div>
+              <div className={styles.discoverIconWrap}>＋</div>
+              <div className={styles.discoverTitle}>Start a new group</div>
+              <div className={styles.discoverSub}>
+                Family, mates, the office — invite up to 50 players with one link.
+              </div>
+            </div>
+            <div className={styles.discoverBtn}>Create →</div>
+          </Link>
+        )}
       </div>
     </div>
   </div>
