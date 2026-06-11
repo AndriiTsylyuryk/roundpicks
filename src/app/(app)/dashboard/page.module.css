@@ -6,8 +6,9 @@
 /* ── Tournament banner ── */
 .banner {
   position: relative;
-  overflow: hidden;
-  transform: translateZ(0);
+  /* overflow: hidden; */
+  /* transform: translateZ(0); */
+  clip-path: inset(0 round 24px);
   background: var(--color-paper-deep);
   border-radius: var(--radius-xl);
   padding: 28px 32px;
