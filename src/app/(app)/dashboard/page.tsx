@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/server-admin";
-import { DataFixBanner } from "@/components/DataFixBanner";
+
 import HeroAnimation from "@/components/landing/HeroAnimation";
 import {
   calcGroupScore,
@@ -102,7 +102,6 @@ export default async function DashboardPage() {
               <div className={styles.bannerSub}>{tournamentRange}</div>
             </div>
           </div>
-          <DataFixBanner />
           <div className={styles.header}>
             <div>
               <div className={`eyebrow ${styles.headerEyebrow}`}>
@@ -372,8 +371,6 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
-
-        <DataFixBanner />
 
         {/* Header */}
         <div className={styles.header}>
