@@ -139,7 +139,6 @@ export default async function DashboardPage() {
   const [
     groupsResult,
     allMembersResult,
-    resultsCountResult,
     groupPicksResult,
     finishedGroupMatchesResult,
     wcTeamsResult,
@@ -156,11 +155,6 @@ export default async function DashboardPage() {
       .from("group_members")
       .select("group_id, user_id")
       .in("group_id", safeIds),
-    supabase
-      .from("wc_matches")
-      .select("id", { count: "exact", head: true })
-      .eq("round", "GROUP")
-      .eq("status", "finished"),
     supabase
       .from("group_picks")
       .select("group_id, user_id, wc_group, rank1_id, rank2_id, rank3_id")
@@ -195,8 +189,6 @@ export default async function DashboardPage() {
     group_id: string;
     user_id: string;
   }[];
-  const hasResults = (resultsCountResult.count ?? 0) > 0;
-
   type GPickRow = {
     group_id: string;
     user_id: string;
@@ -436,10 +428,13 @@ export default async function DashboardPage() {
               };
             })
             .sort((a, b) => {
-              if (a.points !== null && b.points !== null) return b.points - a.points;
+              if (a.points !== null && b.points !== null) {
+                if (b.points !== a.points) return b.points - a.points;
+                return (picksByUser[b.userId]?.length ?? 0) - (picksByUser[a.userId]?.length ?? 0);
+              }
               if (a.points !== null) return -1;
               if (b.points !== null) return 1;
-              return a.name.localeCompare(b.name);
+              return (picksByUser[b.userId]?.length ?? 0) - (picksByUser[a.userId]?.length ?? 0);
             });
 
           const memberCount = standings.length;
@@ -554,7 +549,7 @@ export default async function DashboardPage() {
                   <span className={styles.statusDot} />
                   {predictionsOpen ? "Predictions open" : "Predictions locked"}
                 </span>
-                {!hasResults ? (
+                {!hasGroupResults ? (
                   <span className={styles.noScoresHint}>
                     Standings update
                     <br />
