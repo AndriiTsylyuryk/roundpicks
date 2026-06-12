@@ -246,6 +246,7 @@ export default async function DashboardPage() {
     finishedGroupMatchesResult.data ?? [],
     wcTeams,
   );
+  const hasGroupResults = groupResults.some((r) => r.rank1_id);
   const hasKnockoutResults = knockoutMatches.some(
     (m) => m.status === "finished",
   );
@@ -406,7 +407,7 @@ export default async function DashboardPage() {
           const standings: StandingRow[] = (membersByGroup[group.id] ?? [])
             .map((uid) => {
               const userPicks = picksByUser[uid] ?? [];
-              const groupScore = hasResults
+              const groupScore = hasGroupResults
                 ? calcGroupScore(userPicks, groupResults)
                 : null;
               const btScore = hasBestThird
