@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/server-admin";
 import { FinalCallBanner } from "@/components/FinalCallBanner";
+import { DataFixBanner } from "@/components/DataFixBanner";
 import HeroAnimation from "@/components/landing/HeroAnimation";
 import {
   calcGroupScore,
@@ -101,6 +102,7 @@ export default async function DashboardPage() {
             </div>
           </div>
           <FinalCallBanner />
+          <DataFixBanner />
           <div className={styles.header}>
             <div>
               <div className={`eyebrow ${styles.headerEyebrow}`}>Your groups</div>
@@ -340,6 +342,7 @@ export default async function DashboardPage() {
         </div>
 
         <FinalCallBanner />
+        <DataFixBanner />
 
         {/* Header */}
         <div className={styles.header}>
@@ -504,7 +507,7 @@ export default async function DashboardPage() {
                         <span
                           className={`${styles.lbPoints} ${row.you ? styles.lbPointsYou : ""}`}
                         >
-                          {row.points == null ? "—" : row.points}
+                          —
                         </span>
                       </div>
                     ),

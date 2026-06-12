@@ -8,6 +8,20 @@ export default function HelpPage() {
         <div className={styles.accordion}>
           <details className={styles.item} open>
             <summary className={styles.summary}>
+              <span>When is the game data updated?</span>
+              <svg className={styles.chevron} width="16" height="16" viewBox="0 0 16 16" aria-hidden>
+                <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+              </svg>
+            </summary>
+            <div className={styles.panel}>
+              <p className={styles.p}>
+                Game scores and data are updated within a 1-2 hour delay after a match finishes. Your points and group standings will refresh automatically as soon as the data syncs.
+              </p>
+            </div>
+          </details>
+
+          <details className={styles.item}>
+            <summary className={styles.summary}>
               <span>How does it work?</span>
               <svg className={styles.chevron} width="16" height="16" viewBox="0 0 16 16" aria-hidden>
                 <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
