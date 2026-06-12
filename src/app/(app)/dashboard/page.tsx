@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/server-admin";
-import { FinalCallBanner } from "@/components/FinalCallBanner";
 import { DataFixBanner } from "@/components/DataFixBanner";
 import HeroAnimation from "@/components/landing/HeroAnimation";
 import {
@@ -101,7 +100,6 @@ export default async function DashboardPage() {
               <div className={styles.bannerSub}>{tournamentRange}</div>
             </div>
           </div>
-          <FinalCallBanner />
           <DataFixBanner />
           <div className={styles.header}>
             <div>
@@ -341,7 +339,6 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <FinalCallBanner />
         <DataFixBanner />
 
         {/* Header */}
