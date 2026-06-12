@@ -338,15 +338,13 @@ export default async function GroupPage({ params }: Props) {
                 {m.userId === user!.id && (
                   <span className={styles.youBadge}>you</span>
                 )}
-                {m.groupsSubmitted === 0 && (
-                  <NoPicksBadge />
-                )}
+                {m.groupsSubmitted === 0 && <NoPicksBadge />}
                 {hasGroupResults && i === 0 && (
                   <span className={styles.hotBadge}>HOT</span>
                 )}
               </span>
               <span className={styles.lbScore}>
-                {hasGroupResults && m.score !== null ? (
+                {(hasGroupResults || hasAdvancedResults) && m.score !== null ? (
                   <span className={styles.lbPoints}>{m.score}</span>
                 ) : m.groupsSubmitted < 12 ? (
                   <span className={styles.lbPending}>
