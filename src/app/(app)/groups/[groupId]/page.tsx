@@ -529,7 +529,7 @@ export default async function GroupPage({ params }: Props) {
                 competition.
               </div>
             </div>
-            <span className={styles.inviteClosedBtn}>Link disabled</span>
+            {/* <span className={styles.inviteClosedBtn}>Link disabled</span> */}
           </div>
         </div>
       ) : members.length >= group.max_participants ? (

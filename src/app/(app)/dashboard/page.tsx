@@ -7,6 +7,7 @@ import {
   calcGroupScore,
   calcBestThirdScore,
   calcKnockoutScore,
+  calcMatchPredictionScore,
   deriveGroupStandings,
 } from "@/lib/scoring";
 import styles from "./page.module.css";
@@ -16,6 +17,7 @@ interface GroupRow {
   name: string;
   creator_id: string;
   phase1_locked: boolean;
+  mode: string;
   events: { name: string } | null;
 }
 
@@ -103,7 +105,9 @@ export default async function DashboardPage() {
           <DataFixBanner />
           <div className={styles.header}>
             <div>
-              <div className={`eyebrow ${styles.headerEyebrow}`}>Your groups</div>
+              <div className={`eyebrow ${styles.headerEyebrow}`}>
+                Your groups
+              </div>
               <h1 className={styles.title}>Welcome back, {displayName}.</h1>
             </div>
           </div>
@@ -112,14 +116,22 @@ export default async function DashboardPage() {
               <h2>No groups yet</h2>
               {groupStageOver ? (
                 <>
-                  <p>The competition has already started, no new groups can be created.</p>
-                  <span className={styles.createBtnDisabled} title="Group creation closed, competition has started">
+                  <p>
+                    The competition has already started, no new groups can be
+                    created.
+                  </p>
+                  <span
+                    className={styles.createBtnDisabled}
+                    title="Group creation closed, competition has started"
+                  >
                     + Create your first group
                   </span>
                 </>
               ) : (
                 <>
-                  <p>Create a group and invite your friends to start predicting!</p>
+                  <p>
+                    Create a group and invite your friends to start predicting!
+                  </p>
                   <Link href="/groups/new" className={styles.createBtn}>
                     + Create your first group
                   </Link>
@@ -147,7 +159,7 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     supabase
       .from("groups")
-      .select("id, name, creator_id, phase1_locked, events(name)")
+      .select("id, name, creator_id, phase1_locked, mode, events(name)")
       .in("id", safeIds) as unknown as Promise<{ data: GroupRow[] | null }>,
     supabase
       .from("group_members")
@@ -164,9 +176,8 @@ export default async function DashboardPage() {
       .in("group_id", safeIds),
     supabase
       .from("wc_matches")
-      .select("home_team_id, away_team_id, home_score, away_score, status")
-      .eq("round", "GROUP")
-      .eq("status", "finished"),
+      .select("id, home_team_id, away_team_id, home_score, away_score, status")
+      .eq("round", "GROUP"),
     supabase.from("wc_teams").select("id, group_letter"),
     supabase
       .from("wc_matches")
@@ -183,6 +194,17 @@ export default async function DashboardPage() {
       .select("group_id, user_id, team_ids")
       .in("group_id", safeIds),
   ]);
+
+  const mpData = (
+    await Promise.all(
+      safeIds.map((gid: string) =>
+        supabase
+          .from("match_predictions")
+          .select("group_id, user_id, match_id, prediction")
+          .eq("group_id", gid),
+      ),
+    )
+  ).flatMap((r) => r.data ?? []);
 
   const groups = groupsResult.data ?? [];
   const allMembersRaw = (allMembersResult.data ?? []) as {
@@ -206,6 +228,12 @@ export default async function DashboardPage() {
     winner_id: string;
   };
   type BtPickRow = { group_id: string; user_id: string; team_ids: string[] };
+  type MpRow = {
+    group_id: string;
+    user_id: string;
+    match_id: string;
+    prediction: "home" | "draw" | "away";
+  };
   type KoMatchRow = {
     id: string;
     round: string;
@@ -224,10 +252,16 @@ export default async function DashboardPage() {
   const knockoutMatches = (knockoutMatchesResult.data ?? []) as KoMatchRow[];
   const allKoPicks = (knockoutPicksResult.data ?? []) as KoPickRow[];
   const allBtPicks = (bestThirdPicksResult.data ?? []) as BtPickRow[];
+  const allMpRows = mpData as MpRow[];
 
   const groupResults = deriveGroupStandings(
     finishedGroupMatchesResult.data ?? [],
     wcTeams,
+  );
+
+  const hasGroupResults = groupResults.some((r) => r.rank1_id);
+  const hasAdvancedResults = (finishedGroupMatchesResult.data ?? []).some(
+    (m: { status: string }) => m.status === "finished",
   );
   const hasKnockoutResults = knockoutMatches.some(
     (m) => m.status === "finished",
@@ -347,218 +381,260 @@ export default async function DashboardPage() {
             <div className={`eyebrow ${styles.headerEyebrow}`}>Your groups</div>
             <h1 className={styles.title}>Welcome back, {displayName}.</h1>
           </div>
-          {groupStageOver ? (
-            <span className={styles.createBtnDisabled} title="Group creation closed, competition has started">
-              ＋ Create group
-            </span>
-          ) : (
-            <Link href="/groups/new" className={styles.createBtn}>
-              ＋ Create group
-            </Link>
-          )}
+          {/* {groupStageOver ? (
+        <span className={styles.createBtnDisabled} title="Group creation closed, competition has started">
+          ＋ Create group
+        </span>
+      ) : (
+        <Link href="/groups/new" className={styles.createBtn}>
+          ＋ Create group
+        </Link>
+      )} */}
         </div>
 
         {/* Grid */}
         <div className={styles.grid}>
-        {orderedGroups.map((group) => {
-          const groupPicksForGroup = allGroupPicks.filter(
-            (p) => p.group_id === group.id,
-          );
-          const picksByUser: Record<string, GPickRow[]> = {};
-          for (const p of groupPicksForGroup) {
-            if (!picksByUser[p.user_id]) picksByUser[p.user_id] = [];
-            picksByUser[p.user_id].push(p);
-          }
-          const koBtMap: Record<string, string[]> = {};
-          for (const p of allBtPicks.filter((p) => p.group_id === group.id))
-            koBtMap[p.user_id] = p.team_ids;
-          const koPicksByUser: Record<string, KoPickRow[]> = {};
-          for (const p of allKoPicks.filter((p) => p.group_id === group.id)) {
-            if (!koPicksByUser[p.user_id]) koPicksByUser[p.user_id] = [];
-            koPicksByUser[p.user_id].push(p);
-          }
-
-          const standings: StandingRow[] = (membersByGroup[group.id] ?? [])
-            .map((uid) => {
-              const userPicks = picksByUser[uid] ?? [];
-              const groupScore = hasResults
-                ? calcGroupScore(userPicks, groupResults)
-                : null;
-              const btScore = hasBestThird
-                ? calcBestThirdScore(koBtMap[uid] ?? [], officialBestThirdIds)
-                : null;
-              const koScore = hasKnockoutResults
-                ? calcKnockoutScore(koPicksByUser[uid] ?? [], knockoutMatches)
-                : null;
-              const total =
-                groupScore !== null
-                  ? (groupScore ?? 0) + (btScore ?? 0) + (koScore ?? 0)
-                  : null;
-              return {
-                userId: uid,
-                name: nameById[uid] ?? "User",
-                you: uid === user!.id,
-                points: total,
-              };
-            })
-            .sort((a, b) =>
-              a.points !== null && b.points !== null
-                ? b.points - a.points
-                : a.name.localeCompare(b.name),
+          {orderedGroups.map((group) => {
+            const groupPicksForGroup = allGroupPicks.filter(
+              (p) => p.group_id === group.id,
             );
+            const picksByUser: Record<string, GPickRow[]> = {};
+            for (const p of groupPicksForGroup) {
+              if (!picksByUser[p.user_id]) picksByUser[p.user_id] = [];
+              picksByUser[p.user_id].push(p);
+            }
+            const koBtMap: Record<string, string[]> = {};
+            for (const p of allBtPicks.filter((p) => p.group_id === group.id))
+              koBtMap[p.user_id] = p.team_ids;
+            const koPicksByUser: Record<string, KoPickRow[]> = {};
+            for (const p of allKoPicks.filter((p) => p.group_id === group.id)) {
+              if (!koPicksByUser[p.user_id]) koPicksByUser[p.user_id] = [];
+              koPicksByUser[p.user_id].push(p);
+            }
 
-          const memberCount = standings.length;
-          const isEmpty = memberCount <= 1;
-          const isCreator = group.creator_id === user!.id;
+            const mpByUser: Record<string, MpRow[]> = {};
+            for (const p of allMpRows.filter((p) => p.group_id === group.id)) {
+              if (!mpByUser[p.user_id]) mpByUser[p.user_id] = [];
+              mpByUser[p.user_id].push(p);
+            }
 
-          const visibleRows: (StandingRow | null)[] = isEmpty
-            ? []
-            : standings.slice(0, 3);
+            const allGroupMatchesData = finishedGroupMatchesResult.data ?? [];
 
-          const predictionsOpen = phase1IsOpen && !group.phase1_locked;
-          const userGroupPicks = picksByUser[user!.id] ?? [];
-          const userKoPicks = koPicksByUser[user!.id] ?? [];
-          const groupPicksDone = userGroupPicks.length > 0;
+            const standings: StandingRow[] = (membersByGroup[group.id] ?? [])
+              .map((uid) => {
+                const userPicks = picksByUser[uid] ?? [];
+                const groupScore = hasGroupResults
+                  ? calcGroupScore(userPicks, groupResults)
+                  : null;
+                const btScore = hasBestThird
+                  ? calcBestThirdScore(koBtMap[uid] ?? [], officialBestThirdIds)
+                  : null;
+                const koScore = hasKnockoutResults
+                  ? calcKnockoutScore(koPicksByUser[uid] ?? [], knockoutMatches)
+                  : null;
+                const userMp = mpByUser[uid] ?? [];
+                const matchPredScore =
+                  group.mode === "advanced" &&
+                  hasAdvancedResults &&
+                  userMp.length > 0
+                    ? calcMatchPredictionScore(
+                        userMp,
+                        allGroupMatchesData as {
+                          id: string;
+                          status: string;
+                          home_score: number | null;
+                          away_score: number | null;
+                        }[],
+                      )
+                    : null;
+                const anyScoreKnown =
+                  groupScore !== null ||
+                  btScore !== null ||
+                  koScore !== null ||
+                  matchPredScore !== null;
+                const total = anyScoreKnown
+                  ? (groupScore ?? 0) +
+                    (btScore ?? 0) +
+                    (koScore ?? 0) +
+                    (matchPredScore ?? 0)
+                  : null;
+                return {
+                  userId: uid,
+                  name: nameById[uid] ?? "User",
+                  you: uid === user!.id,
+                  points: total,
+                };
+              })
+              .sort((a, b) => {
+                if (a.points !== null && b.points !== null)
+                  return b.points - a.points;
+                if (a.points !== null) return -1;
+                if (b.points !== null) return 1;
+                return a.name.localeCompare(b.name);
+              });
 
-          return (
-            <Link
-              key={group.id}
-              href={`/groups/${group.id}`}
-              className={styles.card}
-            >
-              <div
-                className={`${styles.cardAccent} ${!predictionsOpen ? styles.cardAccentDim : ""}`}
-              />
+            const memberCount = standings.length;
+            const isEmpty = memberCount <= 1;
+            const isCreator = group.creator_id === user!.id;
 
-              <div className={styles.cardHeader}>
-                <div className={styles.cardHeaderLeft}>
-                  <div className={styles.nameRow}>
-                    <span
-                      className={`${styles.nameDot} ${groupPicksDone ? styles.nameDotDone : styles.nameDotNeeded}`}
-                    />
-                    <div className={styles.cardName}>{group.name}</div>
-                    <div className={styles.nameBadges}>
+            const visibleRows: (StandingRow | null)[] = isEmpty
+              ? []
+              : standings.slice(0, 3);
+
+            const predictionsOpen = phase1IsOpen && !group.phase1_locked;
+            const userGroupPicks = picksByUser[user!.id] ?? [];
+            const userKoPicks = koPicksByUser[user!.id] ?? [];
+            const groupPicksDone = userGroupPicks.length > 0;
+
+            return (
+              <Link
+                key={group.id}
+                href={`/groups/${group.id}`}
+                className={styles.card}
+              >
+                <div
+                  className={`${styles.cardAccent} ${!predictionsOpen ? styles.cardAccentDim : ""}`}
+                />
+
+                <div className={styles.cardHeader}>
+                  <div className={styles.cardHeaderLeft}>
+                    <div className={styles.nameRow}>
                       <span
-                        className={`${styles.namePill} ${groupPicksDone ? styles.pillDone : styles.pillNeeded}`}
-                      >
-                        {groupPicksDone ? "PICKS DONE" : "PICKS NEEDED"}
+                        className={`${styles.nameDot} ${groupPicksDone ? styles.nameDotDone : styles.nameDotNeeded}`}
+                      />
+                      <div className={styles.cardName}>{group.name}</div>
+                      <div className={styles.nameBadges}>
+                        <span
+                          className={`${styles.namePill} ${groupPicksDone ? styles.pillDone : styles.pillNeeded}`}
+                        >
+                          {groupPicksDone ? "PICKS DONE" : "PICKS NEEDED"}
+                        </span>
+                        {groupStageOver &&
+                          (() => {
+                            const koPicksDone = userKoPicks.length > 0;
+                            return (
+                              <span
+                                className={`${styles.namePill} ${koPicksDone ? styles.pillDone : styles.pillNeeded}`}
+                              >
+                                KO: {koPicksDone ? "DONE" : "NEEDED"}
+                              </span>
+                            );
+                          })()}
+                      </div>
+                    </div>
+                    <div className={styles.cardMeta}>
+                      {group.events && (
+                        <span className={styles.tournChip}>
+                          <span className={styles.tournDot} />
+                          {group.events.name}
+                        </span>
+                      )}
+                      <span className={styles.cardMetaPlayers}>
+                        · {memberCount}{" "}
+                        {memberCount === 1 ? "player" : "players"}
                       </span>
-                      {groupStageOver &&
-                        (() => {
-                          const koPicksDone = userKoPicks.length > 0;
-                          return (
-                            <span
-                              className={`${styles.namePill} ${koPicksDone ? styles.pillDone : styles.pillNeeded}`}
-                            >
-                              KO: {koPicksDone ? "DONE" : "NEEDED"}
-                            </span>
-                          );
-                        })()}
                     </div>
                   </div>
-                  <div className={styles.cardMeta}>
-                    {group.events && (
-                      <span className={styles.tournChip}>
-                        <span className={styles.tournDot} />
-                        {group.events.name}
-                      </span>
-                    )}
-                    <span className={styles.cardMetaPlayers}>
-                      · {memberCount} {memberCount === 1 ? "player" : "players"}
-                    </span>
-                  </div>
+                  {isCreator && (
+                    <span className={styles.adminBadge}>Admin</span>
+                  )}
                 </div>
-                {isCreator && <span className={styles.adminBadge}>Admin</span>}
-              </div>
 
-              <div className={styles.miniLb}>
-                {isEmpty ? (
-                  <div className={styles.emptyLb}>
-                    Predictions are open. Standings appear once more players
-                    join.
-                  </div>
-                ) : (
-                  visibleRows.map((row, i) =>
-                    row === null ? (
-                      <div key={`sep-${i}`} className={styles.lbSep}>
-                        ···
-                      </div>
-                    ) : (
-                      <div
-                        key={row.userId}
-                        className={`${styles.lbRow} ${row.you ? styles.lbRowYou : ""}`}
-                      >
-                        <span className={styles.lbRank}>
-                          {row.points == null ? "·" : String(i + 1)}
-                        </span>
-                        <span
-                          className={`${styles.lbAvatar} ${row.you ? styles.lbAvatarYou : ""}`}
+                <div className={styles.miniLb}>
+                  {isEmpty ? (
+                    <div className={styles.emptyLb}>
+                      Predictions are open. Standings appear once more players
+                      join.
+                    </div>
+                  ) : (
+                    visibleRows.map((row, i) =>
+                      row === null ? (
+                        <div key={`sep-${i}`} className={styles.lbSep}>
+                          ···
+                        </div>
+                      ) : (
+                        <div
+                          key={row.userId}
+                          className={`${styles.lbRow} ${row.you ? styles.lbRowYou : ""}`}
                         >
-                          {row.name.slice(0, 1).toUpperCase()}
-                        </span>
-                        <span
-                          className={`${styles.lbName} ${row.you ? styles.lbNameYou : ""}`}
-                        >
-                          {row.you ? `${row.name} (you)` : row.name}
-                        </span>
-                        <span
-                          className={`${styles.lbPoints} ${row.you ? styles.lbPointsYou : ""}`}
-                        >
-                          —
-                        </span>
-                      </div>
-                    ),
-                  )
-                )}
-              </div>
+                          <span className={styles.lbRank}>
+                            {row.points == null ? "·" : String(i + 1)}
+                          </span>
+                          <span
+                            className={`${styles.lbAvatar} ${row.you ? styles.lbAvatarYou : ""}`}
+                          >
+                            {row.name.slice(0, 1).toUpperCase()}
+                          </span>
+                          <span
+                            className={`${styles.lbName} ${row.you ? styles.lbNameYou : ""}`}
+                          >
+                            {row.you ? `${row.name} (you)` : row.name}
+                          </span>
+                          <span
+                            className={`${styles.lbPoints} ${row.you ? styles.lbPointsYou : ""}`}
+                          >
+                            {row.points == null ? "—" : row.points}
+                          </span>
+                        </div>
+                      ),
+                    )
+                  )}
+                </div>
 
-              <div className={styles.cardFooter}>
-                <span
-                  className={`${styles.statusPill} ${predictionsOpen ? styles.statusPillOpen : styles.statusPillLocked}`}
-                >
-                  <span className={styles.statusDot} />
-                  {predictionsOpen ? "Predictions open" : "Predictions locked"}
-                </span>
-                {!hasResults ? (
-                  <span className={styles.noScoresHint}>
-                    Standings update
-                    <br />
-                    after first match
+                <div className={styles.cardFooter}>
+                  <span
+                    className={`${styles.statusPill} ${predictionsOpen ? styles.statusPillOpen : styles.statusPillLocked}`}
+                  >
+                    <span className={styles.statusDot} />
+                    {predictionsOpen
+                      ? "Predictions open"
+                      : "Predictions locked"}
                   </span>
-                ) : (
-                  <span className={styles.viewLink}>View group →</span>
-                )}
-              </div>
-            </Link>
-          );
-        })}
+                  {!hasResults ? (
+                    <span className={styles.noScoresHint}>
+                      Standings update
+                      <br />
+                      after first match
+                    </span>
+                  ) : (
+                    <span className={styles.viewLink}>View group →</span>
+                  )}
+                </div>
+              </Link>
+            );
+          })}
 
-        {/* Create-new card */}
-        {groupStageOver ? (
-          <div className={styles.discoverCardDisabled} title="Group creation closed, competition has started">
-            <div>
-              <div className={styles.discoverIconWrap}>＋</div>
-              <div className={styles.discoverTitle}>Start a new group</div>
-              <div className={styles.discoverSub}>
-                Family, mates, the office — invite up to 50 players with one link.
+          {/* Create-new card */}
+          {/* {groupStageOver ? (
+            <div
+              className={styles.discoverCardDisabled}
+              title="Group creation closed, competition has started"
+            >
+              <div>
+                <div className={styles.discoverIconWrap}>＋</div>
+                <div className={styles.discoverTitle}>Start a new group</div>
+                <div className={styles.discoverSub}>
+                  Family, mates, the office — invite up to 50 players with one
+                  link.
+                </div>
               </div>
+              <div className={styles.discoverBtnDisabled}>Create →</div>
             </div>
-            <div className={styles.discoverBtnDisabled}>Create →</div>
-          </div>
-        ) : (
-          <Link href="/groups/new" className={styles.discoverCard}>
-            <div>
-              <div className={styles.discoverIconWrap}>＋</div>
-              <div className={styles.discoverTitle}>Start a new group</div>
-              <div className={styles.discoverSub}>
-                Family, mates, the office — invite up to 50 players with one link.
+          ) : (
+            <Link href="/groups/new" className={styles.discoverCard}>
+              <div>
+                <div className={styles.discoverIconWrap}>＋</div>
+                <div className={styles.discoverTitle}>Start a new group</div>
+                <div className={styles.discoverSub}>
+                  Family, mates, the office — invite up to 50 players with one
+                  link.
+                </div>
               </div>
-            </div>
-            <div className={styles.discoverBtn}>Create →</div>
-          </Link>
-        )}
+              <div className={styles.discoverBtn}>Create →</div>
+            </Link>
+          )} */}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
 }
