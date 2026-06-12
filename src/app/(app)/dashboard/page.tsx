@@ -7,7 +7,6 @@ import {
   calcGroupScore,
   calcBestThirdScore,
   calcKnockoutScore,
-  calcMatchPredictionScore,
   deriveGroupStandings,
 } from "@/lib/scoring";
 import styles from "./page.module.css";
@@ -17,7 +16,6 @@ interface GroupRow {
   name: string;
   creator_id: string;
   phase1_locked: boolean;
-  mode: string;
   events: { name: string } | null;
 }
 
@@ -139,30 +137,36 @@ export default async function DashboardPage() {
   const [
     groupsResult,
     allMembersResult,
+    resultsCountResult,
     groupPicksResult,
     finishedGroupMatchesResult,
     wcTeamsResult,
     knockoutMatchesResult,
     knockoutPicksResult,
     bestThirdPicksResult,
-    matchPredictionsResult,
   ] = await Promise.all([
     supabase
       .from("groups")
-      .select("id, name, creator_id, phase1_locked, mode, events(name)")
+      .select("id, name, creator_id, phase1_locked, events(name)")
       .in("id", safeIds) as unknown as Promise<{ data: GroupRow[] | null }>,
     supabase
       .from("group_members")
       .select("group_id, user_id")
       .in("group_id", safeIds),
     supabase
+      .from("wc_matches")
+      .select("id", { count: "exact", head: true })
+      .eq("round", "GROUP")
+      .eq("status", "finished"),
+    supabase
       .from("group_picks")
       .select("group_id, user_id, wc_group, rank1_id, rank2_id, rank3_id")
       .in("group_id", safeIds),
     supabase
       .from("wc_matches")
-      .select("id, home_team_id, away_team_id, home_score, away_score, status")
-      .eq("round", "GROUP"),
+      .select("home_team_id, away_team_id, home_score, away_score, status")
+      .eq("round", "GROUP")
+      .eq("status", "finished"),
     supabase.from("wc_teams").select("id, group_letter"),
     supabase
       .from("wc_matches")
@@ -178,10 +182,6 @@ export default async function DashboardPage() {
       .from("best_third_picks")
       .select("group_id, user_id, team_ids")
       .in("group_id", safeIds),
-    supabase
-      .from("match_predictions")
-      .select("group_id, user_id, match_id, prediction")
-      .in("group_id", safeIds),
   ]);
 
   const groups = groupsResult.data ?? [];
@@ -189,6 +189,8 @@ export default async function DashboardPage() {
     group_id: string;
     user_id: string;
   }[];
+  const hasResults = (resultsCountResult.count ?? 0) > 0;
+
   type GPickRow = {
     group_id: string;
     user_id: string;
@@ -204,12 +206,6 @@ export default async function DashboardPage() {
     winner_id: string;
   };
   type BtPickRow = { group_id: string; user_id: string; team_ids: string[] };
-  type MpRow = {
-    group_id: string;
-    user_id: string;
-    match_id: string;
-    prediction: "home" | "draw" | "away";
-  };
   type KoMatchRow = {
     id: string;
     round: string;
@@ -228,17 +224,11 @@ export default async function DashboardPage() {
   const knockoutMatches = (knockoutMatchesResult.data ?? []) as KoMatchRow[];
   const allKoPicks = (knockoutPicksResult.data ?? []) as KoPickRow[];
   const allBtPicks = (bestThirdPicksResult.data ?? []) as BtPickRow[];
-  const allMpRows = (matchPredictionsResult.data ?? []) as MpRow[];
-
-  const hasAdvancedResults = (finishedGroupMatchesResult.data ?? []).some(
-    (m: { status: string }) => m.status === "finished",
-  );
 
   const groupResults = deriveGroupStandings(
     finishedGroupMatchesResult.data ?? [],
     wcTeams,
   );
-  const hasGroupResults = groupResults.some((r) => r.rank1_id);
   const hasKnockoutResults = knockoutMatches.some(
     (m) => m.status === "finished",
   );
@@ -388,18 +378,10 @@ export default async function DashboardPage() {
             koPicksByUser[p.user_id].push(p);
           }
 
-          const mpByUser: Record<string, MpRow[]> = {};
-          for (const p of allMpRows.filter((p) => p.group_id === group.id)) {
-            if (!mpByUser[p.user_id]) mpByUser[p.user_id] = [];
-            mpByUser[p.user_id].push(p);
-          }
-
-          const allGroupMatchesData = finishedGroupMatchesResult.data ?? [];
-
           const standings: StandingRow[] = (membersByGroup[group.id] ?? [])
             .map((uid) => {
               const userPicks = picksByUser[uid] ?? [];
-              const groupScore = hasGroupResults
+              const groupScore = hasResults
                 ? calcGroupScore(userPicks, groupResults)
                 : null;
               const btScore = hasBestThird
@@ -408,17 +390,9 @@ export default async function DashboardPage() {
               const koScore = hasKnockoutResults
                 ? calcKnockoutScore(koPicksByUser[uid] ?? [], knockoutMatches)
                 : null;
-              const matchPredScore =
-                group.mode === "advanced" && hasAdvancedResults
-                  ? calcMatchPredictionScore(
-                      mpByUser[uid] ?? [],
-                      allGroupMatchesData as { id: string; status: string; home_score: number | null; away_score: number | null }[],
-                    )
-                  : null;
-              const anyScoreKnown =
-                groupScore !== null || btScore !== null || koScore !== null || matchPredScore !== null;
-              const total = anyScoreKnown
-                  ? (groupScore ?? 0) + (btScore ?? 0) + (koScore ?? 0) + (matchPredScore ?? 0)
+              const total =
+                groupScore !== null
+                  ? (groupScore ?? 0) + (btScore ?? 0) + (koScore ?? 0)
                   : null;
               return {
                 userId: uid,
@@ -427,15 +401,11 @@ export default async function DashboardPage() {
                 points: total,
               };
             })
-            .sort((a, b) => {
-              if (a.points !== null && b.points !== null) {
-                if (b.points !== a.points) return b.points - a.points;
-                return (picksByUser[b.userId]?.length ?? 0) - (picksByUser[a.userId]?.length ?? 0);
-              }
-              if (a.points !== null) return -1;
-              if (b.points !== null) return 1;
-              return (picksByUser[b.userId]?.length ?? 0) - (picksByUser[a.userId]?.length ?? 0);
-            });
+            .sort((a, b) =>
+              a.points !== null && b.points !== null
+                ? b.points - a.points
+                : a.name.localeCompare(b.name),
+            );
 
           const memberCount = standings.length;
           const isEmpty = memberCount <= 1;
@@ -549,7 +519,7 @@ export default async function DashboardPage() {
                   <span className={styles.statusDot} />
                   {predictionsOpen ? "Predictions open" : "Predictions locked"}
                 </span>
-                {!hasGroupResults ? (
+                {!hasResults ? (
                   <span className={styles.noScoresHint}>
                     Standings update
                     <br />
