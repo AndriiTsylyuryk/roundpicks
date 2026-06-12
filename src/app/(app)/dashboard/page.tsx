@@ -7,6 +7,7 @@ import {
   calcGroupScore,
   calcBestThirdScore,
   calcKnockoutScore,
+  calcMatchPredictionScore,
   deriveGroupStandings,
 } from "@/lib/scoring";
 import styles from "./page.module.css";
@@ -16,6 +17,7 @@ interface GroupRow {
   name: string;
   creator_id: string;
   phase1_locked: boolean;
+  mode: string;
   events: { name: string } | null;
 }
 
@@ -144,10 +146,11 @@ export default async function DashboardPage() {
     knockoutMatchesResult,
     knockoutPicksResult,
     bestThirdPicksResult,
+    matchPredictionsResult,
   ] = await Promise.all([
     supabase
       .from("groups")
-      .select("id, name, creator_id, phase1_locked, events(name)")
+      .select("id, name, creator_id, phase1_locked, mode, events(name)")
       .in("id", safeIds) as unknown as Promise<{ data: GroupRow[] | null }>,
     supabase
       .from("group_members")
@@ -164,9 +167,8 @@ export default async function DashboardPage() {
       .in("group_id", safeIds),
     supabase
       .from("wc_matches")
-      .select("home_team_id, away_team_id, home_score, away_score, status")
-      .eq("round", "GROUP")
-      .eq("status", "finished"),
+      .select("id, home_team_id, away_team_id, home_score, away_score, status")
+      .eq("round", "GROUP"),
     supabase.from("wc_teams").select("id, group_letter"),
     supabase
       .from("wc_matches")
@@ -181,6 +183,10 @@ export default async function DashboardPage() {
     supabase
       .from("best_third_picks")
       .select("group_id, user_id, team_ids")
+      .in("group_id", safeIds),
+    supabase
+      .from("match_predictions")
+      .select("group_id, user_id, match_id, prediction")
       .in("group_id", safeIds),
   ]);
 
@@ -206,6 +212,12 @@ export default async function DashboardPage() {
     winner_id: string;
   };
   type BtPickRow = { group_id: string; user_id: string; team_ids: string[] };
+  type MpRow = {
+    group_id: string;
+    user_id: string;
+    match_id: string;
+    prediction: "home" | "draw" | "away";
+  };
   type KoMatchRow = {
     id: string;
     round: string;
@@ -224,6 +236,11 @@ export default async function DashboardPage() {
   const knockoutMatches = (knockoutMatchesResult.data ?? []) as KoMatchRow[];
   const allKoPicks = (knockoutPicksResult.data ?? []) as KoPickRow[];
   const allBtPicks = (bestThirdPicksResult.data ?? []) as BtPickRow[];
+  const allMpRows = (matchPredictionsResult.data ?? []) as MpRow[];
+
+  const hasAdvancedResults = (finishedGroupMatchesResult.data ?? []).some(
+    (m: { status: string }) => m.status === "finished",
+  );
 
   const groupResults = deriveGroupStandings(
     finishedGroupMatchesResult.data ?? [],
@@ -378,6 +395,14 @@ export default async function DashboardPage() {
             koPicksByUser[p.user_id].push(p);
           }
 
+          const mpByUser: Record<string, MpRow[]> = {};
+          for (const p of allMpRows.filter((p) => p.group_id === group.id)) {
+            if (!mpByUser[p.user_id]) mpByUser[p.user_id] = [];
+            mpByUser[p.user_id].push(p);
+          }
+
+          const allGroupMatchesData = finishedGroupMatchesResult.data ?? [];
+
           const standings: StandingRow[] = (membersByGroup[group.id] ?? [])
             .map((uid) => {
               const userPicks = picksByUser[uid] ?? [];
@@ -390,9 +415,17 @@ export default async function DashboardPage() {
               const koScore = hasKnockoutResults
                 ? calcKnockoutScore(koPicksByUser[uid] ?? [], knockoutMatches)
                 : null;
-              const total =
-                groupScore !== null
-                  ? (groupScore ?? 0) + (btScore ?? 0) + (koScore ?? 0)
+              const matchPredScore =
+                group.mode === "advanced" && hasAdvancedResults
+                  ? calcMatchPredictionScore(
+                      mpByUser[uid] ?? [],
+                      allGroupMatchesData as { id: string; status: string; home_score: number | null; away_score: number | null }[],
+                    )
+                  : null;
+              const anyScoreKnown =
+                groupScore !== null || btScore !== null || koScore !== null || matchPredScore !== null;
+              const total = anyScoreKnown
+                  ? (groupScore ?? 0) + (btScore ?? 0) + (koScore ?? 0) + (matchPredScore ?? 0)
                   : null;
               return {
                 userId: uid,
