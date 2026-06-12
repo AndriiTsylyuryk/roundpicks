@@ -434,11 +434,12 @@ export default async function DashboardPage() {
                 points: total,
               };
             })
-            .sort((a, b) =>
-              a.points !== null && b.points !== null
-                ? b.points - a.points
-                : a.name.localeCompare(b.name),
-            );
+            .sort((a, b) => {
+              if (a.points !== null && b.points !== null) return b.points - a.points;
+              if (a.points !== null) return -1;
+              if (b.points !== null) return 1;
+              return a.name.localeCompare(b.name);
+            });
 
           const memberCount = standings.length;
           const isEmpty = memberCount <= 1;
