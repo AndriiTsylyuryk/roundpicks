@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { track } from "@vercel/analytics";
 import styles from "./page.module.css";
 
 const PRESETS_EUR = [1, 3, 10];
@@ -27,6 +28,7 @@ export default function SupportPage() {
       ? Math.round(parseFloat(customAmount) * 100)
       : supportAmount * 100;
     if (!amount || amount < 100 || amount > 100000) return;
+    track("support_submit", { amount });
     setSubmitting(true);
     try {
       const res = await fetch("/api/stripe/session", {

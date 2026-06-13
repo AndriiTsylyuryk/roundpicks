@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Heart, LayoutDashboard, LifeBuoy, Info, LogOut, MessageSquare, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useDrawer } from "@/lib/drawer-context";
+import { track } from "@vercel/analytics";
 import styles from "./NavUserMenu.module.css";
 
 const PRESETS_EUR = [1, 3, 10];
@@ -107,7 +108,7 @@ export default function UserMenuDrawer({ displayName }: Props) {
             <MessageSquare size={16} className={styles.drawerItemIcon} />
             <span className={styles.drawerItemLabel}>Leave a feedback</span>
           </button>
-          <button className={styles.drawerItem} onClick={() => setView("support")}>
+          <button className={styles.drawerItem} onClick={() => { setView("support"); track("support_drawer_click"); }}>
             <span className={styles.drawerHeartIcon}><Heart size={14} /></span>
             <span className={styles.drawerItemLabel}>Support the project</span>
           </button>
@@ -227,6 +228,7 @@ export default function UserMenuDrawer({ displayName }: Props) {
                   ? Math.round(parseFloat(customAmount) * 100)
                   : supportAmount * 100;
                 if (!amount || amount < 100 || amount > 100000) return;
+                track("support_submit", { amount });
                 setSubmitting(true);
                 try {
                   const res = await fetch("/api/stripe/session", {

@@ -8,6 +8,7 @@ import NavUserMenu from "@/components/NavUserMenu";
 import UserMenuDrawer from "@/components/UserMenuDrawer";
 import { LayoutDashboard, Heart, LifeBuoy, Info } from "lucide-react";
 import { useDrawer } from "@/lib/drawer-context";
+import { track } from "@vercel/analytics";
 import NotificationBell from "@/components/NotificationBell";
 import styles from "./layout.module.css";
 
@@ -41,7 +42,7 @@ export function AppShell({ displayName, children }: Props) {
             <Link href="/dashboard" className={styles.navLink}><LayoutDashboard size={16} /> Dashboard</Link>
             <Link href="/help" className={styles.navLink}><LifeBuoy size={16} /> Help</Link>
             <Link href="/about" className={styles.navLink}><Info size={16} /> About</Link>
-            <Link href="/support" className={styles.navLink}><span className={styles.heartIcon}><Heart size={14} /></span> Support the project</Link>
+            <Link href="/support" className={styles.navLink} onClick={() => track("support_nav_click")}><span className={styles.heartIcon}><Heart size={14} /></span> Support the project</Link>
             <NotificationBell />
             <NavUserMenu displayName={displayName} />
           </div>
