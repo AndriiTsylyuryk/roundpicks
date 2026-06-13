@@ -200,7 +200,8 @@ export default async function GroupPage({ params }: Props) {
     const { data: mpRaw } = await supabase
       .from("match_predictions")
       .select("user_id, match_id, prediction")
-      .eq("group_id", groupId);
+      .eq("group_id", groupId)
+      .limit(10000);
     for (const mp of (mpRaw ?? []) as MpRow[]) {
       if (!matchPredsByUser[mp.user_id]) matchPredsByUser[mp.user_id] = [];
       matchPredsByUser[mp.user_id].push(mp);
