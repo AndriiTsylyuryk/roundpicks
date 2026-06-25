@@ -154,9 +154,9 @@ export function calcGroupScore(picks: GroupPick[], results: GroupResult[]): numb
   for (const pick of picks) {
     const result = resultByGroup.get(pick.wc_group);
     if (!result) continue;
-    const official = [result.rank1_id, result.rank2_id, result.rank3_id];
-    const predicted = [pick.rank1_id, pick.rank2_id, pick.rank3_id];
-    for (let i = 0; i < 3; i++) {
+    const official = [result.rank1_id, result.rank2_id];
+    const predicted = [pick.rank1_id, pick.rank2_id];
+    for (let i = 0; i < 2; i++) {
       const team = predicted[i];
       if (!team) continue;
       if (official[i] === team) score += 2;

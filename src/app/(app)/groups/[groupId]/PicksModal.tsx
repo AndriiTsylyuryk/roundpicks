@@ -336,7 +336,7 @@ export default function PicksModal({
   ): PickStatus => {
     const result = groupResults.find((r) => r.wc_group === group);
     if (!result || !pickTeamId || result.rank1_id === null) return "pending";
-    const officialIds = [result.rank1_id, result.rank2_id, result.rank3_id];
+    const officialIds = [result.rank1_id, result.rank2_id];
     if (officialIds[rankIndex] === pickTeamId) return "hit";
     if (officialIds.includes(pickTeamId)) return "partial";
     return "miss";
@@ -370,7 +370,7 @@ export default function PicksModal({
   };
 
   const bestThirdStatus = (tid: string): PickStatus => {
-    if (officialBestThird.length === 0) return "pending";
+    if (officialBestThird.length < 8) return "pending";
     return officialBestThirdSet.has(tid) ? "hit" : "miss";
   };
 
