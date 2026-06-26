@@ -619,6 +619,14 @@
   font-weight: 600;
   display: flex;
   align-items: center;
+  min-width: 0;
+}
+
+.lbNameText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .hotBadge {
@@ -630,6 +638,7 @@
   font-size: 11px;
   letter-spacing: 0.1em;
   color: var(--color-mint);
+  flex-shrink: 0;
 }
 
 .youBadge {
@@ -1488,10 +1497,6 @@
 
   .lbName {
     font-size: 0.82rem;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .lbScore {

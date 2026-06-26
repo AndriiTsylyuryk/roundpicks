@@ -35,7 +35,7 @@ interface Props {
   userHasRated: boolean;
 }
 
-const ROUND_ORDER = ["R32", "R16", "QF", "SF", "FINAL", "3RD"];
+const ROUND_ORDER = ["R32", "R16", "QF", "SF", "3RD", "FINAL"];
 
 const ROUND_LABEL: Record<string, string> = {
   R32: "Round of 32",
@@ -289,6 +289,7 @@ export default function KnockoutForm({
 
   // For each later-round match, track which upstream match feeds each slot.
   // 3RD is fed by SF losers — can't derive from winner picks, skip it.
+  // FINAL needs to look past 3RD to find SF as its feeder.
   const upstreamSlots = new Map<
     string,
     { home: UpstreamSlot; away: UpstreamSlot }
@@ -296,7 +297,10 @@ export default function KnockoutForm({
   for (let r = 1; r < rounds.length; r++) {
     const { round, matches: curMatches } = rounds[r];
     if (round === "3RD") continue;
-    const prev = rounds[r - 1].matches;
+    let prevIdx = r - 1;
+    while (prevIdx >= 0 && rounds[prevIdx].round === "3RD") prevIdx--;
+    if (prevIdx < 0) continue;
+    const prev = rounds[prevIdx].matches;
     curMatches.forEach((m, i) => {
       const prevHome = prev[2 * i];
       const prevAway = prev[2 * i + 1];

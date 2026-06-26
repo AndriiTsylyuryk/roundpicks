@@ -335,7 +335,7 @@ export default async function GroupPage({ params }: Props) {
                 {String(i + 1).padStart(2, "0")}
               </span>
               <span className={styles.lbName}>
-                {m.name}
+                <span className={styles.lbNameText}>{m.name}</span>
                 {m.userId === user!.id && (
                   <span className={styles.youBadge}>you</span>
                 )}
