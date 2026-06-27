@@ -297,8 +297,16 @@ export default function KnockoutForm({
     [6, 7],   // R16-3: W79(M7) vs W80(M8)  → Match 92
     [11, 10], // R16-4: W83(M12) vs W84(M11) → Match 93
     [9, 8],   // R16-5: W81(M10) vs W82(M9)  → Match 94
-    [12, 15], // R16-6: W85(M13) vs W87(M16) → Match 95
-    [14, 13], // R16-7: W86(M15) vs W88(M14) → Match 96
+    [12, 15], // R16-6: W85(M13) vs W87(M16) → Match 96
+    [14, 13], // R16-7: W86(M15) vs W88(M14) → Match 95
+  ];
+
+  // Official FIFA 2026 R16→QF bracket pairings by R16 index (0-7).
+  const R16_TO_QF_INDEX: [number, number][] = [
+    [0, 1], // QF1 / FIFA M97:  M89 vs M90
+    [4, 5], // QF2 / FIFA M98:  M93 vs M94
+    [2, 3], // QF3 / FIFA M99:  M91 vs M92
+    [7, 6], // QF4 / FIFA M100: M96 vs M95
   ];
 
   const upstreamSlots = new Map<
@@ -313,9 +321,10 @@ export default function KnockoutForm({
     if (prevIdx < 0) continue;
     const prev = rounds[prevIdx].matches;
     curMatches.forEach((m, i) => {
-      const pairings = round === "R16" && prevIdx === 0
-        ? R32_TO_R16_INDEX
-        : null;
+      const pairings =
+        round === "R16" && prevIdx === 0 ? R32_TO_R16_INDEX :
+        round === "QF" ? R16_TO_QF_INDEX :
+        null;
       const prevHomeIdx = pairings ? pairings[i]?.[0] : 2 * i;
       const prevAwayIdx = pairings ? pairings[i]?.[1] : 2 * i + 1;
       const prevHome = prev[prevHomeIdx];
