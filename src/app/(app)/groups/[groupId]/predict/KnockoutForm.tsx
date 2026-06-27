@@ -287,9 +287,20 @@ export default function KnockoutForm({
     });
   }
 
-  // For each later-round match, track which upstream match feeds each slot.
-  // 3RD is fed by SF losers — can't derive from winner picks, skip it.
-  // FINAL needs to look past 3RD to find SF as its feeder.
+  // Official FIFA 2026 R32→R16 bracket pairings by index in kickoff order.
+  // R32 matches sorted by kickoff (indices 0-15) feed into R16 matches (indices 0-7).
+  // Each entry is [homeR32Index, awayR32Index].
+  const R32_TO_R16_INDEX: [number, number][] = [
+    [0, 3],   // R16-0: W73(M1) vs W75(M4)  → Match 89
+    [2, 5],   // R16-1: W74(M3) vs W77(M6)  → Match 90
+    [1, 4],   // R16-2: W76(M2) vs W78(M5)  → Match 91
+    [6, 7],   // R16-3: W79(M7) vs W80(M8)  → Match 92
+    [11, 10], // R16-4: W83(M12) vs W84(M11) → Match 93
+    [9, 8],   // R16-5: W81(M10) vs W82(M9)  → Match 94
+    [12, 15], // R16-6: W85(M13) vs W87(M16) → Match 95
+    [14, 13], // R16-7: W86(M15) vs W88(M14) → Match 96
+  ];
+
   const upstreamSlots = new Map<
     string,
     { home: UpstreamSlot; away: UpstreamSlot }
@@ -302,8 +313,13 @@ export default function KnockoutForm({
     if (prevIdx < 0) continue;
     const prev = rounds[prevIdx].matches;
     curMatches.forEach((m, i) => {
-      const prevHome = prev[2 * i];
-      const prevAway = prev[2 * i + 1];
+      const pairings = round === "R16" && prevIdx === 0
+        ? R32_TO_R16_INDEX
+        : null;
+      const prevHomeIdx = pairings ? pairings[i]?.[0] : 2 * i;
+      const prevAwayIdx = pairings ? pairings[i]?.[1] : 2 * i + 1;
+      const prevHome = prev[prevHomeIdx];
+      const prevAway = prev[prevAwayIdx];
       upstreamSlots.set(m.id, {
         home: {
           matchId: !m.home_team_id && prevHome ? prevHome.id : null,
