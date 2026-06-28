@@ -499,8 +499,15 @@ export default async function GroupPage({ params }: Props) {
             >
               {(userHasAllGroupPicks && phase1IsOpen) ||
               (userHasKnockoutPicks && phase2IsOpen)
-                ? "Picks submitted · Edit picks"
+                ? "Picks submitted \u00B7 Edit picks"
                 : "Make your Picks"}
+            </Link>
+          ) : knockoutsHaveStarted && userHasKnockoutPicks ? (
+            <Link
+              href={`/groups/${groupId}/predict`}
+              className={`${styles.ctaPredictBtn} ${styles.ctaPredictBtnDone}`}
+            >
+              View knockout picks
             </Link>
           ) : (
             <span
