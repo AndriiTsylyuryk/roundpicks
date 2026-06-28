@@ -3,6 +3,7 @@ import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import ToasterProvider from "@/components/ToasterProvider";
+import { AuthListener } from "@/components/AuthListener";
 import "./globals.css";
 
 const display = Bricolage_Grotesque({
@@ -49,6 +50,7 @@ export default function RootLayout({
           />
         </noscript>
         {children}
+        <AuthListener />
         <ToasterProvider />
         <Script
           id="gtm"
