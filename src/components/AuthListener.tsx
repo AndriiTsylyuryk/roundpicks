@@ -8,17 +8,24 @@ export function AuthListener() {
   const router = useRouter();
 
   useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash || !hash.includes("type=recovery")) return;
+
+    const params = new URLSearchParams(hash.replace(/^#/, "?"));
+    const accessToken = params.get("access_token");
+    const refreshToken = params.get("refresh_token");
+
+    if (!accessToken) return;
+
     const supabase = createClient();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event) => {
-        if (event === "PASSWORD_RECOVERY") {
-          router.push("/reset-password");
-        }
-      },
-    );
-
-    return () => subscription.unsubscribe();
+    supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken ?? "",
+    }).then(({ error }) => {
+      if (error) return;
+      window.history.replaceState(null, "", window.location.pathname);
+      router.push("/reset-password");
+    });
   }, [router]);
 
   return null;
