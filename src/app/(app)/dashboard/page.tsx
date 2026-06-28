@@ -103,7 +103,7 @@ export default async function DashboardPage() {
               <div className={styles.bannerSub}>{tournamentRange}</div>
             </div>
           </div>
-          {/* <KnockoutBanner /> */}
+          <KnockoutBanner />
           <div className={styles.header}>
             <div>
               <div className={`eyebrow ${styles.headerEyebrow}`}>
@@ -374,7 +374,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* <KnockoutBanner /> */}
+        <KnockoutBanner />
 
         {/* Header */}
         <div className={styles.header}>

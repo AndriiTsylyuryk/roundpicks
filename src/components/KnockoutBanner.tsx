@@ -6,18 +6,22 @@ export function KnockoutBanner() {
     <div className={styles.wrapper}>
       <div className={styles.panel}>
         <span aria-hidden className={styles.accent} />
-        <span aria-hidden className={styles.iconWrap}>
+        <span aria-hidden className={`${styles.iconWrap} ${localStyles.iconWrap}`}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="8" r="6.4" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M8 4.4V8l2.4 1.6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M8 2.5 2 13.5h12L8 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+            <path d="M8 6.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <circle cx="8" cy="11.5" r=".75" fill="currentColor" />
           </svg>
         </span>
         <div className={styles.content}>
           <div className={styles.title}>
-            Knockout bracket predictions are coming!
+            Knockout bracket predictions are open!
           </div>
           <div className={`${styles.sub} ${localStyles.sub}`}>
-            The complete tournament bracket opens early morning on June 28th, right after the final group game finishes. You&rsquo;ll have a short window to predict the entire knockout phase all the way to the final. Predictions lock that same day at 10:00 PM (UTC+3) when the first knockout game kicks off. Get ready to act fast!
+            The group phase is complete, and the final tournament bracket is
+            open. You have until 10:00 PM (UTC+3) tonight to predict the entire
+            knockout phase all the way to the final. Predictions lock exactly
+            when the first game kicks off. Get yours in now!
           </div>
         </div>
       </div>
