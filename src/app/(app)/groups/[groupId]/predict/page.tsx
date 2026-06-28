@@ -215,13 +215,13 @@ export default async function PredictPage({ params, searchParams }: Props) {
       </div>
 
       {/* Score summary */}
-      <div className={styles.scoreSummary}>
+      {/* <div className={styles.scoreSummary}>
         <p className={styles.scoreDesc}>
           Tap a team in each match to pick the winner — each pick auto-fills the
           next round. Opens once the last group-stage match finishes (the full
           bracket is set) and closes at kickoff of the first Round of 32 match.
         </p>
-      </div>
+      </div> */}
 
       {/* Phase 1 step 1 (advanced only): W/D/L for each group match */}
       {phase1IsOpen && group.mode === "advanced" && currentStep === 1 && (

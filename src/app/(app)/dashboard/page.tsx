@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/server-admin";
 
 import HeroAnimation from "@/components/landing/HeroAnimation";
-import { KnockoutBanner } from "@/components/KnockoutBanner";
 import {
   calcGroupScore,
   calcBestThirdScore,
@@ -103,7 +102,6 @@ export default async function DashboardPage() {
               <div className={styles.bannerSub}>{tournamentRange}</div>
             </div>
           </div>
-          <KnockoutBanner />
           <div className={styles.header}>
             <div>
               <div className={`eyebrow ${styles.headerEyebrow}`}>
@@ -374,7 +372,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <KnockoutBanner />
+        {/* <KnockoutBanner /> */}
 
         {/* Header */}
         <div className={styles.header}>

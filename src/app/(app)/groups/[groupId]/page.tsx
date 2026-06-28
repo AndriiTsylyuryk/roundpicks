@@ -465,9 +465,11 @@ export default async function GroupPage({ params }: Props) {
             <div className={styles.ctaHeadline}>
               {phase1IsOpen
                 ? "Group stage to call."
-                : phase2IsOpen
-                  ? "Knockout picks to call."
-                  : "nothing to call"}
+                : phase2IsOpen && knockoutsHaveStarted && userHasKnockoutPicks
+                  ? "Picks done. Sit back and relax."
+                  : phase2IsOpen
+                    ? "Knockout picks to call."
+                    : "nothing to call"}
             </div>
             <div className={styles.ctaMeta}>
               {phase1Deadline && phase1IsOpen && (
@@ -482,26 +484,41 @@ export default async function GroupPage({ params }: Props) {
             </div>
           </div>
           {phase1IsOpen || phase2IsOpen ? (
-            <Link
-              href={`/groups/${groupId}/predict`}
-              className={[
-                styles.ctaPredictBtn,
-                (userHasAllGroupPicks && phase1IsOpen) ||
+            knockoutsHaveStarted && userHasKnockoutPicks ? (
+              <Link
+                href={`/groups/${groupId}/predict`}
+                className={`${styles.ctaPredictBtn} ${styles.ctaPredictBtnDone}`}
+              >
+                View KO picks
+              </Link>
+            ) : knockoutsHaveStarted ? (
+              <span
+                className={`${styles.ctaPredictBtn} ${styles.ctaPredictBtnDisabled}`}
+              >
+                Predictions closed
+              </span>
+            ) : (
+              <Link
+                href={`/groups/${groupId}/predict`}
+                className={[
+                  styles.ctaPredictBtn,
+                  (userHasAllGroupPicks && phase1IsOpen) ||
+                  (userHasKnockoutPicks && phase2IsOpen)
+                    ? styles.ctaPredictBtnDone
+                    : (phase1IsOpen && !userHasAllGroupPicks) ||
+                        (phase2IsOpen && !userHasKnockoutPicks)
+                      ? styles.ctaPredictBtnIdle
+                      : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              >
+                {(userHasAllGroupPicks && phase1IsOpen) ||
                 (userHasKnockoutPicks && phase2IsOpen)
-                  ? styles.ctaPredictBtnDone
-                  : (phase1IsOpen && !userHasAllGroupPicks) ||
-                      (phase2IsOpen && !userHasKnockoutPicks)
-                    ? styles.ctaPredictBtnIdle
-                    : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
-              {(userHasAllGroupPicks && phase1IsOpen) ||
-              (userHasKnockoutPicks && phase2IsOpen)
-                ? "Picks submitted \u00B7 Edit picks"
-                : "Make your Picks"}
-            </Link>
+                  ? "Picks submitted \u00B7 Edit picks"
+                  : "Make your Picks"}
+              </Link>
+            )
           ) : knockoutsHaveStarted && userHasKnockoutPicks ? (
             <Link
               href={`/groups/${groupId}/predict`}
