@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/server-admin";
 import { DrawerProvider } from "@/lib/drawer-context";
 import { AppShell } from "./AppShell";
 import Spinner from "@/components/Spinner";
+import SurveyBanner from "@/components/SurveyBanner";
 
 export default async function AppLayout({
   children,
@@ -20,7 +21,7 @@ export default async function AppLayout({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name")
+    .select("display_name, has_surveyed")
     .eq("id", user.id)
     .single();
 
@@ -34,6 +35,7 @@ export default async function AppLayout({
   return (
     <DrawerProvider>
       <AppShell displayName={displayName}>
+        <SurveyBanner hasSurveyed={profile?.has_surveyed ?? false} />
         <Suspense fallback={<Spinner size={48} />}>
           {children}
         </Suspense>

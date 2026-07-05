@@ -437,6 +437,7 @@ export type Database = {
           dismissed_notifications: Json
           display_name: string | null
           has_rated: boolean
+          has_surveyed: boolean
           id: string
           locale: string
         }
@@ -446,6 +447,7 @@ export type Database = {
           dismissed_notifications?: Json
           display_name?: string | null
           has_rated?: boolean
+          has_surveyed?: boolean
           id: string
           locale?: string
         }
@@ -455,6 +457,7 @@ export type Database = {
           dismissed_notifications?: Json
           display_name?: string | null
           has_rated?: boolean
+          has_surveyed?: boolean
           id?: string
           locale?: string
         }
@@ -480,6 +483,56 @@ export type Database = {
           title?: string
         }
         Relationships: []
+      }
+      survey_responses: {
+        Row: {
+          chat_email: string | null
+          chat_opt_in: boolean
+          created_at: string
+          enjoyed_most: string[]
+          enjoyed_most_other: string | null
+          frustrating: string | null
+          id: string
+          improvement: string | null
+          user_id: string
+          want_events: string[]
+          want_events_other: string | null
+        }
+        Insert: {
+          chat_email?: string | null
+          chat_opt_in?: boolean
+          created_at?: string
+          enjoyed_most?: string[]
+          enjoyed_most_other?: string | null
+          frustrating?: string | null
+          id?: string
+          improvement?: string | null
+          user_id: string
+          want_events?: string[]
+          want_events_other?: string | null
+        }
+        Update: {
+          chat_email?: string | null
+          chat_opt_in?: boolean
+          created_at?: string
+          enjoyed_most?: string[]
+          enjoyed_most_other?: string | null
+          frustrating?: string | null
+          id?: string
+          improvement?: string | null
+          user_id?: string
+          want_events?: string[]
+          want_events_other?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_responses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wc_matches: {
         Row: {
