@@ -103,10 +103,10 @@ function BracketMatchRow({
         ? (picks[slots.away.matchId] ?? null)
         : null;
 
-  const effectiveHomeId = match.home_team_id ?? derivedHomeId;
-  const effectiveAwayId = match.away_team_id ?? derivedAwayId;
-  const homeIsDerived = !match.home_team_id && !!derivedHomeId;
-  const awayIsDerived = !match.away_team_id && !!derivedAwayId;
+  const effectiveHomeId = derivedHomeId ?? match.home_team_id;
+  const effectiveAwayId = derivedAwayId ?? match.away_team_id;
+  const homeIsDerived = !!derivedHomeId;
+  const awayIsDerived = !!derivedAwayId;
 
   const pickedId = picks[match.id];
   const isFinished = match.status === "finished";
@@ -297,8 +297,8 @@ export default function KnockoutForm({
     [6, 7],   // R16-3: W79(M7) vs W80(M8)  → Match 92
     [11, 10], // R16-4: W83(M12) vs W84(M11) → Match 93
     [9, 8],   // R16-5: W81(M10) vs W82(M9)  → Match 94
-    [12, 15], // R16-6: W85(M13) vs W87(M16) → Match 96
-    [14, 13], // R16-7: W86(M15) vs W88(M14) → Match 95
+    [14, 13], // R16-7: W86(M15) vs W88(M14) → Match 95 (Jul 7 16:00)
+    [12, 15], // R16-8: W85(M13) vs W87(M16) → Match 96 (Jul 7 20:00)
   ];
 
   // Official FIFA 2026 R16→QF bracket pairings by R16 index (0-7).
@@ -331,12 +331,12 @@ export default function KnockoutForm({
       const prevAway = prev[prevAwayIdx];
       upstreamSlots.set(m.id, {
         home: {
-          matchId: !m.home_team_id && prevHome ? prevHome.id : null,
-          label: !m.home_team_id && prevHome ? `Winner ${displayIds.get(prevHome.id) ?? prevHome.id}` : null,
+          matchId: prevHome ? prevHome.id : null,
+          label: prevHome ? `Winner ${displayIds.get(prevHome.id) ?? prevHome.id}` : null,
         },
         away: {
-          matchId: !m.away_team_id && prevAway ? prevAway.id : null,
-          label: !m.away_team_id && prevAway ? `Winner ${displayIds.get(prevAway.id) ?? prevAway.id}` : null,
+          matchId: prevAway ? prevAway.id : null,
+          label: prevAway ? `Winner ${displayIds.get(prevAway.id) ?? prevAway.id}` : null,
         },
       });
     });

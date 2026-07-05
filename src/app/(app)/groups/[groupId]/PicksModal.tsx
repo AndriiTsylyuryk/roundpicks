@@ -260,7 +260,8 @@ export default function PicksModal({
         .select(
           "id, round, home_team_id, away_team_id, home_score, away_score, status",
         )
-        .in("round", ["R32", "R16", "QF", "SF", "FINAL", "3RD"]);
+        .in("round", ["R32", "R16", "QF", "SF", "FINAL", "3RD"])
+        .order("kickoff_at");
       setMatches(koMatchesRaw ?? []);
 
       const { data: finishedGroupRaw } = await supabase
