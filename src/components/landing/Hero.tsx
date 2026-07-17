@@ -23,9 +23,7 @@ export function Hero() {
       <HeroAnimation />
       <div className={styles.inner} style={{ position: "relative", zIndex: 1 }}>
         <div className={styles.copy}>
-          <div className={`eyebrow ${styles.eyebrow}`}>
-            ● Group stage open · World Cup 2026
-          </div>
+          <div className={`eyebrow ${styles.eyebrow}`}>● World Cup 2026</div>
           <h1 className={styles.h1}>
             Predict
             <br />

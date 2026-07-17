@@ -364,7 +364,7 @@ export default async function DashboardPage() {
                   {phase1Deadline ? fmtDate(phase1Deadline) : ""}
                 </>
               ) : groupStageOver ? (
-                "Knockout phase · Predictions open"
+                "Knockout phase"
               ) : (
                 tournamentRange
               )}
