@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   // Pull latest notification
   const { data: notif, error: notifError } = await supabase
     .from("site_notifications")
-    .select("id, title, body")
+    .select("id, title, body, cta_label, cta_url")
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -78,8 +78,8 @@ export async function POST(req: NextRequest) {
         sender: { name: "RoundPicks", email: FROM_EMAIL },
         to: [{ email: r.email, name: r.name }],
         subject: notif.title,
-        htmlContent: buildHtml(notif.title, notif.body),
-        textContent: `${notif.title}\n\n${notif.body}\n\nhttps://roundpicks.com/dashboard`,
+        htmlContent: buildHtml(notif.title, notif.body, notif.cta_label ?? null, notif.cta_url ?? null),
+        textContent: `${notif.title}\n\n${notif.body}\n\n${notif.cta_url ?? "https://roundpicks.com/dashboard"}`,
       }),
     });
 
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
   });
 }
 
-function buildHtml(title: string, body: string) {
+function buildHtml(title: string, body: string, ctaLabel: string | null, ctaUrl: string | null) {
   const bodyHtml = body
     .split("\n")
     .filter(Boolean)
@@ -119,9 +119,9 @@ function buildHtml(title: string, body: string) {
           <td style="padding:40px 40px 32px;">
             <h1 style="margin:0 0 20px;font-size:26px;font-weight:800;line-height:1.15;color:#fff;">${title}</h1>
             ${bodyHtml}
-            <a href="https://roundpicks.com/dashboard"
+            <a href="${ctaUrl ?? "https://roundpicks.com/dashboard"}"
             style="display:inline-block;margin-top:16px;background:#78ffd6;color:#06222b;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;">
-              Go to my groups →
+              ${ctaLabel ?? "Go to my groups →"}
             </a>
           </td>
         </tr>

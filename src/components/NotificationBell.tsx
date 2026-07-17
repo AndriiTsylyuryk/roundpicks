@@ -10,6 +10,8 @@ interface SiteNotification {
   id: string;
   title: string;
   body: string;
+  cta_label: string | null;
+  cta_url: string | null;
   created_at: string;
 }
 
@@ -33,18 +35,24 @@ export default function NotificationBell() {
     (async () => {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      console.log("[NotificationBell] user:", user?.id, user?.created_at);
+      if (!user) { console.log("[NotificationBell] no user, skipping"); return; }
       setUserId(user.id);
 
       const { data: notifs, error: notifError } = await supabase
         .from("site_notifications")
-        .select("*")
+        .select("id, title, body, cta_label, cta_url, created_at")
         .order("created_at", { ascending: false })
         .limit(1);
-      if (notifError || !notifs || notifs.length === 0) return;
+      console.log("[NotificationBell] notifs:", notifs, "error:", notifError);
+      if (notifError || !notifs || notifs.length === 0) { console.log("[NotificationBell] no notifs, skipping"); return; }
 
       const notif = notifs[0];
-      if (user.created_at && new Date(notif.created_at) < new Date(user.created_at)) return;
+      console.log("[NotificationBell] notif:", notif);
+      if (user.created_at && new Date(notif.created_at) < new Date(user.created_at)) {
+        console.log("[NotificationBell] user is newer than notif, skipping");
+        return;
+      }
 
       setNotification(notif);
 
@@ -53,12 +61,17 @@ export default function NotificationBell() {
         .select("dismissed_notifications")
         .eq("id", user.id)
         .single();
+      console.log("[NotificationBell] profile:", profile);
       const dismissedArr = (profile?.dismissed_notifications ?? []) as string[];
       const isDismissed = dismissedArr.includes(notif.id);
+      console.log("[NotificationBell] dismissedArr:", dismissedArr, "isDismissed:", isDismissed);
       setDismissed(isDismissed);
 
       if (!isDismissed) {
+        console.log("[NotificationBell] showing modal");
         setShowModal(true);
+      } else {
+        console.log("[NotificationBell] already dismissed, not showing");
       }
     })();
   }, []);
@@ -115,9 +128,22 @@ export default function NotificationBell() {
             >
               <h2 className={styles.modalTitle}>{notification.title}</h2>
               <BodyLines className={styles.modalBody} text={notification.body} />
-              <button className={styles.ackBtn} onClick={() => dismiss(notification.id)}>
-                Acknowledge
-              </button>
+              <div className={styles.modalActions}>
+                {notification.cta_url && (
+                  <a
+                    href={notification.cta_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.ctaBtn}
+                    onClick={() => dismiss(notification.id)}
+                  >
+                    {notification.cta_label ?? "Learn more"}
+                  </a>
+                )}
+                <button className={styles.ackBtn} onClick={() => dismiss(notification.id)}>
+                  {notification.cta_url ? "Maybe later" : "Acknowledge"}
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}

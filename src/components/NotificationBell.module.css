@@ -81,23 +81,49 @@
   margin-bottom: 1.25rem;
 }
 
-.ackBtn {
+.modalActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.ctaBtn {
   font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
-  padding: 0.55rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.65rem 1.5rem;
   border-radius: 10px;
-  border: none;
-  background: var(--color-ink);
-  color: #fff;
+  background: #78ffd6;
+  color: #06222b;
+  text-decoration: none;
+  text-align: center;
   cursor: pointer;
   transition: opacity 150ms ease;
+  display: block;
+}
+
+.ctaBtn:hover {
+  opacity: 0.85;
+}
+
+.ackBtn {
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.5rem 1.5rem;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  transition: color 150ms ease;
   display: block;
   margin: 0 auto;
 }
 
 .ackBtn:hover {
-  opacity: 0.85;
+  color: var(--color-ink);
 }
 
 /* ── History panel ── */
