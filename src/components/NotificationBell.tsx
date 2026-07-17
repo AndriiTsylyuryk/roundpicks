@@ -35,8 +35,7 @@ export default function NotificationBell() {
     (async () => {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      console.log("[NotificationBell] user:", user?.id, user?.created_at);
-      if (!user) { console.log("[NotificationBell] no user, skipping"); return; }
+      if (!user) return;
       setUserId(user.id);
 
       const { data: notifs, error: notifError } = await supabase
@@ -44,15 +43,10 @@ export default function NotificationBell() {
         .select("id, title, body, cta_label, cta_url, created_at")
         .order("created_at", { ascending: false })
         .limit(1);
-      console.log("[NotificationBell] notifs:", notifs, "error:", notifError);
-      if (notifError || !notifs || notifs.length === 0) { console.log("[NotificationBell] no notifs, skipping"); return; }
+      if (notifError || !notifs || notifs.length === 0) return;
 
       const notif = notifs[0];
-      console.log("[NotificationBell] notif:", notif);
-      if (user.created_at && new Date(notif.created_at) < new Date(user.created_at)) {
-        console.log("[NotificationBell] user is newer than notif, skipping");
-        return;
-      }
+      if (user.created_at && new Date(notif.created_at) < new Date(user.created_at)) return;
 
       setNotification(notif);
 
@@ -61,17 +55,12 @@ export default function NotificationBell() {
         .select("dismissed_notifications")
         .eq("id", user.id)
         .single();
-      console.log("[NotificationBell] profile:", profile);
       const dismissedArr = (profile?.dismissed_notifications ?? []) as string[];
       const isDismissed = dismissedArr.includes(notif.id);
-      console.log("[NotificationBell] dismissedArr:", dismissedArr, "isDismissed:", isDismissed);
       setDismissed(isDismissed);
 
       if (!isDismissed) {
-        console.log("[NotificationBell] showing modal");
         setShowModal(true);
-      } else {
-        console.log("[NotificationBell] already dismissed, not showing");
       }
     })();
   }, []);

@@ -467,18 +467,24 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          cta_label: string | null
+          cta_url: string | null
           id: string
           title: string
         }
         Insert: {
           body: string
           created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
           id?: string
           title: string
         }
         Update: {
           body?: string
           created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
           id?: string
           title?: string
         }
@@ -524,15 +530,7 @@ export type Database = {
           want_events?: string[]
           want_events_other?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "survey_responses_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       wc_matches: {
         Row: {
