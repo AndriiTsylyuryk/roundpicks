@@ -140,7 +140,7 @@
 
 .doneWrap {
   text-align: center;
-  padding: 18px 4px;
+  padding: 18px 4px 6px;
 }
 
 .checkIcon {
@@ -350,13 +350,13 @@
   .wrapper {
     margin-top: 1.5rem;
     margin-bottom: 1.5rem;
-    padding: 24px 20px 26px;
+    padding: 20px 16px;
     border-radius: var(--radius-lg);
   }
 
   .inner {
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
   }
 
   .left {
@@ -373,7 +373,23 @@
 
   .right {
     min-width: unset;
-    padding: 20px 18px;
+    flex: none;
+    padding: 16px 14px 12px;
+  }
+
+  .doneWrap {
+    padding: 6px 0 2px;
+  }
+
+  .doneTitle {
+    font-size: 18px;
+    margin-top: 12px;
+  }
+
+  .doneSub {
+    font-size: 12.5px;
+    margin-top: 4px;
+    word-break: break-word;
   }
 
   .teasers {
