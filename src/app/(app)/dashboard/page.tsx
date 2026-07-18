@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/server-admin";
 
 import HeroAnimation from "@/components/landing/HeroAnimation";
+import ComingSoon from "@/components/ComingSoon";
 import {
   calcGroupScore,
   calcBestThirdScore,
@@ -44,11 +45,13 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name")
+    .select("display_name, keep_me_posted")
     .eq("id", user!.id)
     .single();
   const displayName =
     profile?.display_name ?? user?.user_metadata.full_name ?? "player";
+  const userEmail = user?.email ?? "";
+  const emailSubscribed = profile?.keep_me_posted ?? false;
 
   const { data: membershipsRaw } = await supabase
     .from("group_members")
@@ -390,6 +393,13 @@ export default async function DashboardPage() {
         </Link>
       )} */}
         </div>
+
+        {userEmail && (
+          <ComingSoon
+            knownEmail={userEmail}
+            initialDone={emailSubscribed}
+          />
+        )}
 
         {/* Grid */}
         <div className={styles.grid}>

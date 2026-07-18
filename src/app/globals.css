@@ -14,6 +14,8 @@
   --color-teal:       #007991;
   --color-teal-deep:  #003a47;
   --color-mint:       #78ffd6;
+  --color-lime:       #c6f24e;
+  --color-lime-ink:   #1b2606;
   --gradient-brand:   linear-gradient(135deg, #007991 0%, #78ffd6 100%);
 
   /* ── Legacy aliases (auth / app components) ── */

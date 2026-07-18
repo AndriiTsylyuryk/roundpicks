@@ -438,6 +438,8 @@ export type Database = {
           display_name: string | null
           has_rated: boolean
           id: string
+          keep_me_posted: boolean
+          keep_posted_email: string | null
           locale: string
         }
         Insert: {
@@ -447,6 +449,8 @@ export type Database = {
           display_name?: string | null
           has_rated?: boolean
           id: string
+          keep_me_posted?: boolean
+          keep_posted_email?: string | null
           locale?: string
         }
         Update: {
@@ -456,6 +460,8 @@ export type Database = {
           display_name?: string | null
           has_rated?: boolean
           id?: string
+          keep_me_posted?: boolean
+          keep_posted_email?: string | null
           locale?: string
         }
         Relationships: []

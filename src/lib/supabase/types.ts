@@ -439,6 +439,8 @@ export type Database = {
           has_rated: boolean
           has_surveyed: boolean
           id: string
+          keep_me_posted: boolean
+          keep_posted_email: string | null
           locale: string
         }
         Insert: {
@@ -449,6 +451,8 @@ export type Database = {
           has_rated?: boolean
           has_surveyed?: boolean
           id: string
+          keep_me_posted?: boolean
+          keep_posted_email?: string | null
           locale?: string
         }
         Update: {
@@ -459,6 +463,8 @@ export type Database = {
           has_rated?: boolean
           has_surveyed?: boolean
           id?: string
+          keep_me_posted?: boolean
+          keep_posted_email?: string | null
           locale?: string
         }
         Relationships: []
