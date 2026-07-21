@@ -16,6 +16,15 @@ const PUBLIC_PATHS = [
 ];
 
 export async function proxy(request: NextRequest) {
+  const host = request.headers.get("host") ?? "";
+  if (host.includes("vercel.app")) {
+    const url = new URL(request.url);
+    return NextResponse.redirect(
+      `https://roundpicks.com${url.pathname}${url.search}`,
+      308,
+    );
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
