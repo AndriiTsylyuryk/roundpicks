@@ -115,7 +115,15 @@ function buildHtml(title: string, body: string, ctaLabel: string | null, ctaUrl:
 }
 
 function wrapHtml(title: string, bodyHtml: string, ctaLabel: string | null, ctaUrl: string | null) {
-  return emailTemplate(title, bodyHtml, ctaLabel, ctaUrl);
+  const formatted = bodyHtml
+    .split("\n")
+    .filter(Boolean)
+    .map(
+      (line) =>
+        `<p style="margin:0 0 12px;font-size:16px;line-height:1.55;color:rgba(255,255,255,0.75);">${line}</p>`,
+    )
+    .join("");
+  return emailTemplate(title, formatted, ctaLabel, ctaUrl);
 }
 
 function emailTemplate(title: string, bodyHtml: string, ctaLabel: string | null, ctaUrl: string | null) {
