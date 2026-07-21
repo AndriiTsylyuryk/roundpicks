@@ -352,28 +352,15 @@ export default async function DashboardPage() {
       <HeroAnimation />
       <div>
         {/* Tournament banner */}
-        <div className={styles.banner}>
+        {/* <div className={styles.banner}>
           <div className={styles.bannerOrb} />
           <div className={styles.bannerLeft}>
             <div className={`eyebrow ${styles.bannerEyebrow}`}>
               {phase1IsOpen ? "Active tournament" : "Tournament"}
             </div>
             <div className={styles.bannerTitle}>{tournamentName}</div>
-            <div className={styles.bannerSub}>
-              {countdown ? (
-                <>
-                  <strong>Group stage closes in {countdown}</strong>
-                  {" · "}
-                  {phase1Deadline ? fmtDate(phase1Deadline) : ""}
-                </>
-              ) : groupStageOver ? (
-                "Knockout phase"
-              ) : (
-                tournamentRange
-              )}
-            </div>
           </div>
-        </div>
+        </div> */}
 
         {/* <KnockoutBanner /> */}
 
@@ -395,10 +382,7 @@ export default async function DashboardPage() {
         </div>
 
         {userEmail && (
-          <ComingSoon
-            knownEmail={userEmail}
-            initialDone={emailSubscribed}
-          />
+          <ComingSoon knownEmail={userEmail} initialDone={emailSubscribed} />
         )}
 
         {/* Grid */}

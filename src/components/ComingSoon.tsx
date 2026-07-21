@@ -39,15 +39,17 @@ export default function ComingSoon({ knownEmail, initialDone = false }: Props) {
         <div className={styles.left}>
           <div className={styles.eyebrow}>
             <span className={styles.eyebrowDot} />
-            The World Cup is wrapping up
+            The World Cup is over
           </div>
 
           <h2 className={styles.heading}>
             This was just the <span className={styles.lime}>kickoff.</span>
           </h2>
           <p className={styles.body}>
-            We&rsquo;re not slowing down after the final whistle. Bigger tournaments, more leagues and whole new
-            sports are in the works — we&rsquo;re still shaping exactly what lands first, but there&rsquo;s a lot coming.
+            We&rsquo;re not slowing down after the final whistle. Bigger
+            tournaments, more leagues and whole new sports are in the works —
+            we&rsquo;re still shaping exactly what lands first, but
+            there&rsquo;s a lot coming.
           </p>
 
           <div className={styles.teasers}>
@@ -66,42 +68,86 @@ export default function ComingSoon({ knownEmail, initialDone = false }: Props) {
             <div className={styles.doneWrap}>
               <div className={styles.checkIcon}>
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                  <path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M5 12.5l4.5 4.5L19 7.5"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </div>
               <div className={styles.doneTitle}>You&rsquo;re on the list.</div>
               <div className={styles.doneSub}>
-                We&rsquo;ll reach out at <strong>{editing && valid ? email : knownEmail}</strong> the moment we have exciting news. No spam — just the good stuff.
+                We&rsquo;ll reach out at{" "}
+                <strong>{editing && valid ? email : knownEmail}</strong> the
+                moment we have exciting news. No spam — just the good stuff.
               </div>
             </div>
           ) : (
             <>
               <div className={styles.eyebrowMono}>Be first in line</div>
-              <div className={styles.ctaTitle}>Want to know what&rsquo;s next?</div>
+              <div className={styles.ctaTitle}>
+                Want to know what&rsquo;s next?
+              </div>
               <div className={styles.ctaSub}>
-                We&rsquo;ll be in touch the moment we have exciting news to share — just confirm you&rsquo;re in.
+                We&rsquo;ll be in touch the moment we have exciting news to
+                share — just confirm you&rsquo;re in.
               </div>
 
               {!editing ? (
                 <>
                   <div className={styles.emailChip}>
                     <span aria-hidden className={styles.emailIcon}>
-                      <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                        <rect x="2.5" y="4.5" width="15" height="11" rx="2" stroke="currentColor" strokeWidth="1.5" />
-                        <path d="M3.5 5.5l6.5 5 6.5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                      >
+                        <rect
+                          x="2.5"
+                          y="4.5"
+                          width="15"
+                          height="11"
+                          rx="2"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                        />
+                        <path
+                          d="M3.5 5.5l6.5 5 6.5-5"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
                       </svg>
                     </span>
                     <span className={styles.emailText}>{knownEmail}</span>
                   </div>
-                  <button type="button" className={styles.confirmBtn} onClick={() => confirm(knownEmail)}>
+                  <button
+                    type="button"
+                    className={styles.confirmBtn}
+                    onClick={() => confirm(knownEmail)}
+                  >
                     Yes, keep me posted <span aria-hidden>→</span>
                   </button>
-                  <button type="button" className={styles.editLink} onClick={() => setEditing(true)}>
+                  <button
+                    type="button"
+                    className={styles.editLink}
+                    onClick={() => setEditing(true)}
+                  >
                     Use a different email
                   </button>
                 </>
               ) : (
-                <form className={styles.editForm} onSubmit={(e) => { e.preventDefault(); if (valid) confirm(email); }}>
+                <form
+                  className={styles.editForm}
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (valid) confirm(email);
+                  }}
+                >
                   <input
                     type="email"
                     value={email}
@@ -111,17 +157,29 @@ export default function ComingSoon({ knownEmail, initialDone = false }: Props) {
                     autoFocus
                     className={styles.emailInput}
                   />
-                  <button type="submit" disabled={!valid} className={styles.submitBtn}>
+                  <button
+                    type="submit"
+                    disabled={!valid}
+                    className={styles.submitBtn}
+                  >
                     Keep me posted <span aria-hidden>→</span>
                   </button>
-                  <button type="button" className={styles.editLink} onClick={() => { setEditing(false); setEmail(""); }}>
+                  <button
+                    type="button"
+                    className={styles.editLink}
+                    onClick={() => {
+                      setEditing(false);
+                      setEmail("");
+                    }}
+                  >
                     Use my account email instead
                   </button>
                 </form>
               )}
 
               <div className={styles.disclaimer}>
-                No spam, unsubscribe anytime. We&rsquo;ll only email about new launches.
+                No spam, unsubscribe anytime. We&rsquo;ll only email about new
+                launches.
               </div>
             </>
           )}
