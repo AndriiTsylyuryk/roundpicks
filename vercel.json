@@ -1,0 +1,10 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "roundpicks-git-test-andrii-tsylyuryks-projects.vercel.app" }],
+      "destination": "https://roundpicks.com/:1",
+      "permanent": true
+    }
+  ]
+}
