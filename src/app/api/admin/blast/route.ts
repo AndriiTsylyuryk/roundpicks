@@ -81,8 +81,9 @@ export async function POST(req: NextRequest) {
         sender: { name: "RoundPicks", email: FROM_EMAIL },
         to: [{ email: r.email, name: r.name }],
         subject: notif.email_subject ?? notif.title,
-        htmlContent: notif.email_html ?? buildHtml(notif.title, notif.body, notif.cta_label ?? null, notif.cta_url ?? null),
-        textContent: `${notif.title}\n\n${notif.body}\n\n${notif.cta_url ?? "https://roundpicks.com/dashboard"}`,
+        htmlContent: notif.email_html
+          ? wrapHtml(notif.title, notif.email_html, notif.cta_label ?? null, notif.cta_url ?? null)
+          : buildHtml(notif.title, notif.body, notif.cta_label ?? null, notif.cta_url ?? null),
       }),
     });
 
@@ -110,7 +111,14 @@ function buildHtml(title: string, body: string, ctaLabel: string | null, ctaUrl:
         `<p style="margin:0 0 12px;font-size:16px;line-height:1.65;color:rgba(255,255,255,0.78);">${line}</p>`,
     )
     .join("");
+  return emailTemplate(title, bodyHtml, ctaLabel, ctaUrl);
+}
 
+function wrapHtml(title: string, bodyHtml: string, ctaLabel: string | null, ctaUrl: string | null) {
+  return emailTemplate(title, bodyHtml, ctaLabel, ctaUrl);
+}
+
+function emailTemplate(title: string, bodyHtml: string, ctaLabel: string | null, ctaUrl: string | null) {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
