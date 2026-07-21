@@ -127,7 +127,7 @@ function emailTemplate(title: string, bodyHtml: string, ctaLabel: string | null,
     <tr><td align="center">
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#06222b;border-radius:16px;overflow:hidden;">
         <tr>
-          <td style="padding:40px 40px 32px;">
+          <td style="padding:40px 40px 32px;color:#fff;">
             <h1 style="margin:0 0 20px;font-size:26px;font-weight:800;line-height:1.15;color:#fff;">${title}</h1>
             ${bodyHtml}
             <a href="${ctaUrl ?? "https://roundpicks.com/dashboard"}"
