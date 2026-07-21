@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server-admin";
 
 // Reads the latest site_notifications row and emails it to all confirmed users.
+// Supports separate email content via email_subject / email_html columns.
+// Falls back to title / body when email-specific fields are null.
 //
 // Usage:
-//   1. INSERT INTO site_notifications (title, body) VALUES ('...', '...');
+//   1. INSERT INTO site_notifications (title, body, email_subject, email_html)
+//        VALUES ('...', '...', '...', '...');
 //   2. curl -X POST https://your-app/api/admin/blast \
 //        -H "Authorization: Bearer $BLAST_SECRET"
 
@@ -20,7 +23,7 @@ export async function POST(req: NextRequest) {
   // Pull latest notification
   const { data: notif, error: notifError } = await supabase
     .from("site_notifications")
-    .select("id, title, body, cta_label, cta_url")
+    .select("id, title, body, cta_label, cta_url, email_subject, email_html")
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -77,8 +80,8 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         sender: { name: "RoundPicks", email: FROM_EMAIL },
         to: [{ email: r.email, name: r.name }],
-        subject: notif.title,
-        htmlContent: buildHtml(notif.title, notif.body, notif.cta_label ?? null, notif.cta_url ?? null),
+        subject: notif.email_subject ?? notif.title,
+        htmlContent: notif.email_html ?? buildHtml(notif.title, notif.body, notif.cta_label ?? null, notif.cta_url ?? null),
         textContent: `${notif.title}\n\n${notif.body}\n\n${notif.cta_url ?? "https://roundpicks.com/dashboard"}`,
       }),
     });

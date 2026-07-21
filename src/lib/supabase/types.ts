@@ -475,6 +475,8 @@ export type Database = {
           created_at: string
           cta_label: string | null
           cta_url: string | null
+          email_html: string | null
+          email_subject: string | null
           id: string
           title: string
         }
@@ -483,6 +485,8 @@ export type Database = {
           created_at?: string
           cta_label?: string | null
           cta_url?: string | null
+          email_html?: string | null
+          email_subject?: string | null
           id?: string
           title: string
         }
@@ -491,6 +495,8 @@ export type Database = {
           created_at?: string
           cta_label?: string | null
           cta_url?: string | null
+          email_html?: string | null
+          email_subject?: string | null
           id?: string
           title?: string
         }

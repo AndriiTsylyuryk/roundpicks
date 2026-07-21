@@ -470,18 +470,30 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          cta_label: string | null
+          cta_url: string | null
+          email_html: string | null
+          email_subject: string | null
           id: string
           title: string
         }
         Insert: {
           body: string
           created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          email_html?: string | null
+          email_subject?: string | null
           id?: string
           title: string
         }
         Update: {
           body?: string
           created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          email_html?: string | null
+          email_subject?: string | null
           id?: string
           title?: string
         }
