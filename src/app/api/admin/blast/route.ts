@@ -108,7 +108,7 @@ function buildHtml(title: string, body: string, ctaLabel: string | null, ctaUrl:
     .filter(Boolean)
     .map(
       (line) =>
-        `<p style="margin:0 0 12px;font-size:16px;line-height:1.65;color:rgba(255,255,255,0.78);">${line}</p>`,
+        `<p style="margin:0 0 12px;font-size:16px;line-height:1.55;color:rgba(255,255,255,0.75);">${line}</p>`,
     )
     .join("");
   return emailTemplate(title, bodyHtml, ctaLabel, ctaUrl);
@@ -125,30 +125,20 @@ function emailTemplate(title: string, bodyHtml: string, ctaLabel: string | null,
 <body style="margin:0;padding:0;background:#f2efe7;font-family:system-ui,-apple-system,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f2efe7;padding:40px 16px;">
     <tr><td align="center">
-      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#06222b;border-radius:16px;overflow:hidden;">
         <tr>
-          <td style="padding:0 0 16px;">
-            <table cellpadding="0" cellspacing="0">
-              <tr>
-                <td style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#007991,#78ffd6);text-align:center;vertical-align:middle;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:800;font-size:13px;color:#062731;line-height:32px;">RP</td>
-                <td style="padding-left:10px;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:700;font-size:17px;color:#062731;">RoundPicks</td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-        <tr>
-          <td style="background:#06222b;border-radius:20px;overflow:hidden;padding:40px 40px 32px;">
-            <h1 style="margin:0 0 20px;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:28px;font-weight:800;line-height:1.1;letter-spacing:-0.02em;color:#c6f24e;">${title}</h1>
+          <td style="padding:40px 40px 32px;">
+            <h1 style="margin:0 0 20px;font-size:26px;font-weight:800;line-height:1.15;color:#fff;">${title}</h1>
             ${bodyHtml}
             <a href="${ctaUrl ?? "https://roundpicks.com/dashboard"}"
-            style="display:inline-block;margin-top:16px;background:#c6f24e;color:#1b2606;font-weight:700;font-size:15px;padding:14px 28px;border-radius:11px;text-decoration:none;box-shadow:0 8px 24px rgba(198,242,78,0.25);">
+            style="display:inline-block;margin-top:16px;background:#78ffd6;color:#06222b;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;">
               ${ctaLabel ?? "Go to my groups →"}
             </a>
           </td>
         </tr>
         <tr>
-          <td style="padding:20px 0 0;">
-            <p style="margin:0;text-align:center;font-size:12px;color:rgba(6,39,49,0.45);">
+          <td style="padding:16px 40px 24px;border-top:1px solid rgba(255,255,255,0.08);">
+            <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.3);">
               You're receiving this because you signed up at roundpicks.com.
             </p>
           </td>
